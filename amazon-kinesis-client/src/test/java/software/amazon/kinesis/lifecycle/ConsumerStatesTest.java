@@ -128,7 +128,8 @@ public class ConsumerStatesTest {
                 INITIAL_POSITION_IN_STREAM, cleanupLeasesOfCompletedShards, ignoreUnexpectedChildShards, shardDetector,
                 new AggregatorUtil(), hierarchicalShardSyncer, metricsFactory, leaseCleanupManager, schemaRegistryDecoder);
         when(shardInfo.shardId()).thenReturn("shardId-000000000000");
-        when(shardInfo.streamIdentifierSerOpt()).thenReturn(Optional.of(StreamIdentifier.singleStreamInstance(STREAM_NAME).serialize()));
+        Optional<String> x = Optional.of(StreamIdentifier.singleStreamInstance(STREAM_NAME).serialize());
+        when(shardInfo.streamIdentifierSerOpt()).thenReturn(x);
         consumer = spy(new ShardConsumer(recordsPublisher, executorService, shardInfo, logWarningForTaskAfterMillis,
                 argument, taskExecutionListener, 0));
         when(recordProcessorCheckpointer.checkpointer()).thenReturn(checkpointer);

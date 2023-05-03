@@ -21,6 +21,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.experimental.Accessors;
+import lombok.extern.slf4j.Slf4j;
 import software.amazon.awssdk.arns.Arn;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.kinesis.model.DescribeStreamSummaryResponse;
@@ -35,16 +36,17 @@ import java.util.regex.Pattern;
 @EqualsAndHashCode
 @Getter
 @Accessors(fluent = true)
+@Slf4j
 public class StreamIdentifier {
 
     @Builder.Default
-    private final Optional<String> accountIdOptional = Optional.empty();
+    private Optional<String> accountIdOptional = Optional.empty();
     @NonNull
     private final String streamName;
     @Builder.Default
     private Optional<Long> streamCreationEpochOptional = Optional.empty();
     @Builder.Default
-    private final Optional<Arn> streamARNOptional = Optional.empty();
+    private Optional<Arn> streamARNOptional = Optional.empty();
 
     /**
      * Pattern for a serialized {@link StreamIdentifier}. The valid format is
@@ -69,7 +71,18 @@ public class StreamIdentifier {
      *      and is optional.
      */
     public String serialize() {
+//        log.info("furq123: called serialize in StreamIdentifier, accountId.isPresent:{}, creationEpoch:{}", accountIdOptional.isPresent(), streamCreationEpochOptional.isPresent());
         if (!accountIdOptional.isPresent()) {
+            
+//            if (!streamARNOptional.isPresent()) {
+//                final DescribeStreamSummaryResponse dss = KinesisClientFacade.describeStreamSummaryWithStreamName(streamName);
+//                if (dss != null) {
+//                    streamARNOptional = Optional.of(Arn.fromString(dss.streamDescriptionSummary().streamARN()));
+//                    log.info("furq1233-retrieved account arn: {}.", streamARNOptional.get());
+//                    new RuntimeException().printStackTrace();
+//                }
+//            }
+            
             return streamName;
         }
 
@@ -164,9 +177,11 @@ public class StreamIdentifier {
             return fromArn;
         }
 
+//        final DescribeStreamSummaryResponse dss = KinesisClientFacade.describeStreamSummary(streamNameOrArn);
+//        return fromArn(dss.streamDescriptionSummary().streamARN(), kinesisRegion);
         return StreamIdentifier.builder()
                 .streamName(streamNameOrArn)
-                .streamARNOptional(StreamARNUtil.getStreamARN(streamNameOrArn, kinesisRegion))
+                .streamARNOptional(Optional.empty()) //StreamARNUtil.getStreamARN(streamNameOrArn, kinesisRegion))
                 .build();
     }
 
@@ -210,20 +225,45 @@ public class StreamIdentifier {
             final Region kinesisRegion) {
         final String accountId = matcher.group("accountId");
         final String streamName = matcher.group("streamName");
+//        log.info("furq123: called toStreamIdentifier in StreamIdentifier, {} {}", accountId, streamName);
         final Optional<Long> creationEpoch = matchedEpoch.isEmpty() ? Optional.empty()
                 : Optional.of(Long.valueOf(matchedEpoch));
-        final Optional<Arn> arn = StreamARNUtil.getStreamARN(streamName, kinesisRegion, accountId);
-
-        if (!creationEpoch.isPresent() && !arn.isPresent()) {
-            throw new IllegalArgumentException("Cannot create StreamIdentifier if missing both ARN and creation epoch");
-        }
+//        final Optional<Arn> arn = Optional.empty()StreamARNUtil.getStreamARN(streamName, kinesisRegion, accountId);
+//
+//        if (!creationEpoch.isPresent() && !arn.isPresent()) {
+//            throw new IllegalArgumentException("Cannot create StreamIdentifier if missing both ARN and creation epoch");
+//        }
 
         return StreamIdentifier.builder()
                 .accountIdOptional(Optional.of(accountId))
                 .streamName(streamName)
                 .streamCreationEpochOptional(creationEpoch)
-                .streamARNOptional(arn)
+                .streamARNOptional(Optional.empty()) //arn)
                 .build();
     }
 
+//    public Optional<Arn> streamARNOptional() {
+//        if (!streamARNOptional.isPresent()) {
+//            final DescribeStreamSummaryResponse dss = KinesisClientFacade.describeStreamSummaryWithStreamName(streamName);
+//            if (dss != null) {
+//                StreamIdentifier si = fromArn(dss.streamDescriptionSummary().streamARN(), Region.US_EAST_1);
+////                accountIdOptional = si.accountIdOptional;
+//                streamARNOptional = si.streamARNOptional;
+//                log.info("furq1233-retrieved account id: {} and arn: {}.", accountIdOptional.get(), streamARNOptional.get());
+//            }
+//        }
+//        return streamARNOptional;
+//    }
+    public Optional<Arn> streamARNOptional() {
+        if (!streamARNOptional.isPresent()) {
+            final DescribeStreamSummaryResponse dss = KinesisClientFacade.describeStreamSummaryWithStreamName(streamName);
+            if (dss != null) {
+                streamARNOptional = Optional.of(Arn.fromString(dss.streamDescriptionSummary().streamARN()));
+                log.info("furq1233-retrieved arn: {}.", streamARNOptional.get());
+                log.info("hashcode: {}", this.hashCode());
+                new RuntimeException().printStackTrace();
+            }
+        }
+        return streamARNOptional;
+    }
 }
