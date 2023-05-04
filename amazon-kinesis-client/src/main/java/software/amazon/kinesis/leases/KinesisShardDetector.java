@@ -222,9 +222,10 @@ public class KinesisShardDetector implements ShardDetector {
             final boolean shouldPropagateResourceNotFoundException) {
         ListShardsRequest.Builder builder = KinesisRequestsBuilder.listShardsRequestBuilder();
         if (StringUtils.isEmpty(nextToken)) {
-            builder.streamName(streamIdentifier.streamName()).shardFilter(shardFilter);
-            streamIdentifier.streamARNOptional().ifPresent(arn -> builder.streamARN(arn.toString()));
-
+            log.info("furq123-kinesissharddetector1");
+            builder.streamName(streamIdentifier.streamName()).shardFilter(shardFilter).streamARN(streamIdentifier.getStreamARN().toString());
+//            streamIdentifier.getStreamARN().ifPresent(arn -> builder.streamARN(arn.toString()));
+            
         } else {
             builder.nextToken(nextToken);
         }
@@ -309,11 +310,13 @@ public class KinesisShardDetector implements ShardDetector {
 
     @Override
     public List<ChildShard> getChildShards(final String shardId) throws InterruptedException, ExecutionException, TimeoutException {
+        log.info("furq123-kinesissharddetector2");
         final GetShardIteratorRequest.Builder requestBuilder = KinesisRequestsBuilder.getShardIteratorRequestBuilder()
                 .streamName(streamIdentifier.streamName())
                 .shardIteratorType(ShardIteratorType.LATEST)
-                .shardId(shardId);
-        streamIdentifier.streamARNOptional().ifPresent(arn -> requestBuilder.streamARN(arn.toString()));
+                .shardId(shardId)
+                .streamARN(streamIdentifier.getStreamARN().toString());
+//        streamIdentifier.getStreamARN().ifPresent(arn -> requestBuilder.streamARN(arn.toString()));
         final GetShardIteratorRequest getShardIteratorRequest = requestBuilder.build();
 
         final GetShardIteratorResponse getShardIteratorResponse =

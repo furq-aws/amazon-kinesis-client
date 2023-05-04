@@ -236,9 +236,10 @@ public class KinesisDataFetcher implements DataFetcher {
             throw new IllegalArgumentException("SequenceNumber should not be null: shardId " + shardId);
         }
 
+        log.info("furq123-kinesissdatafetcher1");
         GetShardIteratorRequest.Builder builder = KinesisRequestsBuilder.getShardIteratorRequestBuilder()
-                .streamName(streamIdentifier.streamName()).shardId(shardId);
-        streamIdentifier.streamARNOptional().ifPresent(arn -> builder.streamARN(arn.toString()));
+                .streamName(streamIdentifier.streamName()).shardId(shardId).streamARN(streamIdentifier.getStreamARN().toString());
+//        streamIdentifier.getStreamARN().ifPresent(arn -> builder.streamARN(arn.toString()));
 
         GetShardIteratorRequest request;
         if (isIteratorRestart) {
@@ -319,9 +320,10 @@ public class KinesisDataFetcher implements DataFetcher {
 
     @Override
     public GetRecordsRequest getGetRecordsRequest(String nextIterator) {
+        log.info("furq123-kinesisdatafetcher2");
         GetRecordsRequest.Builder builder = KinesisRequestsBuilder.getRecordsRequestBuilder()
-                .shardIterator(nextIterator).limit(maxRecords);
-        streamIdentifier.streamARNOptional().ifPresent(arn -> builder.streamARN(arn.toString()));
+                .shardIterator(nextIterator).limit(maxRecords).streamARN(streamIdentifier.getStreamARN().toString());
+//        streamIdentifier.getStreamARN().ifPresent(arn -> builder.streamARN(arn.toString()));
         return builder.build();
     }
 

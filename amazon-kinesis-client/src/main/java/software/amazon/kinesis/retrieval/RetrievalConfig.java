@@ -120,7 +120,7 @@ public class RetrievalConfig {
     public RetrievalConfig(@NonNull KinesisAsyncClient kinesisAsyncClient, @NonNull String streamName,
                            @NonNull String applicationName) {
         this(kinesisAsyncClient,
-                new SingleStreamTracker(streamName, kinesisAsyncClient.serviceClientConfiguration().region()),
+                new SingleStreamTracker(streamName),
                 applicationName);
     }
 

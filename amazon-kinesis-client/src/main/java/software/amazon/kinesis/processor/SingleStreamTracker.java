@@ -49,10 +49,6 @@ public class SingleStreamTracker implements StreamTracker {
         this(StreamIdentifier.singleStreamInstance(streamName));
     }
 
-    public SingleStreamTracker(String streamName, Region region) {
-        this(StreamIdentifier.singleStreamInstance(streamName, region));
-    }
-
     public SingleStreamTracker(StreamIdentifier streamIdentifier) {
         this(streamIdentifier, DEFAULT_POSITION_IN_STREAM);
     }
