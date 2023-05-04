@@ -28,13 +28,17 @@ import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.powermock.api.mockito.PowerMockito.mockStatic;
+import static software.amazon.kinesis.common.StreamARNUtil.getStreamARN;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -42,6 +46,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
@@ -50,7 +55,11 @@ import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
 
+import software.amazon.awssdk.arns.Arn;
+import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.core.exception.SdkException;
 import software.amazon.awssdk.services.kinesis.KinesisAsyncClient;
 import software.amazon.awssdk.services.kinesis.model.ChildShard;
@@ -63,8 +72,11 @@ import software.amazon.awssdk.services.kinesis.model.ResourceNotFoundException;
 import software.amazon.awssdk.services.kinesis.model.ShardIteratorType;
 import software.amazon.awssdk.utils.CollectionUtils;
 import software.amazon.kinesis.checkpoint.SentinelCheckpoint;
+import software.amazon.kinesis.common.FunctionCache;
 import software.amazon.kinesis.common.InitialPositionInStream;
 import software.amazon.kinesis.common.InitialPositionInStreamExtended;
+import software.amazon.kinesis.common.StreamARNUtil;
+import software.amazon.kinesis.common.StreamARNUtilTest;
 import software.amazon.kinesis.exceptions.KinesisClientLibException;
 import software.amazon.kinesis.leases.ShardObjectHelper;
 import software.amazon.kinesis.metrics.MetricsFactory;
@@ -78,11 +90,15 @@ import software.amazon.kinesis.retrieval.kpl.ExtendedSequenceNumber;
 /**
  * Unit tests for KinesisDataFetcher.
  */
-@RunWith(MockitoJUnitRunner.class)
+@PrepareForTest(StreamARNUtil.class)
+@RunWith(PowerMockRunner.class)
 public class KinesisDataFetcherTest {
     private static final int MAX_RECORDS = 1;
+    private static final String TEST_ACCOUNT_ID = "123456789012";
     private static final String STREAM_NAME = "streamName";
     private static final String SHARD_ID = "shardId-1";
+    private static final Region KINESIS_REGION = Region.US_WEST_1;
+    private static final Arn DEFAULT_ARN = buildArn(KINESIS_REGION);
     private static final InitialPositionInStreamExtended INITIAL_POSITION_LATEST = InitialPositionInStreamExtended
             .newInitialPosition(InitialPositionInStream.LATEST);
     private static final InitialPositionInStreamExtended INITIAL_POSITION_TRIM_HORIZON = InitialPositionInStreamExtended
@@ -102,6 +118,11 @@ public class KinesisDataFetcherTest {
 
     @Rule
     public ExpectedException expectedExceptionRule = ExpectedException.none();
+
+    @BeforeClass
+    public static void setUpBeforeClass() throws Exception {
+        StreamARNUtilTest.setUpFunctionCache(new FunctionCache<String, Arn>((streamName) -> DEFAULT_ARN));
+    }
 
     @Before
     public void setup() {
@@ -558,6 +579,14 @@ public class KinesisDataFetcherTest {
         assertEquals(expectedRecords, getRecordsRetrievalStrategy.getRecords(MAX_RECORDS).records());
         verify(kinesisClient, times(1)).getShardIterator(any(GetShardIteratorRequest.class));
         verify(kinesisClient, times(1)).getRecords(any(GetRecordsRequest.class));
+    }
+
+    private static Arn buildArn(final Region region) {
+        return Arn.builder().partition("aws").service("kinesis")
+                  .accountId(TEST_ACCOUNT_ID)
+                  .resource("stream/" + STREAM_NAME)
+                  .region(region.toString())
+                  .build();
     }
 
 }
