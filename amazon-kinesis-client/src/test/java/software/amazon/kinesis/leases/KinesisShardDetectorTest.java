@@ -17,12 +17,17 @@ package software.amazon.kinesis.leases;
 
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
+import software.amazon.awssdk.arns.Arn;
+import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.kinesis.KinesisAsyncClient;
 import software.amazon.awssdk.services.kinesis.model.LimitExceededException;
 import software.amazon.awssdk.services.kinesis.model.ListShardsRequest;
@@ -30,6 +35,9 @@ import software.amazon.awssdk.services.kinesis.model.ListShardsResponse;
 import software.amazon.awssdk.services.kinesis.model.ResourceInUseException;
 import software.amazon.awssdk.services.kinesis.model.ResourceNotFoundException;
 import software.amazon.awssdk.services.kinesis.model.Shard;
+import software.amazon.kinesis.common.FunctionCache;
+import software.amazon.kinesis.common.StreamARNUtil;
+import software.amazon.kinesis.common.StreamARNUtilTest;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -40,6 +48,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import static software.amazon.kinesis.common.StreamARNUtil.getStreamARN;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.isA;
 import static org.hamcrest.CoreMatchers.nullValue;
@@ -50,20 +59,25 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.powermock.api.mockito.PowerMockito.mockStatic;
 
 /**
- *
+ * Unit tests for KinesisShardDetector.
  */
-@RunWith(MockitoJUnitRunner.class)
+@RunWith(PowerMockRunner.class)
+@PrepareForTest(StreamARNUtil.class)
 public class KinesisShardDetectorTest {
 
     private static final String STREAM_NAME = "TestStream";
+    private static final Region KINESIS_REGION = Region.US_WEST_1;
+    private static final String TEST_ACCOUNT_ID = "123456789012";
     private static final long LIST_SHARDS_BACKOFF_TIME_IN_MILLIS = 50L;
     private static final int MAX_LIST_SHARDS_RETRY_ATTEMPTS = 5;
     private static final long LIST_SHARDS_CACHE_ALLOWED_AGE_IN_SECONDS = 10;
     private static final int MAX_CACHE_MISSES_BEFORE_RELOAD = 10;
     private static final int CACHE_MISS_WARNING_MODULUS = 2;
     private static final String SHARD_ID = "shardId-%012d";
+    private static final Arn DEFAULT_ARN = buildArn(KINESIS_REGION);
 
     private KinesisShardDetector shardDetector;
 
@@ -74,6 +88,11 @@ public class KinesisShardDetectorTest {
     private KinesisAsyncClient client;
     @Mock
     private CompletableFuture<ListShardsResponse> mockFuture;
+
+    @BeforeClass
+    public static void setUpBeforeClass() throws Exception {
+        StreamARNUtilTest.setUpFunctionCache(new FunctionCache<String, Arn>((streamName) -> DEFAULT_ARN));
+    }
 
     @Before
     public void setup() {
@@ -255,5 +274,13 @@ public class KinesisShardDetectorTest {
                 Shard.builder().shardId(String.format(SHARD_ID, 2)).build(),
                 Shard.builder().shardId(String.format(SHARD_ID, 3)).build(),
                 Shard.builder().shardId(String.format(SHARD_ID, 4)).build());
+    }
+
+    private static Arn buildArn(final Region region) {
+        return Arn.builder().partition("aws").service("kinesis")
+                  .accountId(TEST_ACCOUNT_ID)
+                  .resource("stream/" + STREAM_NAME)
+                  .region(region.toString())
+                  .build();
     }
 }

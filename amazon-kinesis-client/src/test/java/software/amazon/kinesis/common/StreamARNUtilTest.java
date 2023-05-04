@@ -37,11 +37,6 @@ public class StreamARNUtilTest {
      */
     private static final FunctionCache<String, Arn> ORIGINAL_CACHE = Whitebox.getInternalState(
             StreamARNUtil.class, "STREAM_ARN_CACHE");
-
-    private static final String ACCOUNT_ID = "12345";
-
-    private static final String STREAM_NAME = StreamARNUtilTest.class.getSimpleName();
-
     private static final Arn defaultArn = toArn(KINESIS_STREAM_ARN_FORMAT, ACCOUNT_ID, STREAM_NAME);
 
     private FunctionCache<String, Arn> spyFunctionCache;
@@ -57,12 +52,36 @@ public class StreamARNUtilTest {
         doReturn(defaultArn).when(spyFunctionCache).get(STREAM_NAME);
     }
 
+//    @Before
+//    public void setUp() throws Exception {
+//        MockitoAnnotations.initMocks(this);
+//
+//        spySupplierCache = spy(ORIGINAL_CACHE);
+//        setUpSupplierCache(spySupplierCache);
+//
+//        final Arn defaultArn = toArn(STS_RESPONSE_ARN_FORMAT, ACCOUNT_ID);
+//        doReturn(defaultArn).when(spySupplierCache).get();
+//    }
+//
+//    private void setUpSts() {
+//        PowerMockito.mockStatic(StsClient.class);
+//        PowerMockito.mockStatic(UrlConnectionHttpClient.class);
+//
+//        when(UrlConnectionHttpClient.builder()).thenReturn(mock(UrlConnectionHttpClient.Builder.class));
+//        when(StsClient.builder()).thenReturn(mockStsClientBuilder);
+//        when(mockStsClientBuilder.httpClient(any(SdkHttpClient.class))).thenReturn(mockStsClientBuilder);
+//        when(mockStsClientBuilder.build()).thenReturn(mockStsClient);
+//
+//        // bypass the spy so the Sts clients are called
+//        when(spySupplierCache.get()).thenCallRealMethod();
+//    }
+//
     /**
      * Wrap and embed the original {@link FunctionCache} with a spy to avoid
      * one-and-done cache behavior, provide each test precise control over
      * return values, and enable the ability to verify interactions via Mockito.
      */
-    private static void setUpFunctionCache(final FunctionCache<String, Arn> cache) throws Exception {
+    public static void setUpFunctionCache(final FunctionCache<String, Arn> cache) throws Exception {
         final Field f = StreamARNUtil.class.getDeclaredField("STREAM_ARN_CACHE");
         f.setAccessible(true);
         f.set(null, cache);

@@ -10,8 +10,8 @@ import software.amazon.kinesis.retrieval.KinesisClientFacade;
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class StreamARNUtil {
-    
-    private static final FunctionCache<String, Arn> STREAM_ARN_CACHE = new FunctionCache<>(streamName -> {
+
+    private static final FunctionCache<String, Arn> STREAM_ARN_CACHE = new FunctionCache<String, Arn>(streamName -> {
         final DescribeStreamSummaryResponse response = KinesisClientFacade.describeStreamSummaryWithStreamName(streamName);
         if (response == null) return null;
         return Arn.fromString(response.streamDescriptionSummary().streamARN());
@@ -22,7 +22,7 @@ public final class StreamARNUtil {
         return Arn.builder()
                 .partition("aws")
                 .service("kinesis")
-                .region(region.toString())
+                .region(region)
                 .accountId(accountId)
                 .resource("stream/" + streamName)
                 .build();
