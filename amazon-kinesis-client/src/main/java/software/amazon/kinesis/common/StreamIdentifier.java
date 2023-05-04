@@ -72,8 +72,17 @@ public class StreamIdentifier {
      */
     public String serialize() {
         if (!accountIdOptional.isPresent()) {
+
+//            if (streamARN == null) {
+//                log.info("furq129-streamName {}, accountId {}", streamName, accountIdOptional.isPresent());
+//                streamARN = StreamARNUtil.getStreamARN(streamName);
+//            }
+            
             return streamName;
         }
+
+//        if (streamARN == null)
+//            streamARN = StreamARNUtil.toArn(streamName, accountIdOptional.get(), KinesisClientFacade.region().id());
 
         if (!streamCreationEpochOptional.isPresent()) { // should this be cached?
             // FIXME bias-for-action hack to simplify back-porting into KCL 1.x and facilitate the
@@ -149,7 +158,7 @@ public class StreamIdentifier {
     private static StreamIdentifier fromSerialization(final String input) {
         final Matcher matcher = STREAM_IDENTIFIER_PATTERN.matcher(input);
         return matcher.matches()
-                ? toStreamIdentifierFromSerialization(matcher, matcher.group("creationEpoch")) : null;
+                ? toStreamIdentifier(matcher, matcher.group("creationEpoch"), null) : null;
     }
 
     /**
@@ -162,43 +171,28 @@ public class StreamIdentifier {
         final Matcher matcher = STREAM_ARN_PATTERN.matcher(input);
         if (matcher.matches()) {
             final Region arnRegion = Region.of(matcher.group("region"));
-            final Region kinesisRegion = KinesisClientFacade.region();
-            // this check only works if customer passes arn directly to configsbuilder in singlestream-mode, region = null otherwise, arn passed in through StreamTracker is never checked
-            if ((kinesisRegion != null) && (arnRegion != kinesisRegion)) {
-                throw new IllegalArgumentException(String.format(
-                        "Cannot create StreamIdentifier for a region other than %s: %s", kinesisRegion, input));
-            }
-            return toStreamIdentifierFromArn(matcher, arnRegion);
+            return toStreamIdentifier(matcher, "", arnRegion);
         }
         return null;
     }
 
-    private static StreamIdentifier toStreamIdentifierFromArn(final Matcher matcher, final Region arnRegion) {
+    private static StreamIdentifier toStreamIdentifier(final Matcher matcher, final String matchedEpoch,
+                                                       final Region arnRegion) {
         final String accountId = matcher.group("accountId");
         final String streamName = matcher.group("streamName");
+        final Optional<Long> creationEpoch = matchedEpoch.isEmpty() ? Optional.empty()
+                : Optional.of(Long.valueOf(matchedEpoch));
+        final Arn streamARN = arnRegion != null ? StreamARNUtil.toArn(streamName, accountId, arnRegion.id()) : null;
 
-        final Arn arn = StreamARNUtil.toArn(streamName, accountId, arnRegion.id());
-
-        return StreamIdentifier.builder()
-                .accountIdOptional(Optional.of(accountId))
-                .streamName(streamName)
-                .streamCreationEpochOptional(Optional.empty())
-                .streamARN(arn)
-                .build();
-    }
-
-    private static StreamIdentifier toStreamIdentifierFromSerialization(final Matcher matcher, final String matchedEpoch) {
-        final String accountId = matcher.group("accountId");
-        final String streamName = matcher.group("streamName");
-        final Optional<Long> creationEpoch = Optional.of(Long.valueOf(matchedEpoch));
-        
-        // can only construct ARN if customer provides serialization AND region
+        if (!creationEpoch.isPresent() && streamARN == null) {
+            throw new IllegalArgumentException("Cannot create StreamIdentifier if missing both ARN and creation epoch");
+        }
 
         return StreamIdentifier.builder()
                 .accountIdOptional(Optional.of(accountId))
                 .streamName(streamName)
                 .streamCreationEpochOptional(creationEpoch)
-                .streamARN(null)
+                .streamARN(streamARN)
                 .build();
     }
 
