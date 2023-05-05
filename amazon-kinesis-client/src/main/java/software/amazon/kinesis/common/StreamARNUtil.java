@@ -11,9 +11,13 @@ import software.amazon.kinesis.retrieval.KinesisClientFacade;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class StreamARNUtil {
     
-    // this cached streamARN is only used when a customer provides a single-stream by name
-    private static Arn cachedStreamARN;
-
+    private static final FunctionCache<String, Arn> streamARNCache = new FunctionCache<String, Arn>(streamName -> {
+        final DescribeStreamSummaryResponse response = KinesisClientFacade.describeStreamSummaryWithStreamName(streamName);
+        if (response == null) return null;
+        return Arn.fromString(response.streamDescriptionSummary().streamARN());
+    }
+    );
+    
     // can/should we remove region argument and call KCF.region from here (remove completely from SI)?
     public static Arn toArn(String streamName, String accountId, String region) {
         return Arn.builder()
@@ -26,22 +30,7 @@ public final class StreamARNUtil {
     }
     
     public static Arn getStreamARN(String streamName) {
-        if (cachedStreamARN != null) {
-            log.info("furq123-returning cached ARN {}", cachedStreamARN);
-            return cachedStreamARN;
-        }
-
-        log.info("furq123- calling dss");
-        final DescribeStreamSummaryResponse dss = KinesisClientFacade.describeStreamSummaryWithStreamName(streamName);
-        if (dss == null) {
-            log.info("furqError- dss was null, returning null ARN");
-            return null;
-        }
-        
-        cachedStreamARN = Arn.fromString(dss.streamDescriptionSummary().streamARN());
-        log.info("furq1233-retrieved arn: {}.", cachedStreamARN);
-        
-        return cachedStreamARN;
+        return streamARNCache.get(streamName);
     }
 
 }
