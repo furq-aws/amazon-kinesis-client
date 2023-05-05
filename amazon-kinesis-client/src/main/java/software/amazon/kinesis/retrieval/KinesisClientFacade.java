@@ -41,7 +41,6 @@ public final class KinesisClientFacade {
     }
 
     static void initialize(final KinesisAsyncClient client) {
-        log.info("furq123: called initialize in KinesisClientFacade");
         kinesisClient = client;
     }
     
@@ -51,7 +50,6 @@ public final class KinesisClientFacade {
     }
 
     public static DescribeStreamSummaryResponse describeStreamSummary(final String streamArn) {
-        log.info("furq123: called DescribeStreamSummary in KinesisClientFacade");
         final DescribeStreamSummaryRequest request = KinesisRequestsBuilder
                 .describeStreamSummaryRequestBuilder().streamARN(streamArn).build();
         final ServiceCallerSupplier<DescribeStreamSummaryResponse> dss =
@@ -60,7 +58,6 @@ public final class KinesisClientFacade {
     }
 
     public static DescribeStreamSummaryResponse describeStreamSummaryWithStreamName(final String streamName) {
-        log.info("furq123: called DescribeStreamSummaryWithStreamName in KinesisClientFacade");
         if (kinesisClient == null) return null;
         final DescribeStreamSummaryRequest request = KinesisRequestsBuilder
                 .describeStreamSummaryRequestBuilder().streamName(streamName).build();
@@ -68,22 +65,6 @@ public final class KinesisClientFacade {
                 () -> kinesisClient.describeStreamSummary(request).get();
         return retryWhenThrottled(dss, 3, streamName, "DescribeStreamSummary");
     }
-
-//    public static DescribeStreamSummaryResponse describeStreamSummary(final String streamName, boolean x) {
-//        log.info("furq123: called DescribeStreamSummary in KinesisClientFacade");
-//        if (kinesisClient == null) return null;
-//        final DescribeStreamSummaryRequest request = KinesisRequestsBuilder
-//                .describeStreamSummaryRequestBuilder().streamName(streamName).build();
-//        try {
-//            final CompletableFuture<DescribeStreamSummaryResponse> dss = kinesisClient.describeStreamSummary(request);
-//            if (dss != null) return dss.get();
-//        } catch (InterruptedException e) {
-//            throw new RuntimeException(e);
-//        } catch (ExecutionException e) {
-//            throw new RuntimeException(e);
-//        }
-//        return null;
-//    }
 
     // FIXME code lifted-and-shifted from FanOutConsumerRegistration; that class
     //      (and others) should not be responsible for interacting directly with
@@ -99,7 +80,6 @@ public final class KinesisClientFacade {
         while (retries > 0) {
             try {
                 try {
-                    log.info("furq123-calling retryWhenThrottled in KinesisClientFacade");
                     return retriever.get();
                 } catch (ExecutionException e) {
                     throw AWS_EXCEPTION_MANAGER.apply(e.getCause());

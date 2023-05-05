@@ -72,17 +72,8 @@ public class StreamIdentifier {
      */
     public String serialize() {
         if (!accountIdOptional.isPresent()) {
-
-//            if (streamARN == null) {
-//                log.info("furq129-streamName {}, accountId {}", streamName, accountIdOptional.isPresent());
-//                streamARN = StreamARNUtil.getStreamARN(streamName);
-//            }
-            
             return streamName;
         }
-
-//        if (streamARN == null)
-//            streamARN = StreamARNUtil.toArn(streamName, accountIdOptional.get(), KinesisClientFacade.region().id());
 
         if (!streamCreationEpochOptional.isPresent()) { // should this be cached?
             // FIXME bias-for-action hack to simplify back-porting into KCL 1.x and facilitate the
@@ -198,7 +189,6 @@ public class StreamIdentifier {
 
     public Arn getStreamARN() {
         if (streamARN == null) {
-            log.info("furq129-streamName {}, accountId {}", streamName, accountIdOptional.isPresent());
             if (!accountIdOptional.isPresent()) {
                 streamARN = StreamARNUtil.getStreamARN(streamName);
             } else {
