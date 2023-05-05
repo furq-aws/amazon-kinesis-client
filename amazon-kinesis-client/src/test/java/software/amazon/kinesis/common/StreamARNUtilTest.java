@@ -31,6 +31,8 @@ import static org.powermock.api.mockito.PowerMockito.verifyStatic;
 @PrepareForTest({ StreamARNUtil.class, KinesisClientFacade.class })
 public class StreamARNUtilTest {
     private static final String KINESIS_STREAM_ARN_FORMAT = "arn:aws:kinesis:us-east-1:%s:stream/%s";
+    private static final String ACCOUNT_ID = "12345";
+    private static final String STREAM_NAME = StreamARNUtilTest.class.getSimpleName();
 
     /**
      * Original {@link FunctionCache} that is constructed on class load.
@@ -52,30 +54,6 @@ public class StreamARNUtilTest {
         doReturn(defaultArn).when(spyFunctionCache).get(STREAM_NAME);
     }
 
-//    @Before
-//    public void setUp() throws Exception {
-//        MockitoAnnotations.initMocks(this);
-//
-//        spySupplierCache = spy(ORIGINAL_CACHE);
-//        setUpSupplierCache(spySupplierCache);
-//
-//        final Arn defaultArn = toArn(STS_RESPONSE_ARN_FORMAT, ACCOUNT_ID);
-//        doReturn(defaultArn).when(spySupplierCache).get();
-//    }
-//
-//    private void setUpSts() {
-//        PowerMockito.mockStatic(StsClient.class);
-//        PowerMockito.mockStatic(UrlConnectionHttpClient.class);
-//
-//        when(UrlConnectionHttpClient.builder()).thenReturn(mock(UrlConnectionHttpClient.Builder.class));
-//        when(StsClient.builder()).thenReturn(mockStsClientBuilder);
-//        when(mockStsClientBuilder.httpClient(any(SdkHttpClient.class))).thenReturn(mockStsClientBuilder);
-//        when(mockStsClientBuilder.build()).thenReturn(mockStsClient);
-//
-//        // bypass the spy so the Sts clients are called
-//        when(spySupplierCache.get()).thenCallRealMethod();
-//    }
-//
     /**
      * Wrap and embed the original {@link FunctionCache} with a spy to avoid
      * one-and-done cache behavior, provide each test precise control over
@@ -107,8 +85,7 @@ public class StreamARNUtilTest {
         verify(spyFunctionCache, times(2)).get(STREAM_NAME);
         assertEquals(actualStreamARN1, actualStreamARN2);
 
-        verifyStatic(times(1));
-        KinesisClientFacade.describeStreamSummaryWithStreamName(STREAM_NAME);
+        verifyKinesisClientFacadeStaticCall(1);
     }
     
     @Test
@@ -117,9 +94,8 @@ public class StreamARNUtilTest {
         final Arn actualStreamARN = StreamARNUtil.getStreamARN(STREAM_NAME);
         
         assertNull(actualStreamARN);
-        
-        verifyStatic(times(1));
-        KinesisClientFacade.describeStreamSummaryWithStreamName(STREAM_NAME);
+
+        verifyKinesisClientFacadeStaticCall(1);
     }
     
     @Test
@@ -131,9 +107,8 @@ public class StreamARNUtilTest {
 
         when(KinesisClientFacade.describeStreamSummaryWithStreamName(any(String.class))).thenReturn(describeStreamSummaryResponse(STREAM_NAME));
         getStreamArn();
-        
-        verifyStatic(times(2));
-        KinesisClientFacade.describeStreamSummaryWithStreamName(STREAM_NAME);
+
+        verifyKinesisClientFacadeStaticCall(2);
     }
     
     @Test
@@ -142,6 +117,11 @@ public class StreamARNUtilTest {
         final Arn expectedArn = toArn(KINESIS_STREAM_ARN_FORMAT, ACCOUNT_ID, STREAM_NAME);
 
         assertEquals(expectedArn, actualArn);
+    }
+
+    private void verifyKinesisClientFacadeStaticCall(int count) {
+        verifyStatic(times(count));
+        KinesisClientFacade.describeStreamSummaryWithStreamName(STREAM_NAME);
     }
 
     private static Arn getStreamArn() {

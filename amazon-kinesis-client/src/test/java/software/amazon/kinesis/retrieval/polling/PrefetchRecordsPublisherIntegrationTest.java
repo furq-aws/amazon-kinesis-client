@@ -43,9 +43,12 @@ import java.util.concurrent.TimeUnit;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
@@ -53,15 +56,20 @@ import org.mockito.runners.MockitoJUnitRunner;
 import org.mockito.stubbing.Answer;
 
 import software.amazon.awssdk.core.SdkBytes;
+import software.amazon.kinesis.common.FunctionCache;
 import software.amazon.kinesis.common.InitialPositionInStreamExtended;
 
 import lombok.extern.slf4j.Slf4j;
+import software.amazon.awssdk.arns.Arn;
+import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.kinesis.KinesisAsyncClient;
 import software.amazon.awssdk.services.kinesis.model.ExpiredIteratorException;
 import software.amazon.awssdk.services.kinesis.model.GetRecordsResponse;
 import software.amazon.awssdk.services.kinesis.model.GetShardIteratorRequest;
 import software.amazon.awssdk.services.kinesis.model.GetShardIteratorResponse;
 import software.amazon.awssdk.services.kinesis.model.Record;
+import software.amazon.kinesis.common.StreamARNUtil;
+import software.amazon.kinesis.common.StreamARNUtilTest;
 import software.amazon.kinesis.lifecycle.events.ProcessRecordsInput;
 import software.amazon.kinesis.metrics.MetricsFactory;
 import software.amazon.kinesis.metrics.NullMetricsFactory;
@@ -73,7 +81,8 @@ import software.amazon.kinesis.retrieval.kpl.ExtendedSequenceNumber;
 /**
  * These are the integration tests for the PrefetchRecordsPublisher class.
  */
-@RunWith(MockitoJUnitRunner.class)
+@RunWith(PowerMockRunner.class)
+@PrepareForTest(StreamARNUtil.class)
 @Slf4j
 public class PrefetchRecordsPublisherIntegrationTest {
     private static final int MAX_SIZE = 3;
@@ -83,16 +92,18 @@ public class PrefetchRecordsPublisherIntegrationTest {
     private static final long IDLE_MILLIS_BETWEEN_CALLS = 500L;
     private static final long AWAIT_TERMINATION_TIMEOUT = 1L;
     private static final MetricsFactory NULL_METRICS_FACTORY = new NullMetricsFactory();
+    private static final Arn DEFAULT_ARN = buildArn(Region.US_WEST_1);
+    private static final String ACCOUNT_ID = "123456789012";
+    private static final String OPERATION = "ProcessTask";
+    private static final String STREAM_NAME = "streamName";
+    private static final String SHARD_ID = "shardId-000000000000";
+    private static final String NEXT_SHARD_ITERATOR = "testNextShardIterator";
 
     private PrefetchRecordsPublisher getRecordsCache;
     private GetRecordsRetrievalStrategy getRecordsRetrievalStrategy;
     private KinesisDataFetcher dataFetcher;
     private ExecutorService executorService;
     private List<Record> records;
-    private String operation = "ProcessTask";
-    private String streamName = "streamName";
-    private String shardId = "shardId-000000000000";
-    private String nextShardIterator = "testNextShardIterator";
 
     @Mock
     private KinesisAsyncClient kinesisClient;
@@ -101,10 +112,15 @@ public class PrefetchRecordsPublisherIntegrationTest {
     @Mock
     private InitialPositionInStreamExtended initialPosition;
 
+    @BeforeClass
+    public static void setUpBeforeClass() throws Exception {
+        StreamARNUtilTest.setUpFunctionCache(new FunctionCache<String, Arn>((streamName) -> DEFAULT_ARN));
+    }
+
     @Before
     public void setup() throws Exception {
         records = new ArrayList<>();
-        dataFetcher = spy(new KinesisDataFetcherForTest(kinesisClient, streamName, shardId, MAX_RECORDS_PER_CALL));
+        dataFetcher = spy(new KinesisDataFetcherForTest(kinesisClient, STREAM_NAME, SHARD_ID, MAX_RECORDS_PER_CALL));
         getRecordsRetrievalStrategy = Mockito.spy(new SynchronousGetRecordsRetrievalStrategy(dataFetcher));
         executorService = spy(Executors.newFixedThreadPool(1));
         CompletableFuture<GetShardIteratorResponse> future = mock(CompletableFuture.class);
@@ -120,8 +136,7 @@ public class PrefetchRecordsPublisherIntegrationTest {
                 getRecordsRetrievalStrategy,
                 executorService,
                 IDLE_MILLIS_BETWEEN_CALLS,
-                new NullMetricsFactory(),
-                operation,
+                new NullMetricsFactory(), OPERATION,
                 "test-shard",
                 AWAIT_TERMINATION_TIMEOUT);
     }
@@ -163,9 +178,9 @@ public class PrefetchRecordsPublisherIntegrationTest {
     @Test
     public void testDifferentShardCaches() {
         final ExecutorService executorService2 = spy(Executors.newFixedThreadPool(1));
-        final KinesisDataFetcher kinesisDataFetcher = spy(new KinesisDataFetcher(kinesisClient, streamName, shardId, MAX_RECORDS_PER_CALL, NULL_METRICS_FACTORY));
+        final KinesisDataFetcher kinesisDataFetcher = spy(new KinesisDataFetcher(kinesisClient, STREAM_NAME, SHARD_ID, MAX_RECORDS_PER_CALL, NULL_METRICS_FACTORY));
         final GetRecordsRetrievalStrategy getRecordsRetrievalStrategy2 =
-                spy(new AsynchronousGetRecordsRetrievalStrategy(kinesisDataFetcher, 5 , 5, shardId));
+                spy(new AsynchronousGetRecordsRetrievalStrategy(kinesisDataFetcher, 5 , 5, SHARD_ID));
         final PrefetchRecordsPublisher recordsPublisher2 = new PrefetchRecordsPublisher(
                 MAX_SIZE,
                 MAX_BYTE_SIZE,
@@ -174,8 +189,7 @@ public class PrefetchRecordsPublisherIntegrationTest {
                 getRecordsRetrievalStrategy2,
                 executorService2,
                 IDLE_MILLIS_BETWEEN_CALLS,
-                new NullMetricsFactory(),
-                operation,
+                new NullMetricsFactory(), OPERATION,
                 "test-shard-2",
                 AWAIT_TERMINATION_TIMEOUT);
 
@@ -194,9 +208,9 @@ public class PrefetchRecordsPublisherIntegrationTest {
 
         sleep(IDLE_MILLIS_BETWEEN_CALLS);
 
-        ProcessRecordsInput p1 = evictPublishedEvent(getRecordsCache, shardId).processRecordsInput();
+        ProcessRecordsInput p1 = evictPublishedEvent(getRecordsCache, SHARD_ID).processRecordsInput();
 
-        ProcessRecordsInput p2 = evictPublishedEvent(recordsPublisher2, shardId).processRecordsInput();
+        ProcessRecordsInput p2 = evictPublishedEvent(recordsPublisher2, SHARD_ID).processRecordsInput();
 
         assertNotEquals(p1, p2);
         assertTrue(p1.records().isEmpty());
@@ -253,6 +267,14 @@ public class PrefetchRecordsPublisherIntegrationTest {
         return publisher.getPublisherSession().evictPublishedRecordAndUpdateDemand(shardId);
     }
 
+    private static Arn buildArn(final Region region) {
+        return Arn.builder().partition("aws").service("kinesis")
+                  .accountId(ACCOUNT_ID)
+                  .resource("stream/" + STREAM_NAME)
+                  .region(region.toString())
+                  .build();
+    }
+
     @After
     public void shutdown() {
         getRecordsCache.shutdown();
@@ -277,7 +299,8 @@ public class PrefetchRecordsPublisherIntegrationTest {
 
         @Override
         public DataFetcherResult getRecords() {
-            GetRecordsResponse getRecordsResult = GetRecordsResponse.builder().records(new ArrayList<>(records)).nextShardIterator(nextShardIterator).millisBehindLatest(1000L).build();
+            GetRecordsResponse getRecordsResult = GetRecordsResponse.builder().records(new ArrayList<>(records)).nextShardIterator(
+                    NEXT_SHARD_ITERATOR).millisBehindLatest(1000L).build();
 
             return new AdvancingResult(getRecordsResult);
         }

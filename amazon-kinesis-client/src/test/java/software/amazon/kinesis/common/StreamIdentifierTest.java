@@ -25,7 +25,7 @@ import static org.mockito.Mockito.times;
 import static org.powermock.api.mockito.PowerMockito.mockStatic;
 import static org.powermock.api.mockito.PowerMockito.verifyStatic;
 import static software.amazon.kinesis.retrieval.KinesisClientFacade.region;
-import static software.amazon.kinesis.common.StreamARNUtil.toArn;
+import static software.amazon.kinesis.common.StreamARNUtil.toARN;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({StreamARNUtil.class, KinesisClientFacade.class})
@@ -104,7 +104,7 @@ public class StreamIdentifierTest {
     @Test(expected = IllegalArgumentException.class)
     public void testInstanceWithoutEpochOrArn() {
         mockStatic(StreamARNUtil.class);
-        when(toArn(STREAM_NAME, TEST_ACCOUNT_ID, KINESIS_REGION.toString()))
+        when(toARN(STREAM_NAME, TEST_ACCOUNT_ID, KINESIS_REGION.toString()))
                 .thenReturn(null);
         try {
             StreamIdentifier.singleStreamInstance(DEFAULT_ARN.toString());
@@ -165,7 +165,7 @@ public class StreamIdentifierTest {
 
     private void verifyToArnStatic(int count) {
         verifyStatic(times(count));
-        toArn(STREAM_NAME, TEST_ACCOUNT_ID, KINESIS_REGION.toString());
+        toARN(STREAM_NAME, TEST_ACCOUNT_ID, KINESIS_REGION.toString());
     }
 
     /**
