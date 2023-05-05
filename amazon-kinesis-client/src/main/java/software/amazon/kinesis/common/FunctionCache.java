@@ -46,5 +46,4 @@ public class FunctionCache<IN, OUT> extends SynchronizedCache<OUT> {
     public OUT get(final IN input) {
         return get(() -> function.apply(input));
     }
-
 }
