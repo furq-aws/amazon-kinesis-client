@@ -11,15 +11,14 @@ import software.amazon.kinesis.retrieval.KinesisClientFacade;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class StreamARNUtil {
     
-    private static final FunctionCache<String, Arn> streamARNCache = new FunctionCache<String, Arn>(streamName -> {
+    private static final FunctionCache<String, Arn> STREAM_ARN_CACHE = new FunctionCache<>(streamName -> {
         final DescribeStreamSummaryResponse response = KinesisClientFacade.describeStreamSummaryWithStreamName(streamName);
         if (response == null) return null;
         return Arn.fromString(response.streamDescriptionSummary().streamARN());
-    }
-    );
+    });
     
     // can/should we remove region argument and call KCF.region from here (remove completely from SI)?
-    public static Arn toArn(String streamName, String accountId, String region) {
+    public static Arn toARN(String streamName, String accountId, String region) {
         return Arn.builder()
                 .partition("aws")
                 .service("kinesis")
@@ -30,7 +29,7 @@ public final class StreamARNUtil {
     }
     
     public static Arn getStreamARN(String streamName) {
-        return streamARNCache.get(streamName);
+        return STREAM_ARN_CACHE.get(streamName);
     }
 
 }

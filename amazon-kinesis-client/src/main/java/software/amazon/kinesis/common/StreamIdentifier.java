@@ -182,7 +182,7 @@ public class StreamIdentifier {
         final String streamName = matcher.group("streamName");
         final Optional<Long> creationEpoch = matchedEpoch.isEmpty() ? Optional.empty()
                 : Optional.of(Long.valueOf(matchedEpoch));
-        final Arn streamARN = arnRegion != null ? StreamARNUtil.toArn(streamName, accountId, arnRegion.id()) : null;
+        final Arn streamARN = arnRegion != null ? StreamARNUtil.toARN(streamName, accountId, arnRegion.id()) : null;
 
         if (!creationEpoch.isPresent() && streamARN == null) {
             throw new IllegalArgumentException("Cannot create StreamIdentifier if missing both ARN and creation epoch");
@@ -202,7 +202,7 @@ public class StreamIdentifier {
             if (!accountIdOptional.isPresent()) {
                 streamARN = StreamARNUtil.getStreamARN(streamName);
             } else {
-                streamARN = StreamARNUtil.toArn(streamName, accountIdOptional.get(), KinesisClientFacade.region().id());
+                streamARN = StreamARNUtil.toARN(streamName, accountIdOptional.get(), KinesisClientFacade.region().id());
             }
         }
         return streamARN;
