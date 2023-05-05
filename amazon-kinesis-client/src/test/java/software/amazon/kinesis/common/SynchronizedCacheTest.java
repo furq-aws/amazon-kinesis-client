@@ -14,48 +14,49 @@
  */
 package software.amazon.kinesis.common;
 
-import java.util.function.Function;
+import java.util.function.Supplier;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
-import static org.mockito.Matchers.anyInt;
+import static org.junit.Assert.assertSame;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
-public class FunctionCacheTest {
+public class SynchronizedCacheTest {
+
+    private static final Object DUMMY_RESULT = SynchronizedCacheTest.class;
 
     @Mock
-    private Function<Integer, Object> mockFunction;
+    private Supplier<Object> mockSupplier;
 
-    private FunctionCache<Integer, Object> cache;
+    private final SynchronizedCache<Object> cache = new SynchronizedCache<>();
 
-    @Before
-    public void setUp() {
-        cache = new FunctionCache<>(mockFunction);
-    }
-
-    /**
-     * Test that the cache stops invoking the encapsulated {@link Function}
-     * after it returns a non-null value.
-     */
     @Test
     public void testCache() {
-        final int expectedValue = 3;
-        when(mockFunction.apply(expectedValue)).thenReturn(expectedValue);
+        when(mockSupplier.get()).thenReturn(DUMMY_RESULT);
 
-        assertNull(cache.get(1));
-        assertNull(cache.get(2));
-        assertEquals(expectedValue, cache.get(3));
-        assertEquals(expectedValue, cache.get(4));
-        assertEquals(expectedValue, cache.get(5));
-        verify(mockFunction, times(expectedValue)).apply(anyInt());
+        final Object result1 = cache.get(mockSupplier);
+        final Object result2 = cache.get(mockSupplier);
+
+        assertEquals(DUMMY_RESULT, result1);
+        assertSame(result1, result2);
+        verify(mockSupplier).get();
+    }
+
+    @Test
+    public void testCacheWithNullResult() {
+        when(mockSupplier.get()).thenReturn(null).thenReturn(DUMMY_RESULT);
+
+        assertNull(cache.get(mockSupplier));
+        assertEquals(DUMMY_RESULT, cache.get(mockSupplier));
+        assertEquals(DUMMY_RESULT, cache.get(mockSupplier));
+        verify(mockSupplier, times(2)).get();
     }
 }
