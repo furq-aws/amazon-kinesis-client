@@ -54,14 +54,6 @@ public class StreamIdentifier {
             "(?<accountId>[0-9]+):(?<streamName>[^:]+):(?<creationEpoch>[0-9]+)");
 
     /**
-     * Pattern for a stream ARN. The valid format is
-     * {@code arn:aws:kinesis:<region>:<accountId>:stream:<streamName>}
-     * where {@code region} is the id representation of a {@link Region}.
-     */
-    private static final Pattern STREAM_ARN_PATTERN = Pattern.compile(
-            "arn:aws:kinesis:(?<region>[-a-z0-9]+):(?<accountId>[0-9]{12}):stream/(?<streamName>.+)");
-
-    /**
      * Getter for {@link #streamARN}.
      * Internally constructs the ARN if accountId is available, retrieves ARN from Kinesis otherwise.
      *
@@ -168,13 +160,13 @@ public class StreamIdentifier {
     }
 
     /**
-     * Constructs a StreamIdentifier from {@link #STREAM_ARN_PATTERN}.
+     * Constructs a StreamIdentifier from {@link StreamARNUtil#STREAM_ARN_PATTERN}.
      *
      * @param input input string (e.g., ARN, serialized instance) to convert into an instance
      * @return a StreamIdentifier instance if the pattern matched, otherwise null
      */
     private static StreamIdentifier fromArn(final String input) {
-        final Matcher matcher = STREAM_ARN_PATTERN.matcher(input);
+        final Matcher matcher = StreamARNUtil.STREAM_ARN_PATTERN.matcher(input);
         if (matcher.matches()) {
             final Region arnRegion = Region.of(matcher.group("region"));
             return toStreamIdentifier(matcher, "", arnRegion);

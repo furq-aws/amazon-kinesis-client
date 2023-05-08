@@ -4,21 +4,32 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import software.amazon.awssdk.arns.Arn;
+import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.kinesis.model.DescribeStreamSummaryResponse;
 import software.amazon.kinesis.retrieval.KinesisClientFacade;
+
+import java.util.regex.Pattern;
 
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class StreamARNUtil {
 
     /**
-     * Caches an {@link Arn} from a {@link KinesisClientFacade#describeStreamSummaryWithStreamName(String)} call.
+     * Caches an {@link Arn} from a {@link KinesisClientFacade#describeStreamSummary(String)} call.
      */
-    private static final FunctionCache<String, Arn> STREAM_ARN_CACHE = new FunctionCache<String, Arn>(streamName -> {
-        final DescribeStreamSummaryResponse response = KinesisClientFacade.describeStreamSummaryWithStreamName(streamName);
+    private static final FunctionCache<String, Arn> STREAM_ARN_CACHE = new FunctionCache<>(streamName -> {
+        final DescribeStreamSummaryResponse response = KinesisClientFacade.describeStreamSummary(streamName);
         if (response == null) return null;
         return Arn.fromString(response.streamDescriptionSummary().streamARN());
     });
+
+    /**
+     * Pattern for a stream ARN. The valid format is
+     * {@code arn:aws:kinesis:<region>:<accountId>:stream:<streamName>}
+     * where {@code region} is the id representation of a {@link Region}.
+     */
+    public static final Pattern STREAM_ARN_PATTERN = Pattern.compile(
+            "arn:aws:kinesis:(?<region>[-a-z0-9]+):(?<accountId>[0-9]{12}):stream/(?<streamName>.+)");
 
     /**
      * Constructs a stream ARN using the stream name, accountId, and region.

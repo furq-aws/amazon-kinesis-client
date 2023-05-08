@@ -15,6 +15,8 @@ import software.amazon.awssdk.services.kinesis.model.ResourceInUseException;
 import software.amazon.awssdk.services.kinesis.model.ResourceNotFoundException;
 import software.amazon.kinesis.common.KinesisRequestsBuilder;
 
+import static software.amazon.kinesis.common.StreamARNUtil.STREAM_ARN_PATTERN;
+
 /**
  * Facade pattern to simplify interactions with a {@link KinesisAsyncClient}.
  */
@@ -49,21 +51,19 @@ public final class KinesisClientFacade {
         return kinesisClient.serviceClientConfiguration().region();
     }
 
-    public static DescribeStreamSummaryResponse describeStreamSummary(final String streamArn) {
-        final DescribeStreamSummaryRequest request = KinesisRequestsBuilder
-                .describeStreamSummaryRequestBuilder().streamARN(streamArn).build();
-        final ServiceCallerSupplier<DescribeStreamSummaryResponse> dss =
-                () -> kinesisClient.describeStreamSummary(request).get();
-        return retryWhenThrottled(dss, 3, streamArn, "DescribeStreamSummary");
-    }
-
-    public static DescribeStreamSummaryResponse describeStreamSummaryWithStreamName(final String streamName) {
+    public static DescribeStreamSummaryResponse describeStreamSummary(final String streamNameOrArn) {
         if (kinesisClient == null) return null;
+        final DescribeStreamSummaryRequest.Builder builder = KinesisRequestsBuilder
+                .describeStreamSummaryRequestBuilder();
+        if (STREAM_ARN_PATTERN.matcher(streamNameOrArn).matches())
+            builder.streamARN(streamNameOrArn);
+        else
+            builder.streamName(streamNameOrArn);
         final DescribeStreamSummaryRequest request = KinesisRequestsBuilder
-                .describeStreamSummaryRequestBuilder().streamName(streamName).build();
+                .describeStreamSummaryRequestBuilder().streamName(streamNameOrArn).build();
         final ServiceCallerSupplier<DescribeStreamSummaryResponse> dss =
                 () -> kinesisClient.describeStreamSummary(request).get();
-        return retryWhenThrottled(dss, 3, streamName, "DescribeStreamSummary");
+        return retryWhenThrottled(dss, 3, streamNameOrArn, "DescribeStreamSummary");
     }
 
     // FIXME code lifted-and-shifted from FanOutConsumerRegistration; that class
@@ -72,7 +72,7 @@ public final class KinesisClientFacade {
     private static <T> T retryWhenThrottled(
             @NonNull final ServiceCallerSupplier<T> retriever,
             final int maxRetries,
-            final String streamArn,
+            final String streamNameOrArn,
             @NonNull final String apiName) {
         LimitExceededException finalException = null;
 
@@ -86,10 +86,10 @@ public final class KinesisClientFacade {
                 } catch (InterruptedException e) {
                     throw KinesisException.create("Unable to complete " + apiName, e);
                 } catch (TimeoutException te) {
-                    log.info("Timed out waiting for " + apiName + " for " + streamArn);
+                    log.info("Timed out waiting for " + apiName + " for " + streamNameOrArn);
                 }
             } catch (LimitExceededException e) {
-                log.info("{} : Throttled while calling {} API, will backoff.", streamArn, apiName);
+                log.info("{} : Throttled while calling {} API, will backoff.", streamNameOrArn, apiName);
                 try {
                     Thread.sleep(1000 + (long) (Math.random() * 100));
                 } catch (InterruptedException ie) {
@@ -101,7 +101,7 @@ public final class KinesisClientFacade {
         }
 
         if (finalException == null) {
-            throw new IllegalStateException(streamArn + " : Exhausted retries while calling " + apiName);
+            throw new IllegalStateException(streamNameOrArn + " : Exhausted retries while calling " + apiName);
         }
 
         throw finalException;

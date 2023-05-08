@@ -41,6 +41,10 @@ public class StreamARNUtilTest {
             StreamARNUtil.class, "STREAM_ARN_CACHE");
     private static final Arn defaultArn = toArn(KINESIS_STREAM_ARN_FORMAT, ACCOUNT_ID, STREAM_NAME);
 
+    private static final DescribeStreamSummaryResponse DESCRIBE_STREAM_SUMMARY_RESPONSE =
+            DescribeStreamSummaryResponse.builder().streamDescriptionSummary(StreamDescriptionSummary.builder()
+                    .streamARN(toArn(KINESIS_STREAM_ARN_FORMAT, ACCOUNT_ID, STREAM_NAME).toString()).build()).build();
+
     private FunctionCache<String, Arn> spyFunctionCache;
 
     @Before
@@ -76,8 +80,8 @@ public class StreamARNUtilTest {
     public void testGetStreamARNFromCache() {
         // bypass the spy so KinesisClientFacade is called
         Mockito.when(spyFunctionCache.get(STREAM_NAME)).thenCallRealMethod();
-        when(KinesisClientFacade.describeStreamSummaryWithStreamName(any(String.class)))
-                .thenReturn(describeStreamSummaryResponse(STREAM_NAME));
+        when(KinesisClientFacade.describeStreamSummary(any(String.class)))
+                .thenReturn(DESCRIBE_STREAM_SUMMARY_RESPONSE);
         
         final Arn actualStreamARN1 = getStreamArn();
         final Arn actualStreamARN2 = getStreamArn();
@@ -101,12 +105,12 @@ public class StreamARNUtilTest {
     @Test
     public void testGetStreamARNAfterKinesisClientInitiallyReturnsNull() {
         when(spyFunctionCache.get(STREAM_NAME)).thenCallRealMethod();
-        when(KinesisClientFacade.describeStreamSummaryWithStreamName(any(String.class))).thenReturn(null);
+        when(KinesisClientFacade.describeStreamSummary(any(String.class))).thenReturn(null);
         final Arn actualStreamARN1 = StreamARNUtil.getStreamARN(STREAM_NAME);
         assertNull(actualStreamARN1);
 
-        when(KinesisClientFacade.describeStreamSummaryWithStreamName(any(String.class)))
-                .thenReturn(describeStreamSummaryResponse(STREAM_NAME));
+        when(KinesisClientFacade.describeStreamSummary(any(String.class)))
+                .thenReturn(DESCRIBE_STREAM_SUMMARY_RESPONSE);
         getStreamArn();
 
         verifyKinesisClientFacadeStaticCall(2);
@@ -122,7 +126,7 @@ public class StreamARNUtilTest {
 
     private void verifyKinesisClientFacadeStaticCall(int count) {
         verifyStatic(times(count));
-        KinesisClientFacade.describeStreamSummaryWithStreamName(STREAM_NAME);
+        KinesisClientFacade.describeStreamSummary(STREAM_NAME);
     }
 
     private static Arn getStreamArn() {
@@ -137,12 +141,6 @@ public class StreamARNUtilTest {
 
     private static Arn toArn(final String format, final Object... params) {
         return Arn.fromString(String.format(format, params));
-    }
-
-    private static DescribeStreamSummaryResponse describeStreamSummaryResponse(String streamName) {
-        final StreamDescriptionSummary streamDescriptionSummary = StreamDescriptionSummary.builder()
-                .streamARN(toArn(KINESIS_STREAM_ARN_FORMAT, ACCOUNT_ID, streamName).toString()).build();
-        return DescribeStreamSummaryResponse.builder().streamDescriptionSummary(streamDescriptionSummary).build();
     }
 
 }
