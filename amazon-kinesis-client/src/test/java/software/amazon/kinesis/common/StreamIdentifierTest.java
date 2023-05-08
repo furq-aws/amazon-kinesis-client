@@ -138,8 +138,7 @@ public class StreamIdentifierTest {
 
     @Test
     public void testMultiStreamInstanceWithoutRegionSerialized() {
-        StreamIdentifier actualStreamIdentifier = StreamIdentifier.multiStreamInstance(
-                serialize());
+        StreamIdentifier actualStreamIdentifier = StreamIdentifier.multiStreamInstance(serialize());
         assertActualStreamIdentifierExpected(actualStreamIdentifier);
         verifyGetRegionStatic(1);
     }

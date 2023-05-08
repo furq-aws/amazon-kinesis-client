@@ -105,7 +105,7 @@ public class StreamARNUtilTest {
 
         verifyKinesisClientFacadeStaticCall(1);
     }
-    
+
     @Test
     public void testGetStreamARNReturnsNullWhenKinesisClientNotInitialized() {
         when(spyFunctionCache.get(STREAM_NAME)).thenCallRealMethod();
@@ -129,7 +129,7 @@ public class StreamARNUtilTest {
 
         verifyKinesisClientFacadeStaticCall(2);
     }
-    
+
     @Test
     public void testToARN() {
         final Arn actualArn = StreamARNUtil.toARN(STREAM_NAME, ACCOUNT_ID, Region.US_EAST_1.id());
