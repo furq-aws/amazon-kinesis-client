@@ -10,17 +10,13 @@ import org.powermock.modules.junit4.PowerMockRunner;
 import software.amazon.awssdk.arns.Arn;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.kinesis.retrieval.KinesisClientFacade;
-import software.amazon.kinesis.common.FunctionCache;
 
 import java.util.Arrays;
 import java.util.Optional;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotEquals;
 import static org.mockito.Mockito.when;
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.times;
 import static org.powermock.api.mockito.PowerMockito.mockStatic;
 import static org.powermock.api.mockito.PowerMockito.verifyStatic;
@@ -28,7 +24,7 @@ import static software.amazon.kinesis.retrieval.KinesisClientFacade.region;
 import static software.amazon.kinesis.common.StreamARNUtil.toARN;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({StreamARNUtil.class, KinesisClientFacade.class})
+@PrepareForTest({ StreamARNUtil.class, KinesisClientFacade.class })
 public class StreamIdentifierTest {
     private static final String STREAM_NAME = "stream-name";
     private static final Region KINESIS_REGION = Region.US_WEST_1;
@@ -119,7 +115,7 @@ public class StreamIdentifierTest {
         StreamIdentifier actualStreamIdentifier = StreamIdentifier.singleStreamInstance(STREAM_NAME);
         assertFalse(actualStreamIdentifier.streamCreationEpochOptional().isPresent());
         assertFalse(actualStreamIdentifier.accountIdOptional().isPresent());
-        assertEquals(DEFAULT_ARN, actualStreamIdentifier.getStreamARN());
+        assertEquals(DEFAULT_ARN, actualStreamIdentifier.streamARN());
         assertEquals(STREAM_NAME, actualStreamIdentifier.streamName());
     }
 
@@ -129,7 +125,7 @@ public class StreamIdentifierTest {
         assertFalse(actualStreamIdentifier.streamCreationEpochOptional().isPresent());
         assertFalse(actualStreamIdentifier.accountIdOptional().isPresent());
         assertEquals(STREAM_NAME, actualStreamIdentifier.streamName());
-        assertEquals(DEFAULT_ARN, actualStreamIdentifier.getStreamARN());
+        assertEquals(DEFAULT_ARN, actualStreamIdentifier.streamARN());
     }
 
     @Test
@@ -155,7 +151,7 @@ public class StreamIdentifierTest {
     private void assertActualStreamIdentifierExpected(Arn expectedArn, StreamIdentifier actual) {
         assertEquals(STREAM_NAME, actual.streamName());
         assertEquals(Optional.of(TEST_ACCOUNT_ID), actual.accountIdOptional());
-        assertEquals(expectedArn, actual.getStreamARN());
+        assertEquals(expectedArn, actual.streamARN());
     }
 
     private void verifyGetRegionStatic(int count) {

@@ -21,7 +21,6 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.experimental.Accessors;
-import lombok.extern.slf4j.Slf4j;
 import software.amazon.awssdk.arns.Arn;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.kinesis.model.DescribeStreamSummaryResponse;
@@ -33,14 +32,13 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @Builder(access = AccessLevel.PRIVATE)
-@EqualsAndHashCode
+@EqualsAndHashCode(doNotUseGetters = true)
 @Getter
 @Accessors(fluent = true)
-@Slf4j
 public class StreamIdentifier {
 
     @Builder.Default
-    private Optional<String> accountIdOptional = Optional.empty();
+    private final Optional<String> accountIdOptional = Optional.empty();
     @NonNull
     private final String streamName;
     @Builder.Default
@@ -64,6 +62,23 @@ public class StreamIdentifier {
             "arn:aws:kinesis:(?<region>[-a-z0-9]+):(?<accountId>[0-9]{12}):stream/(?<streamName>.+)");
 
     /**
+     * Getter for {@link #streamARN}.
+     * Internally constructs the ARN if accountId is available, retrieves ARN from Kinesis otherwise.
+     *
+     * @return stream {@link Arn} which may be null if invoked prior to {@link KinesisClientFacade} being initialized
+     */
+    public Arn streamARN() {
+        if (streamARN == null) {
+            if (accountIdOptional.isPresent()) {
+                streamARN = StreamARNUtil.toARN(streamName, accountIdOptional.get(), KinesisClientFacade.region().id());
+            } else {
+                streamARN = StreamARNUtil.getStreamARN(streamName);
+            }
+        }
+        return streamARN;
+    }
+
+    /**
      * Serialize the current StreamIdentifier instance.
      *
      * @return a String of {@code account:stream:creationEpoch[:region]}
@@ -75,7 +90,7 @@ public class StreamIdentifier {
             return streamName;
         }
 
-        if (!streamCreationEpochOptional.isPresent()) { // should this be cached?
+        if (!streamCreationEpochOptional.isPresent()) {
             // FIXME bias-for-action hack to simplify back-porting into KCL 1.x and facilitate the
             //      backwards-compatible requirement. There's a chicken-and-egg issue if DSS is
             //      called as the application is being configured (and before the client is rigged).
@@ -187,15 +202,4 @@ public class StreamIdentifier {
                 .build();
     }
 
-    public Arn getStreamARN() {
-        if (streamARN == null) {
-            if (!accountIdOptional.isPresent()) {
-                streamARN = StreamARNUtil.getStreamARN(streamName);
-            } else {
-                streamARN = StreamARNUtil.toARN(streamName, accountIdOptional.get(), KinesisClientFacade.region().id());
-            }
-        }
-        return streamARN;
-    }
-    
 }

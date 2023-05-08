@@ -222,8 +222,9 @@ public class KinesisShardDetector implements ShardDetector {
             final boolean shouldPropagateResourceNotFoundException) {
         ListShardsRequest.Builder builder = KinesisRequestsBuilder.listShardsRequestBuilder();
         if (StringUtils.isEmpty(nextToken)) {
-            builder.streamName(streamIdentifier.streamName()).shardFilter(shardFilter).streamARN(streamIdentifier.getStreamARN().toString());
-            
+            builder.streamName(streamIdentifier.streamName())
+                    .shardFilter(shardFilter)
+                    .streamARN(streamIdentifier.streamARN().toString());
         } else {
             builder.nextToken(nextToken);
         }
@@ -312,7 +313,7 @@ public class KinesisShardDetector implements ShardDetector {
                 .streamName(streamIdentifier.streamName())
                 .shardIteratorType(ShardIteratorType.LATEST)
                 .shardId(shardId)
-                .streamARN(streamIdentifier.getStreamARN().toString());
+                .streamARN(streamIdentifier.streamARN().toString());
         final GetShardIteratorRequest getShardIteratorRequest = requestBuilder.build();
 
         final GetShardIteratorResponse getShardIteratorResponse =
