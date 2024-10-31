@@ -32,7 +32,7 @@ class Cgroupv1CpuWorkerMetricsTest {
     }
 
     @Test
-    void sanity_sense(final @TempDir Path tempDir) throws IOException {
+    void sanity_capture(final @TempDir Path tempDir) throws IOException {
         final File cpuTimeFile = new File(tempDir.toAbsolutePath() + "/cpuTime");
         final File cfsQuotaFile = new File(tempDir.toAbsolutePath() + "/cfsQuota");
         final File cfsPeriodFile = new File(tempDir.toAbsolutePath() + "/cfsPeriod");
@@ -71,7 +71,7 @@ class Cgroupv1CpuWorkerMetricsTest {
     }
 
     @Test
-    void sense_noCpuLimit(final @TempDir Path tempDir) throws IOException {
+    void capture_noCpuLimit(final @TempDir Path tempDir) throws IOException {
         final File cpuTimeFile = new File(tempDir.toAbsolutePath() + "/cpuTime");
         final File cfsQuotaFile = new File(tempDir.toAbsolutePath() + "/cfsQuota");
         final File cfsPeriodFile = new File(tempDir.toAbsolutePath() + "/cfsPeriod");
@@ -112,7 +112,7 @@ class Cgroupv1CpuWorkerMetricsTest {
     }
 
     @Test
-    void sanity_sense_file_not_found() {
+    void sanity_capture_file_not_found() {
         final OperatingRange operatingRange = OperatingRange.builder()
                                                             .maxUtilization(80)
                                                             .build();

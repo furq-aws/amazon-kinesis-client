@@ -9,7 +9,7 @@ import static org.junit.Assert.assertTrue;
 class WorkerMetricTest {
 
     @Test
-    void testSensorValueBuildValidCases() {
+    void testWorkerMetricValueBuildValidCases() {
         // build method does not fail means test is valid
         WorkerMetric.WorkerMetricValue.builder().value(0D).build();
         WorkerMetric.WorkerMetricValue.builder().value(0.000001D).build();

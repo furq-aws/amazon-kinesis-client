@@ -65,7 +65,7 @@ class WorkerWorkerMetricsSelectorTest {
     }
 
     @Test
-    void testOnEcsAndUsesEcsSensor() {
+    void testOnEcsAndUsesEcsWorkerMetric() {
         when(resourceMetadataProvider.getPlatform()).thenReturn(ResourceMetadataProvider.ComputePlatform.ECS);
         when(resourceMetadataProvider.getOperatingRangeDataProvider())
                 .thenReturn(Optional.of(OperatingRangeDataProvider.LINUX_ECS_METADATA_KEY_V4));

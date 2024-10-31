@@ -116,13 +116,13 @@ class LeaseAssignmentManagerTest {
     }
 
     @Test
-    void performAssignment_workerWithFailingSensor_assertLeaseNotAssignedToWorkerWithFailingSensor() throws Exception {
+    void performAssignment_workerWithFailingWorkerMetric_assertLeaseNotAssignedToWorkerWithFailingWorkerMetric() throws Exception {
         createLeaseAssignmentManager(getWorkerUtilizationAwareAssignmentConfig(Double.MAX_VALUE, 20),
                 100L,
                 System::nanoTime, Integer.MAX_VALUE);
-        final String workerWithFailingSensorId = "WorkerIdOfFailingSensor";
+        final String workerWithFailingWorkerMetricId = "WorkerIdOfFailingWorkerMetric";
 
-        workerMetricsDAO.updateMetrics(createWorkerWithFailingSensor(workerWithFailingSensorId));
+        workerMetricsDAO.updateMetrics(createWorkerWithFailingWorkerMetric(workerWithFailingWorkerMetricId));
         leaseRefresher.createLeaseIfNotExists(createDummyUnAssignedLease("something1"));
         leaseRefresher.createLeaseIfNotExists(createDummyUnAssignedLease("something2"));
 
@@ -130,19 +130,19 @@ class LeaseAssignmentManagerTest {
         assertEquals(0,
                 leaseRefresher.listLeases()
                         .stream()
-                        .filter(lease -> workerWithFailingSensorId.equals(lease.leaseOwner()))
+                        .filter(lease -> workerWithFailingWorkerMetricId.equals(lease.leaseOwner()))
                         .collect(Collectors.toSet())
                         .size());
     }
 
     @Test
-    void performAssignment_workerWithFailingSensorInPast_assertLeaseAssignment() throws Exception {
+    void performAssignment_workerWithFailingWorkerMetricInPast_assertLeaseAssignment() throws Exception {
         createLeaseAssignmentManager(getWorkerUtilizationAwareAssignmentConfig(Double.MAX_VALUE, 20),
                 100L,
                 System::nanoTime, Integer.MAX_VALUE);
-        final String workerWithFailingSensorId = "WorkerIdOfFailingSensor";
+        final String workerWithFailingWorkerMetricId = "WorkerIdOfFailingWorkerMetric";
 
-        workerMetricsDAO.updateMetrics(createWorkerWithFailingSensorInPast(workerWithFailingSensorId));
+        workerMetricsDAO.updateMetrics(createWorkerWithFailingWorkerMetricInPast(workerWithFailingWorkerMetricId));
         leaseRefresher.createLeaseIfNotExists(createDummyUnAssignedLease("something1"));
         leaseRefresher.createLeaseIfNotExists(createDummyUnAssignedLease("something2"));
 
@@ -150,7 +150,7 @@ class LeaseAssignmentManagerTest {
         assertEquals(2,
                 leaseRefresher.listLeases()
                         .stream()
-                        .filter(lease -> workerWithFailingSensorId.equals(lease.leaseOwner()))
+                        .filter(lease -> workerWithFailingWorkerMetricId.equals(lease.leaseOwner()))
                         .collect(Collectors.toSet())
                         .size());
     }
@@ -549,14 +549,14 @@ class LeaseAssignmentManagerTest {
 
     }
     @Test
-    void performAssignment_workerWithHotSensorButNotAboveAverage_validateRebalance()
+    void performAssignment_workerWithHotWorkerMetricButNotAboveAverage_validateRebalance()
             throws ProvisionedThroughputException, InvalidStateException, DependencyException {
         final String randomWorkerId = "randomWorkerId";
         // Setting reBalance threshold as INT_MAX which means no reBalance due to variance in utilization ratio
         createLeaseAssignmentManager(getWorkerUtilizationAwareAssignmentConfig(Double.MAX_VALUE, 20),
                 Duration.ofHours(1).toMillis(), System::nanoTime, Integer.MAX_VALUE);
 
-        workerMetricsDAO.updateMetrics(createWorkerWithHotSensorStats(randomWorkerId));
+        workerMetricsDAO.updateMetrics(createWorkerWithHotWorkerMetricStats(randomWorkerId));
         final WorkerMetricStats takeWorkerStats = createDummyTakeWorkerMetrics(TEST_TAKE_WORKER_ID);
         takeWorkerStats.setMetricStats(ImmutableMap.of("C", ImmutableList.of(40D, 40D)));
         workerMetricsDAO.updateMetrics(takeWorkerStats);
@@ -822,13 +822,13 @@ class LeaseAssignmentManagerTest {
     }
 
     @Test
-    void loadInMemoryStorageView_testDefaultSensorTakeLeasesUtilRatioCalculation()
+    void loadInMemoryStorageView_testDefaultWorkerMetricTakeLeasesUtilRatioCalculation()
         throws Exception {
         createLeaseAssignmentManager(getWorkerUtilizationAwareAssignmentConfig(Double.MAX_VALUE, 20),
             100L,
             System::nanoTime, Integer.MAX_VALUE);
 
-        final WorkerMetricStats workerMetrics1 = createDummyDefaultSensorWorkerMetrics("worker1");
+        final WorkerMetricStats workerMetrics1 = createDummyDefaultWorkerMetrics("worker1");
         final WorkerMetricStats workerMetrics2 = createDummyTakeWorkerMetrics("worker2");
 
         workerMetricsDAO.updateMetrics(workerMetrics1);
@@ -855,13 +855,13 @@ class LeaseAssignmentManagerTest {
     }
 
     @Test
-    void loadInMemoryStorageView_assertNoLeasesTakenFromOptimallyUtilizedDefaultSensorWorker()
+    void loadInMemoryStorageView_assertNoLeasesTakenFromOptimallyUtilizedDefaultWorkerMetricWorker()
         throws Exception {
         createLeaseAssignmentManager(getWorkerUtilizationAwareAssignmentConfig(Double.MAX_VALUE, 20),
             100L,
             System::nanoTime, Integer.MAX_VALUE);
 
-        final WorkerMetricStats workerMetrics1 = createDummyDefaultSensorWorkerMetrics("worker1");
+        final WorkerMetricStats workerMetrics1 = createDummyDefaultWorkerMetrics("worker1");
         final WorkerMetricStats workerMetrics2 = createDummyTakeWorkerMetrics("worker2");
 
         workerMetricsDAO.updateMetrics(workerMetrics1);
@@ -892,13 +892,13 @@ class LeaseAssignmentManagerTest {
     }
 
     @Test
-    void loadInMemoryStorageView_assertNoLeasesTakenWhenDefaultSensorAndCPUSensorWorkersAreOverloaded()
+    void loadInMemoryStorageView_assertNoLeasesTakenWhenDefaultWorkerMetricAndCPUWorkerMetricWorkersAreOverloaded()
         throws Exception {
         createLeaseAssignmentManager(getWorkerUtilizationAwareAssignmentConfig(Double.MAX_VALUE, 20),
             100L,
             System::nanoTime, Integer.MAX_VALUE);
 
-        final WorkerMetricStats workerMetrics1 = createDummyDefaultSensorWorkerMetrics("worker1");
+        final WorkerMetricStats workerMetrics1 = createDummyDefaultWorkerMetrics("worker1");
         final WorkerMetricStats workerMetrics2 = createDummyYieldWorkerMetrics("worker2");
 
         workerMetricsDAO.updateMetrics(workerMetrics1);
@@ -923,13 +923,13 @@ class LeaseAssignmentManagerTest {
     }
 
 //    @Test
-    void loadInMemoryStorageView_assertLeasesAreTakenWhenDefaultSensorWorkerIsOverloaded()
+    void loadInMemoryStorageView_assertLeasesAreTakenWhenDefaultWorkerMetricWorkerIsOverloaded()
         throws Exception {
         createLeaseAssignmentManager(getWorkerUtilizationAwareAssignmentConfig(Double.MAX_VALUE, 20),
             100L,
             System::nanoTime, Integer.MAX_VALUE);
 
-        final WorkerMetricStats workerMetrics1 = createDummyDefaultSensorWorkerMetrics("worker1");
+        final WorkerMetricStats workerMetrics1 = createDummyDefaultWorkerMetrics("worker1");
         final WorkerMetricStats workerMetrics2 = createDummyTakeWorkerMetrics("worker2");
 
         workerMetricsDAO.updateMetrics(workerMetrics1);
@@ -969,13 +969,13 @@ class LeaseAssignmentManagerTest {
     }
 
 //    @Test
-    void loadInMemoryStorageView_assertLeasesAreBalancedWhenDefaultSensorWorkerIsOverloadedWithMultipleRuns()
+    void loadInMemoryStorageView_assertLeasesAreBalancedWhenDefaultWorkerMetricWorkerIsOverloadedWithMultipleRuns()
         throws Exception {
         createLeaseAssignmentManager(getWorkerUtilizationAwareAssignmentConfig(Double.MAX_VALUE, 20),
             100L,
             System::nanoTime, Integer.MAX_VALUE);
 
-        final WorkerMetricStats workerMetrics1 = createDummyDefaultSensorWorkerMetrics("worker1");
+        final WorkerMetricStats workerMetrics1 = createDummyDefaultWorkerMetrics("worker1");
         final WorkerMetricStats workerMetrics2 = createDummyTakeWorkerMetrics("worker2");
 
         workerMetricsDAO.updateMetrics(workerMetrics1);
@@ -1076,7 +1076,7 @@ class LeaseAssignmentManagerTest {
         return lease;
     }
 
-    private WorkerMetricStats createDummyDefaultSensorWorkerMetrics(final String workerId) {
+    private WorkerMetricStats createDummyDefaultWorkerMetrics(final String workerId) {
         final long currentTime = Instant.now().getEpochSecond();
         return WorkerMetricStats.builder()
                            .workerId(workerId)
@@ -1117,7 +1117,7 @@ class LeaseAssignmentManagerTest {
                 .build();
     }
 
-    private WorkerMetricStats createWorkerWithFailingSensor(final String workerId) {
+    private WorkerMetricStats createWorkerWithFailingWorkerMetric(final String workerId) {
         final long currentTime = Instant.now().getEpochSecond();
         return WorkerMetricStats.builder()
                 .workerId(workerId)
@@ -1127,7 +1127,7 @@ class LeaseAssignmentManagerTest {
                 .build();
     }
 
-    private WorkerMetricStats createWorkerWithFailingSensorInPast(final String workerId) {
+    private WorkerMetricStats createWorkerWithFailingWorkerMetricInPast(final String workerId) {
         final long currentTime = Instant.now().getEpochSecond();
         return WorkerMetricStats.builder()
                 .workerId(workerId)
@@ -1137,7 +1137,7 @@ class LeaseAssignmentManagerTest {
                 .build();
     }
 
-    private WorkerMetricStats createWorkerWithHotSensorStats(final String workerId) {
+    private WorkerMetricStats createWorkerWithHotWorkerMetricStats(final String workerId) {
         final long currentTime = Instant.now().getEpochSecond();
         return WorkerMetricStats.builder()
                 .workerId(workerId)

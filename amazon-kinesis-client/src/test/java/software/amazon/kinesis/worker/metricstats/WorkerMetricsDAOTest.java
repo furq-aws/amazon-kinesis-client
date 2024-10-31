@@ -100,7 +100,7 @@ class WorkerMetricsDAOTest {
         workerMetrics.setMetricStats(ImmutableMap.of("C", Collections.emptyList()));
 
         assertThrows(IllegalArgumentException.class, () -> workerMetricsDAO.updateMetrics(workerMetrics),
-                "Validation on empty stats values for sensor did not fail with IllegalArgumentException");
+                "Validation on empty stats values for workerMetric did not fail with IllegalArgumentException");
     }
 
     @Test

@@ -76,15 +76,15 @@ class WorkerMetricsManagerTest {
     @Test
     void computeStats_sanity() throws InterruptedException {
         final CountDownLatch countDownLatch = new CountDownLatch(10);
-        final TestWorkerMetric testSensor = new TestWorkerMetric(countDownLatch, 10.0, false);
+        final TestWorkerMetric testWorkerMetric = new TestWorkerMetric(countDownLatch, 10.0, false);
 
-        final WorkerMetricStatsManager workerMetricsManager = createManagerInstanceAndWaitTillAwait(testSensor, countDownLatch);
+        final WorkerMetricStatsManager workerMetricsManager = createManagerInstanceAndWaitTillAwait(testWorkerMetric, countDownLatch);
 
         assertTrue(workerMetricsManager.getWorkerMetricsToRawHighFreqValuesMap()
-                .get(testSensor)
+                .get(testWorkerMetric)
                 .size() >= 10);
         workerMetricsManager.getWorkerMetricsToRawHighFreqValuesMap()
-                .get(testSensor)
+                .get(testWorkerMetric)
                 .forEach(value -> assertEquals(10D, value, "in memory stats map have incorrect value."));
 
         List<Double> values1 = workerMetricsManager.computeMetrics().get(WorkerMetricType.CPU.getShortName());
@@ -92,7 +92,7 @@ class WorkerMetricsManagerTest {
         assertEquals(10D, values1.get(0), "Averaged value is not correct");
         // After computeStats called, inMemoryQueue is expected to drain.
         assertEquals(0, workerMetricsManager.getWorkerMetricsToRawHighFreqValuesMap()
-                .get(testSensor)
+                .get(testWorkerMetric)
                 .size());
 
         // calling stats again without inMemory update is expected to return -1 for last value.
@@ -102,10 +102,10 @@ class WorkerMetricsManagerTest {
     }
 
     @Test
-    void computeStats_sensorReturningValueWithMoreThan6DigitAfterDecimal_assertTriming() throws InterruptedException {
+    void computeStats_workerMetricReturningValueWithMoreThan6DigitAfterDecimal_assertTriming() throws InterruptedException {
         final CountDownLatch countDownLatch = new CountDownLatch(5);
-        final TestWorkerMetric testSensor = new TestWorkerMetric(countDownLatch, 10.12345637888234234, false);
-        final WorkerMetricStatsManager workerMetricsManager = createManagerInstanceAndWaitTillAwait(testSensor, countDownLatch);
+        final TestWorkerMetric testWorkerMetric = new TestWorkerMetric(countDownLatch, 10.12345637888234234, false);
+        final WorkerMetricStatsManager workerMetricsManager = createManagerInstanceAndWaitTillAwait(testWorkerMetric, countDownLatch);
         final List<Double> values1 = workerMetricsManager.computeMetrics().get(WorkerMetricType.CPU.getShortName());
 
         // assert that upto 6 digit after decimal is returned
@@ -113,14 +113,14 @@ class WorkerMetricsManagerTest {
     }
 
     @Test
-    void computeStats_sensorReturningNull_expectSensorFailureStatsComputed() throws InterruptedException {
+    void computeStats_workerMetricReturningNull_expectWorkerMetricFailureStatsComputed() throws InterruptedException {
         final CountDownLatch countDownLatch = new CountDownLatch(10);
-        final TestWorkerMetric testSensor = new TestWorkerMetric(countDownLatch, null, false);
+        final TestWorkerMetric testWorkerMetric = new TestWorkerMetric(countDownLatch, null, false);
 
-        final WorkerMetricStatsManager workerMetricsManager = createManagerInstanceAndWaitTillAwait(testSensor, countDownLatch);
+        final WorkerMetricStatsManager workerMetricsManager = createManagerInstanceAndWaitTillAwait(testWorkerMetric, countDownLatch);
 
         assertEquals(0, workerMetricsManager.getWorkerMetricsToRawHighFreqValuesMap()
-                .get(testSensor)
+                .get(testWorkerMetric)
                 .size());
         assertEquals(1, workerMetricsManager.computeMetrics()
                 .get(WorkerMetricType.CPU.getShortName())
@@ -129,26 +129,26 @@ class WorkerMetricsManagerTest {
 
     @ParameterizedTest
     @CsvSource({ "101, false", "50, true", "-10, false", ", false" })
-    void recordStats_sensorReturningInvalidValues_assertNoDataRecordedAndMetricsForFailure(final Double value,
+    void recordStats_workerMetricReturningInvalidValues_assertNoDataRecordedAndMetricsForFailure(final Double value,
             final boolean shouldThrowException) throws InterruptedException {
         final CountDownLatch countDownLatch = new CountDownLatch(10);
-        final TestWorkerMetric testSensor = new TestWorkerMetric(countDownLatch, value, shouldThrowException);
+        final TestWorkerMetric testWorkerMetric = new TestWorkerMetric(countDownLatch, value, shouldThrowException);
 
-        final WorkerMetricStatsManager workerMetricsManager = createManagerInstanceAndWaitTillAwait(testSensor, countDownLatch);
+        final WorkerMetricStatsManager workerMetricsManager = createManagerInstanceAndWaitTillAwait(testWorkerMetric, countDownLatch);
         List<Double> metricsValues = metricsMap.get(METRICS_IN_MEMORY_REPORTER_FAILURE);
 
         assertTrue(metricsValues.size() > 0, "Metrics for reporter failure not published");
         assertEquals(1, metricsMap.get(METRICS_IN_MEMORY_REPORTER_FAILURE)
                                   .get(0));
         assertEquals(0, workerMetricsManager.getWorkerMetricsToRawHighFreqValuesMap()
-                .get(testSensor)
+                .get(testWorkerMetric)
                 .size());
     }
 
-    private WorkerMetricStatsManager createManagerInstanceAndWaitTillAwait(final TestWorkerMetric testSensor,
+    private WorkerMetricStatsManager createManagerInstanceAndWaitTillAwait(final TestWorkerMetric testWorkerMetric,
             final CountDownLatch countDownLatch) throws InterruptedException {
         final WorkerMetricStatsManager workerMetricsManager = new WorkerMetricStatsManager(TEST_STATS_COUNT,
-                Collections.singletonList(testSensor), metricsFactory, 10);
+                Collections.singletonList(testWorkerMetric), metricsFactory, 10);
 
         workerMetricsManager.startManager();
         boolean awaitSuccess = countDownLatch.await(10 * 15, TimeUnit.MILLISECONDS);
@@ -166,7 +166,7 @@ class WorkerMetricsManagerTest {
         private final WorkerMetricType workerMetricType = WorkerMetricType.CPU;
 
         private final CountDownLatch countDownLatch;
-        private final Double sensorValue;
+        private final Double workerMetricValue;
         private final Boolean shouldThrowException;
 
         @Override
@@ -176,7 +176,6 @@ class WorkerMetricsManagerTest {
 
         @Override
         public WorkerMetricValue capture() {
-            log.info("sense called");
             countDownLatch.countDown();
 
             if (shouldThrowException) {
@@ -184,7 +183,7 @@ class WorkerMetricsManagerTest {
             }
 
             return WorkerMetricValue.builder()
-                    .value(sensorValue)
+                    .value(workerMetricValue)
                     .build();
         }
 

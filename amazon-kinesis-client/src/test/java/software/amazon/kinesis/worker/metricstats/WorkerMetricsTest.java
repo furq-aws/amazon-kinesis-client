@@ -12,7 +12,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class WorkerMetricsTest {
 
     @Test
-    void isAnySensorFailing_withFailingSensor_assertTrue() {
+    void isAnyWorkerMetricFailing_withFailingWorkerMetric_assertTrue() {
         final WorkerMetricStats workerMetrics = WorkerMetricStats.builder()
                 .workerId("WorkerId1")
                 .lastUpdateTime(Instant.now().getEpochSecond())
@@ -22,11 +22,11 @@ class WorkerMetricsTest {
                 ).build();
 
         assertTrue(workerMetrics.isAnyWorkerMetricFailing(),
-                "isAnySensorFailing does not return true even with failing sensor");
+                "isAnyWorkerMetricFailing does not return true even with failing workerMetric");
     }
 
     @Test
-    void isAnySensorFailing_withoutFailingSensor_assertFalse() {
+    void isAnyWorkerMetricFailing_withoutFailingWorkerMetric_assertFalse() {
         final WorkerMetricStats workerMetrics = WorkerMetricStats.builder()
                 .workerId("WorkerId1")
                 .lastUpdateTime(Instant.now().getEpochSecond())
@@ -36,11 +36,11 @@ class WorkerMetricsTest {
                 ).build();
 
         assertFalse(workerMetrics.isAnyWorkerMetricFailing(),
-                "isAnySensorFailing does not return false even without failing sensor");
+                "isAnyWorkerMetricFailing does not return false even without failing workerMetric");
     }
 
     @Test
-    void isAnySensorFailing_withoutAnyValues_assertFalse() {
+    void isAnyWorkerMetricFailing_withoutAnyValues_assertFalse() {
         final WorkerMetricStats workerMetrics = WorkerMetricStats.builder()
                 .workerId("WorkerId1")
                 .lastUpdateTime(Instant.now().getEpochSecond())
@@ -48,28 +48,28 @@ class WorkerMetricsTest {
                 .build();
 
         assertFalse(workerMetrics.isAnyWorkerMetricFailing(),
-                "isAnySensorFailing does not return false even without failing sensor");
+                "isAnyWorkerMetricFailing does not return false even without failing workerMetric");
     }
 
     @Test
     void isValidWorkerMetrics_sanity() {
-        final WorkerMetricStats workerMetricsEntryForDefaultSensor = WorkerMetricStats.builder()
+        final WorkerMetricStats workerMetricsEntryForDefaultWorkerMetric = WorkerMetricStats.builder()
                 .workerId("WorkerId1")
                 .lastUpdateTime(Instant.now().getEpochSecond())
                 .build();
 
-        assertTrue(workerMetricsEntryForDefaultSensor.isValidWorkerMetric());
-        assertTrue(workerMetricsEntryForDefaultSensor.isUsingDefaultWorkerMetric());
+        assertTrue(workerMetricsEntryForDefaultWorkerMetric.isValidWorkerMetric());
+        assertTrue(workerMetricsEntryForDefaultWorkerMetric.isUsingDefaultWorkerMetric());
 
-        final WorkerMetricStats workerMetricsEntryWithEmptyResourceMapsForDefaultSensor = WorkerMetricStats.builder()
+        final WorkerMetricStats workerMetricsEntryWithEmptyResourceMapsForDefaultWorkerMetric = WorkerMetricStats.builder()
                 .workerId("WorkerId1")
                 .metricStats(ImmutableMap.of())
                 .operatingRange(ImmutableMap.of())
                 .lastUpdateTime(Instant.now().getEpochSecond())
                 .build();
 
-        assertTrue(workerMetricsEntryWithEmptyResourceMapsForDefaultSensor.isValidWorkerMetric());
-        assertTrue(workerMetricsEntryWithEmptyResourceMapsForDefaultSensor.isUsingDefaultWorkerMetric());
+        assertTrue(workerMetricsEntryWithEmptyResourceMapsForDefaultWorkerMetric.isValidWorkerMetric());
+        assertTrue(workerMetricsEntryWithEmptyResourceMapsForDefaultWorkerMetric.isUsingDefaultWorkerMetric());
 
         final WorkerMetricStats workerMetricsEntryMissingOperatingRange = WorkerMetricStats.builder()
                 .workerId("WorkerId1")
@@ -95,15 +95,15 @@ class WorkerMetricsTest {
 
         assertFalse(workerMetricsEntryMissingResourceMetrics.isValidWorkerMetric());
 
-        // C sensor has resourceStats but not operatingRange
-        final WorkerMetricStats workerMetricsEntryWithMismatchSensorInMetricsAndOperatingRange = WorkerMetricStats.builder()
+        // C workerMetric has resourceStats but not operatingRange
+        final WorkerMetricStats workerMetricsEntryWithMismatchWorkerStatsAndOperatingRangeKey = WorkerMetricStats.builder()
                 .workerId("WorkerId1")
                 .lastUpdateTime(Instant.now().getEpochSecond())
                 .metricStats(ImmutableMap.of("C", ImmutableList.of(5D, 5D)))
                 .operatingRange(ImmutableMap.of("M", ImmutableList.of(80L, 10L)))
                 .build();
 
-        assertFalse(workerMetricsEntryWithMismatchSensorInMetricsAndOperatingRange.isValidWorkerMetric());
+        assertFalse(workerMetricsEntryWithMismatchWorkerStatsAndOperatingRangeKey.isValidWorkerMetric());
 
         final WorkerMetricStats workerMetricsEntryWithEmptyOperatingRangeValue = WorkerMetricStats.builder()
                 .workerId("WorkerId1")
@@ -114,14 +114,14 @@ class WorkerMetricsTest {
 
         assertFalse(workerMetricsEntryWithEmptyOperatingRangeValue.isValidWorkerMetric());
 
-        final WorkerMetricStats workerMetricsEntryWithNoResourceMetrics = WorkerMetricStats.builder()
+        final WorkerMetricStats workerMetricsEntryWithNoMetricStats = WorkerMetricStats.builder()
                 .workerId("WorkerId1")
                 .lastUpdateTime(Instant.now().getEpochSecond())
                 .metricStats(ImmutableMap.of())
                 .operatingRange(ImmutableMap.of("C", ImmutableList.of(80L, 10L)))
                 .build();
 
-        assertTrue(workerMetricsEntryWithNoResourceMetrics.isValidWorkerMetric());
+        assertTrue(workerMetricsEntryWithNoMetricStats.isValidWorkerMetric());
 
         final WorkerMetricStats workerMetricsEntryWithNullResourceMetrics = WorkerMetricStats.builder()
                 .workerId("WorkerId1")

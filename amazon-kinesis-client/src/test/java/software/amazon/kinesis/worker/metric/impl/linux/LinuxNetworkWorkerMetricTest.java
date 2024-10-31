@@ -49,71 +49,71 @@ public class LinuxNetworkWorkerMetricTest {
     private Path tempDir;
 
     @Test
-    void sense_sanityWith1SecondTicker() throws IOException {
-        executeTestForInAndOutSensor(INPUT_1, INPUT_2, 1000L, 10, 20);
-        executeTestForInAndOutSensor(NO_WHITESPACE_INPUT_1, NO_WHITESPACE_INPUT_2, 1000L, 10, 20);
+    void capture_sanityWith1SecondTicker() throws IOException {
+        executeTestForInAndOutWorkerMetric(INPUT_1, INPUT_2, 1000L, 10, 20);
+        executeTestForInAndOutWorkerMetric(NO_WHITESPACE_INPUT_1, NO_WHITESPACE_INPUT_2, 1000L, 10, 20);
     }
 
     @Test
-    void sense_sanityWith500MsTicker() throws IOException {
-        executeTestForInAndOutSensor(INPUT_1, INPUT_2, 500L, 20, 40);
-        executeTestForInAndOutSensor(NO_WHITESPACE_INPUT_1, NO_WHITESPACE_INPUT_2, 500L, 20, 40);
+    void capture_sanityWith500MsTicker() throws IOException {
+        executeTestForInAndOutWorkerMetric(INPUT_1, INPUT_2, 500L, 20, 40);
+        executeTestForInAndOutWorkerMetric(NO_WHITESPACE_INPUT_1, NO_WHITESPACE_INPUT_2, 500L, 20, 40);
     }
 
     @Test
-    void sense_withNoTimeElapsed() {
-        assertThrows(IllegalArgumentException.class, () -> executeTestForInAndOutSensor(INPUT_1, INPUT_2, 0L, 20, 40));
+    void capture_withNoTimeElapsed() {
+        assertThrows(IllegalArgumentException.class, () -> executeTestForInAndOutWorkerMetric(INPUT_1, INPUT_2, 0L, 20, 40));
     }
 
-    void executeTestForInAndOutSensor(final String input1, final String input2, final long tickMillis,
+    void executeTestForInAndOutWorkerMetric(final String input1, final String input2, final long tickMillis,
             final long expectedIn, final long expectedOut) throws IOException {
         final File statFile = new File(tempDir.toAbsolutePath() + "/netStat");
 
-        final LinuxNetworkInWorkerMetric linuxNetworkInSensor = new LinuxNetworkInWorkerMetric(TEST_OPERATING_RANGE, "eth0",
+        final LinuxNetworkInWorkerMetric linuxNetworkInWorkerMetric = new LinuxNetworkInWorkerMetric(TEST_OPERATING_RANGE, "eth0",
                 statFile.getAbsolutePath(), 10, getMockedStopWatchWithOneSecondTicker(tickMillis));
 
-        writeFileAndRunTest(statFile, linuxNetworkInSensor, input1, input2, expectedIn);
+        writeFileAndRunTest(statFile, linuxNetworkInWorkerMetric, input1, input2, expectedIn);
 
-        final LinuxNetworkOutWorkerMetric linuxNetworkOutSensor = new LinuxNetworkOutWorkerMetric(TEST_OPERATING_RANGE, "eth0",
+        final LinuxNetworkOutWorkerMetric linuxNetworkOutWorkerMetric = new LinuxNetworkOutWorkerMetric(TEST_OPERATING_RANGE, "eth0",
                 statFile.getAbsolutePath(), 10, getMockedStopWatchWithOneSecondTicker(tickMillis));
 
-        writeFileAndRunTest(statFile, linuxNetworkOutSensor, input1, input2, expectedOut);
+        writeFileAndRunTest(statFile, linuxNetworkOutWorkerMetric, input1, input2, expectedOut);
     }
 
     @Test
-    void sense_nonExistingFile_assertIllegalArgumentException() {
-        final LinuxNetworkInWorkerMetric linuxNetworkInSensor = new LinuxNetworkInWorkerMetric(TEST_OPERATING_RANGE, "eth0",
+    void capture_nonExistingFile_assertIllegalArgumentException() {
+        final LinuxNetworkInWorkerMetric linuxNetworkInWorkerMetric = new LinuxNetworkInWorkerMetric(TEST_OPERATING_RANGE, "eth0",
                 "/non/existing/file", 10, getMockedStopWatchWithOneSecondTicker(1000L));
 
-        assertThrows(IllegalArgumentException.class, linuxNetworkInSensor::capture);
+        assertThrows(IllegalArgumentException.class, linuxNetworkInWorkerMetric::capture);
     }
 
     @Test
-    void sense_nonExistingNetworkInterface_assertIllegalArgumentException() throws IOException {
+    void capture_nonExistingNetworkInterface_assertIllegalArgumentException() throws IOException {
 
         final File statFile = new File(tempDir.toAbsolutePath() + "/netStat");
 
-        final LinuxNetworkInWorkerMetric linuxNetworkInSensor = new LinuxNetworkInWorkerMetric(TEST_OPERATING_RANGE, "randomName",
+        final LinuxNetworkInWorkerMetric linuxNetworkInWorkerMetric = new LinuxNetworkInWorkerMetric(TEST_OPERATING_RANGE, "randomName",
                 statFile.getAbsolutePath(), 10, getMockedStopWatchWithOneSecondTicker(1000L));
 
         writeLineToFile(statFile, INPUT_1);
 
-        assertThrows(IllegalArgumentException.class, linuxNetworkInSensor::capture);
+        assertThrows(IllegalArgumentException.class, linuxNetworkInWorkerMetric::capture);
     }
 
     @Test
-    void sense_configuredMaxLessThanUtilized_assert100Percent() throws IOException {
+    void capture_configuredMaxLessThanUtilized_assert100Percent() throws IOException {
         final File statFile = new File(tempDir.toAbsolutePath() + "/netStat");
 
         // configured bandwidth is 1 MB and utilized bandwidth is 2 MB.
-        final LinuxNetworkOutWorkerMetric linuxNetworkOutSensor = new LinuxNetworkOutWorkerMetric(TEST_OPERATING_RANGE, "eth0",
+        final LinuxNetworkOutWorkerMetric linuxNetworkOutWorkerMetric = new LinuxNetworkOutWorkerMetric(TEST_OPERATING_RANGE, "eth0",
                 statFile.getAbsolutePath(), 1, getMockedStopWatchWithOneSecondTicker(1000L));
 
-        writeFileAndRunTest(statFile, linuxNetworkOutSensor, NO_WHITESPACE_INPUT_1, NO_WHITESPACE_INPUT_2, 100);
+        writeFileAndRunTest(statFile, linuxNetworkOutWorkerMetric, NO_WHITESPACE_INPUT_1, NO_WHITESPACE_INPUT_2, 100);
     }
 
     @Test
-    void sense_maxBandwidthInMBAsZero_assertIllegalArgumentException() throws IOException {
+    void capture_maxBandwidthInMBAsZero_assertIllegalArgumentException() throws IOException {
         final File statFile = new File(tempDir.toAbsolutePath() + "/netStat");
 
         assertThrows(IllegalArgumentException.class,
@@ -121,15 +121,15 @@ public class LinuxNetworkWorkerMetricTest {
                         getMockedStopWatchWithOneSecondTicker(1000L)));
     }
 
-    private void writeFileAndRunTest(final File statFile, final LinuxNetworkWorkerMetricBase linuxNetworkSensorBase,
+    private void writeFileAndRunTest(final File statFile, final LinuxNetworkWorkerMetricBase linuxNetworkWorkerMetricBase,
             final String input1, final String input2, final double expectedValues) throws IOException {
 
         writeLineToFile(statFile, input1);
         // The First call is expected to be returning 0;
-        assertEquals(0, linuxNetworkSensorBase.capture().getValue());
+        assertEquals(0, linuxNetworkWorkerMetricBase.capture().getValue());
 
         writeLineToFile(statFile, input2);
-        assertEquals(expectedValues, linuxNetworkSensorBase.capture().getValue());
+        assertEquals(expectedValues, linuxNetworkWorkerMetricBase.capture().getValue());
 
     }
 
