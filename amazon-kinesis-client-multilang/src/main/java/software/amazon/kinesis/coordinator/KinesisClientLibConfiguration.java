@@ -25,8 +25,6 @@ import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
 import software.amazon.kinesis.checkpoint.ShardRecordProcessorCheckpointer;
 import software.amazon.kinesis.common.InitialPositionInStream;
 import software.amazon.kinesis.common.InitialPositionInStreamExtended;
-import software.amazon.kinesis.leases.LeaseManagementConfig.GracefulLeaseHandoffConfig;
-import software.amazon.kinesis.leases.LeaseManagementConfig.WorkerUtilizationAwareAssignmentConfig;
 import software.amazon.kinesis.leases.NoOpShardPrioritization;
 import software.amazon.kinesis.leases.ShardPrioritization;
 import software.amazon.kinesis.lifecycle.ProcessTask;
@@ -247,8 +245,6 @@ public class KinesisClientLibConfiguration {
     private boolean skipShardSyncAtWorkerInitializationIfLeasesExist;
     private ShardPrioritization shardPrioritization;
     private long shutdownGraceMillis;
-    private WorkerUtilizationAwareAssignmentConfig workerUtilizationAwareAssignmentConfig;
-    private GracefulLeaseHandoffConfig gracefulLeaseHandoffConfig;
 
     @Getter
     private Optional<Integer> timeoutInSeconds = Optional.empty();
