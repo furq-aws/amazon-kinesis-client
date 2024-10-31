@@ -114,7 +114,8 @@ class EcsCpuWorkerMetricsTest {
         final String containerStatsPath = Paths.get(testDataPath + "/stats").toAbsolutePath().toUri().toURL().toString();
         final String taskMetadataPath = Paths.get(testDataPath + "/task").toAbsolutePath().toUri().toURL().toString();
         final String containerMetadataPath = Paths.get(testDataPath + "/root").toAbsolutePath().toUri().toURL().toString();
-        final EcsCpuWorkerMetric ecsCpuWorkerMetric = new EcsCpuWorkerMetric(operatingRange, containerStatsPath, taskMetadataPath, containerMetadataPath);
+        final EcsCpuWorkerMetric ecsCpuWorkerMetric = new EcsCpuWorkerMetric(operatingRange, containerStatsPath,
+            taskMetadataPath, containerMetadataPath);
 
         final WorkerMetric.WorkerMetricValue response1 = ecsCpuWorkerMetric.capture();
         assertEquals(expectedCpuUtilization, response1.getValue());
