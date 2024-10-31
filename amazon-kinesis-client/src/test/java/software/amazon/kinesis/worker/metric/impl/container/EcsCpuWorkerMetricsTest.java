@@ -28,7 +28,7 @@ class EcsCpuWorkerMetricsTest {
     */
     @Test
     void sanity_sense_noTaskCpuLimitOneContainer() throws IOException {
-        final String testDataPath = "tst/data/ecstestdata/noTaskCpuLimitOneContainer";
+        final String testDataPath = "src/test/data/ecstestdata/noTaskCpuLimitOneContainer";
         runSensorTest(testDataPath, 50D);
     }
 
@@ -47,7 +47,7 @@ class EcsCpuWorkerMetricsTest {
     */
     @Test
     void sanity_sense_noTaskCpuLimitTwoContainers() throws IOException {
-        final String testDataPath = "tst/data/ecstestdata/noTaskCpuLimitTwoContainers";
+        final String testDataPath = "src/test/data/ecstestdata/noTaskCpuLimitTwoContainers";
         runSensorTest(testDataPath, 80D);
     }
 
@@ -57,7 +57,7 @@ class EcsCpuWorkerMetricsTest {
      */
     @Test
     void sanity_sense_noTaskCpuLimitButHasMemoryLimitOneContainer() throws IOException {
-        final String testDataPath = "tst/data/ecstestdata/noTaskCpuLimitButHasMemoryLimitOneContainer";
+        final String testDataPath = "src/test/data/ecstestdata/noTaskCpuLimitButHasMemoryLimitOneContainer";
         runSensorTest(testDataPath, 50D);
     }
 
@@ -76,7 +76,7 @@ class EcsCpuWorkerMetricsTest {
    */
     @Test
     void sanity_sense_taskCpuLimitOneContainer() throws IOException {
-        final String testDataPath = "tst/data/ecstestdata/taskCpuLimitOneContainer";
+        final String testDataPath = "src/test/data/ecstestdata/taskCpuLimitOneContainer";
         runSensorTest(testDataPath, 25D);
     }
 
@@ -85,13 +85,13 @@ class EcsCpuWorkerMetricsTest {
      */
     @Test
     void sanity_sense_NoPrecpuStats() throws IOException {
-        final String testDataPath = "tst/data/ecstestdata/noPrecpuStats";
+        final String testDataPath = "src/test/data/ecstestdata/noPrecpuStats";
         runSensorTest(testDataPath, 0D);
     }
 
     @Test
     void sanity_sense_NoSystemCpuUsage() throws IOException {
-        final String testDataPath = "tst/data/ecstestdata/noSystemCpuUsage";
+        final String testDataPath = "src/test/data/ecstestdata/noSystemCpuUsage";
         runSensorTest(testDataPath, 100D);
     }
 
