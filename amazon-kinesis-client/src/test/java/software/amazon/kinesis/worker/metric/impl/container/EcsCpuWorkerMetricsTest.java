@@ -27,9 +27,9 @@ class EcsCpuWorkerMetricsTest {
      * 1 CPU core time used / 2 available = 50% usage
     */
     @Test
-    void sanity_sense_noTaskCpuLimitOneContainer() throws IOException {
+    void sanity_capture_noTaskCpuLimitOneContainer() throws IOException {
         final String testDataPath = "src/test/data/ecstestdata/noTaskCpuLimitOneContainer";
-        runSensorTest(testDataPath, 50D);
+        runWorkerMetricTest(testDataPath, 50D);
     }
 
     /**
@@ -46,19 +46,19 @@ class EcsCpuWorkerMetricsTest {
      * 1 CPU core time used / 1.25 available = 80% usage
     */
     @Test
-    void sanity_sense_noTaskCpuLimitTwoContainers() throws IOException {
+    void sanity_capture_noTaskCpuLimitTwoContainers() throws IOException {
         final String testDataPath = "src/test/data/ecstestdata/noTaskCpuLimitTwoContainers";
-        runSensorTest(testDataPath, 80D);
+        runWorkerMetricTest(testDataPath, 80D);
     }
 
     /**
-     * Behaves the same as sanity_sense_noTaskCpuLimitOneContainer, but it is possible for a customer to supply
+     * Behaves the same as sanity_capture_noTaskCpuLimitOneContainer, but it is possible for a customer to supply
      * a memory limit but not a CPU limit which makes the code path a little different
      */
     @Test
-    void sanity_sense_noTaskCpuLimitButHasMemoryLimitOneContainer() throws IOException {
+    void sanity_capture_noTaskCpuLimitButHasMemoryLimitOneContainer() throws IOException {
         final String testDataPath = "src/test/data/ecstestdata/noTaskCpuLimitButHasMemoryLimitOneContainer";
-        runSensorTest(testDataPath, 50D);
+        runWorkerMetricTest(testDataPath, 50D);
     }
 
     /**
@@ -75,37 +75,37 @@ class EcsCpuWorkerMetricsTest {
      * 1 CPU core time used / 4 available = 25% usage
    */
     @Test
-    void sanity_sense_taskCpuLimitOneContainer() throws IOException {
+    void sanity_capture_taskCpuLimitOneContainer() throws IOException {
         final String testDataPath = "src/test/data/ecstestdata/taskCpuLimitOneContainer";
-        runSensorTest(testDataPath, 25D);
+        runWorkerMetricTest(testDataPath, 25D);
     }
 
     /**
-     * Using the same test data as sanity_sense_taskCpuLimitOneContainer.
+     * Using the same test data as sanity_capture_taskCpuLimitOneContainer.
      */
     @Test
-    void sanity_sense_NoPrecpuStats() throws IOException {
+    void sanity_capture_NoPrecpuStats() throws IOException {
         final String testDataPath = "src/test/data/ecstestdata/noPrecpuStats";
-        runSensorTest(testDataPath, 0D);
+        runWorkerMetricTest(testDataPath, 0D);
     }
 
     @Test
-    void sanity_sense_NoSystemCpuUsage() throws IOException {
+    void sanity_capture_NoSystemCpuUsage() throws IOException {
         final String testDataPath = "src/test/data/ecstestdata/noSystemCpuUsage";
-        runSensorTest(testDataPath, 100D);
+        runWorkerMetricTest(testDataPath, 100D);
     }
 
     @Test
-    void sanity_sense_bad_metadata_url() {
+    void sanity_capture_bad_metadata_url() {
         final OperatingRange operatingRange = OperatingRange.builder()
                                                             .maxUtilization(80)
                                                             .build();
-        final EcsCpuWorkerMetric ecsCpuSensor = new EcsCpuWorkerMetric(operatingRange,
+        final EcsCpuWorkerMetric ecsCpuWorkerMetric = new EcsCpuWorkerMetric(operatingRange,
                 "/someBadPath", "/someBadPath", "/someBadPath");
-        assertThrows(IllegalArgumentException.class, () -> ecsCpuSensor.capture());
+        assertThrows(IllegalArgumentException.class, () -> ecsCpuWorkerMetric.capture());
     }
 
-    void runSensorTest(String testDataPath, double expectedCpuUtilization) throws IOException {
+    void runWorkerMetricTest(String testDataPath, double expectedCpuUtilization) throws IOException {
         final OperatingRange operatingRange = OperatingRange.builder()
                                                             .maxUtilization(80)
                                                             .build();
@@ -114,9 +114,9 @@ class EcsCpuWorkerMetricsTest {
         final String containerStatsPath = Paths.get(testDataPath + "/stats").toAbsolutePath().toUri().toURL().toString();
         final String taskMetadataPath = Paths.get(testDataPath + "/task").toAbsolutePath().toUri().toURL().toString();
         final String containerMetadataPath = Paths.get(testDataPath + "/root").toAbsolutePath().toUri().toURL().toString();
-        final EcsCpuWorkerMetric ecsCpuSensor = new EcsCpuWorkerMetric(operatingRange, containerStatsPath, taskMetadataPath, containerMetadataPath);
+        final EcsCpuWorkerMetric ecsCpuWorkerMetric = new EcsCpuWorkerMetric(operatingRange, containerStatsPath, taskMetadataPath, containerMetadataPath);
 
-        final WorkerMetric.WorkerMetricValue response1 = ecsCpuSensor.capture();
+        final WorkerMetric.WorkerMetricValue response1 = ecsCpuWorkerMetric.capture();
         assertEquals(expectedCpuUtilization, response1.getValue());
     }
 }

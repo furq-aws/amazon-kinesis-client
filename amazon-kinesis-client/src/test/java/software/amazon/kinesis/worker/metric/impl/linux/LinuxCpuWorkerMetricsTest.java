@@ -19,46 +19,46 @@ import software.amazon.kinesis.worker.metric.WorkerMetric;
 class LinuxCpuWorkerMetricsTest {
 
     @Test
-    void sanity_sense(final @TempDir Path tempDir) throws IOException {
+    void sanity_capture(final @TempDir Path tempDir) throws IOException {
         final File statFile = new File(tempDir.toAbsolutePath() + "/cpuStat");
 
-        final LinuxCpuWorkerMetric linuxCpuSensor = new LinuxCpuWorkerMetric(OperatingRange.builder()
+        final LinuxCpuWorkerMetric linuxCpuWorkerMetric = new LinuxCpuWorkerMetric(OperatingRange.builder()
                                                                                              .maxUtilization(80)
                                                                                              .build(), statFile.getAbsolutePath());
 
 
         writeLineToFile(statFile, String.format("cpu  %d %d %d %d %d 0 0 0 0 0", 20000, 200, 2000, 1500000, 1000));
-        final WorkerMetric.WorkerMetricValue response1 = linuxCpuSensor.capture();
+        final WorkerMetric.WorkerMetricValue response1 = linuxCpuWorkerMetric.capture();
         // First request so expects the value to be 0;
         assertEquals(0D, response1.getValue());
         statFile.delete();
 
         writeLineToFile(statFile, String.format("cpu  %d %d %d %d %d 0 0 0 0 0", 30000, 3000, 30000, 2000000, 2000));
         // The Second request asserts non-zero value.
-        final WorkerMetric.WorkerMetricValue response2 = linuxCpuSensor.capture();
+        final WorkerMetric.WorkerMetricValue response2 = linuxCpuWorkerMetric.capture();
         assertEquals(7, (int) response2.getValue().doubleValue());
         statFile.delete();
     }
 
     @Test
-    void sanity_sense_file_not_found(final @TempDir Path tempDir) {
-        final LinuxCpuWorkerMetric linuxCpuSensor = new LinuxCpuWorkerMetric(OperatingRange.builder()
+    void sanity_capture_file_not_found(final @TempDir Path tempDir) {
+        final LinuxCpuWorkerMetric linuxCpuWorkerMetric = new LinuxCpuWorkerMetric(OperatingRange.builder()
                                                                                              .maxUtilization(80)
                                                                                              .build(), tempDir.toAbsolutePath() + "/randomPath");
-        assertThrows(IllegalArgumentException.class, linuxCpuSensor::capture);
+        assertThrows(IllegalArgumentException.class, linuxCpuWorkerMetric::capture);
     }
 
     @Test
-    void sense_rareIoWaitFieldDecreased_assert0Response(final @TempDir Path tempDir) throws IOException {
+    void capture_rareIoWaitFieldDecreased_assert0Response(final @TempDir Path tempDir) throws IOException {
         final File statFile = new File(tempDir.toAbsolutePath() + "/cpuStat");
 
-        final LinuxCpuWorkerMetric linuxCpuSensor = new LinuxCpuWorkerMetric(OperatingRange.builder()
+        final LinuxCpuWorkerMetric linuxCpuWorkerMetric = new LinuxCpuWorkerMetric(OperatingRange.builder()
                                                                                              .maxUtilization(80)
                                                                                              .build(), statFile.getAbsolutePath());
 
         writeLine(statFile,
                 String.format("cpu  %d %d %d %d %d 0 0 0 0 0", 5469899, 773829, 2079951, 2814572566L, 52048));
-        final WorkerMetric.WorkerMetricValue response1 = linuxCpuSensor.capture();
+        final WorkerMetric.WorkerMetricValue response1 = linuxCpuWorkerMetric.capture();
         // First request so expects the value to be 0;
         assertEquals(0D, response1.getValue());
         statFile.delete();
@@ -66,7 +66,7 @@ class LinuxCpuWorkerMetricsTest {
         writeLine(statFile,
                 String.format("cpu  %d %d %d %d %d 0 0 0 0 0", 5469899, 773829, 2079951, 2814575765L, 52047));
         // The Second request asserts zero value as the iow field has decreased and thus diff_tot < diff_idl
-        final WorkerMetric.WorkerMetricValue response2 = linuxCpuSensor.capture();
+        final WorkerMetric.WorkerMetricValue response2 = linuxCpuWorkerMetric.capture();
         assertEquals(0D, Math.round(response2.getValue() * 1000.0) / 1000.0);
         statFile.delete();
     }

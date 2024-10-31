@@ -31,7 +31,7 @@ class Cgroupv2CpuWorkerMetricsTest {
     }
 
     @Test
-    void sanity_sense(final @TempDir Path tempDir) throws IOException {
+    void sanity_capture(final @TempDir Path tempDir) throws IOException {
         final File cpuMaxFile = new File(tempDir.toAbsolutePath() + "/cpu.max");
         final File effectiveCpusFile = new File(tempDir.toAbsolutePath() + "/cpuset.cpus.effective");
         final File cpuStatFile = new File(tempDir.toAbsolutePath() + "/cpu.stat");
@@ -40,7 +40,7 @@ class Cgroupv2CpuWorkerMetricsTest {
                                                             .build();
 
 
-        final Cgroupv2CpuWorkerMetric cgroupv2CpuSensor = new Cgroupv2CpuWorkerMetric(operatingRange,
+        final Cgroupv2CpuWorkerMetric cgroupv2CpuWorkerMetric = new Cgroupv2CpuWorkerMetric(operatingRange,
                 cpuMaxFile.getAbsolutePath(), effectiveCpusFile.getAbsolutePath(), cpuStatFile.getAbsolutePath(), clock);
 
         when(clock.millis()).thenReturn(1000L, 2000L);
@@ -48,13 +48,13 @@ class Cgroupv2CpuWorkerMetricsTest {
         // Can use 2 cores
         writeLineToFile(cpuMaxFile, "20000 10000");
         writeLineToFile(cpuStatFile, "usage_usec " + TimeUnit.MILLISECONDS.toMicros(1000));
-        final WorkerMetric.WorkerMetricValue response1 = cgroupv2CpuSensor.capture();
+        final WorkerMetric.WorkerMetricValue response1 = cgroupv2CpuWorkerMetric.capture();
         // First request so expects the value to be 0;
         assertEquals(0D, response1.getValue());
 
         writeLineToFile(cpuStatFile, "usage_usec " + TimeUnit.MILLISECONDS.toMicros(1500));
         // The Second request asserts non-zero value.
-        final WorkerMetric.WorkerMetricValue response2 = cgroupv2CpuSensor.capture();
+        final WorkerMetric.WorkerMetricValue response2 = cgroupv2CpuWorkerMetric.capture();
 
         // Over 1 second time passed, the container has used 1500 ms- 1000ms = 0.5 seconds of cpu time. The container
         // can use up to 2 cpu cores so cpu utilization is 0.5 / 2 = 25%
@@ -66,7 +66,7 @@ class Cgroupv2CpuWorkerMetricsTest {
     }
 
     @Test
-    void sense_noCpuLimit(final @TempDir Path tempDir) throws IOException {
+    void capture_noCpuLimit(final @TempDir Path tempDir) throws IOException {
         final File cpuMaxFile = new File(tempDir.toAbsolutePath() + "/cpu.max");
         final File effectiveCpusFile = new File(tempDir.toAbsolutePath() + "/cpuset.cpus.effective");
         final File cpuStatFile = new File(tempDir.toAbsolutePath() + "/cpu.stat");
@@ -75,7 +75,7 @@ class Cgroupv2CpuWorkerMetricsTest {
                                                             .build();
 
 
-        final Cgroupv2CpuWorkerMetric cgroupv2CpuSensor = new Cgroupv2CpuWorkerMetric(operatingRange,
+        final Cgroupv2CpuWorkerMetric cgroupv2CpuWorkerMetric = new Cgroupv2CpuWorkerMetric(operatingRange,
                 cpuMaxFile.getAbsolutePath(), effectiveCpusFile.getAbsolutePath(), cpuStatFile.getAbsolutePath(), clock);
 
         when(clock.millis()).thenReturn(1000L, 2000L);
@@ -84,13 +84,13 @@ class Cgroupv2CpuWorkerMetricsTest {
         writeLineToFile(cpuMaxFile, "max 10000");
         writeLineToFile(effectiveCpusFile, "0-7");
         writeLineToFile(cpuStatFile, "usage_usec " + TimeUnit.MILLISECONDS.toMicros(1000));
-        final WorkerMetric.WorkerMetricValue response1 = cgroupv2CpuSensor.capture();
+        final WorkerMetric.WorkerMetricValue response1 = cgroupv2CpuWorkerMetric.capture();
         // First request so expects the value to be 0;
         assertEquals(0D, response1.getValue());
 
         writeLineToFile(cpuStatFile, "usage_usec " + TimeUnit.MILLISECONDS.toMicros(1500));
         // The Second request asserts non-zero value.
-        final WorkerMetric.WorkerMetricValue response2 = cgroupv2CpuSensor.capture();
+        final WorkerMetric.WorkerMetricValue response2 = cgroupv2CpuWorkerMetric.capture();
 
         // Over 1 second time passed, the container has used 1500 ms- 1000ms = 0.5 seconds of cpu time. The container
         // can use up to 8 cpu cores so cpu utilization is 0.5 / 8 = 6.25
@@ -102,13 +102,13 @@ class Cgroupv2CpuWorkerMetricsTest {
     }
 
     @Test
-    void sanity_sense_file_not_found() {
+    void sanity_capture_file_not_found() {
         final OperatingRange operatingRange = OperatingRange.builder()
                                                             .maxUtilization(80)
                                                             .build();
-        final Cgroupv2CpuWorkerMetric cgroupv2CpuSensor = new Cgroupv2CpuWorkerMetric(operatingRange,
+        final Cgroupv2CpuWorkerMetric cgroupv2CpuWorkerMetric = new Cgroupv2CpuWorkerMetric(operatingRange,
                 "/someBadPath", "/someBadPath", "/someBadPath", clock);
-        assertThrows(IllegalArgumentException.class, () -> cgroupv2CpuSensor.capture());
+        assertThrows(IllegalArgumentException.class, () -> cgroupv2CpuWorkerMetric.capture());
     }
 
 }

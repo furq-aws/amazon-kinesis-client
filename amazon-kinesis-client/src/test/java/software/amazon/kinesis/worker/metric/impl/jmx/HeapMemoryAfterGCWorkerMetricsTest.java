@@ -11,15 +11,15 @@ import software.amazon.kinesis.worker.metric.WorkerMetricType;
 class HeapMemoryAfterGCWorkerMetricsTest {
 
     @Test
-    void sense_sanity() {
-        final HeapMemoryAfterGCWorkerMetric heapMemoryAfterGCSensor = new HeapMemoryAfterGCWorkerMetric(
+    void capture_sanity() {
+        final HeapMemoryAfterGCWorkerMetric heapMemoryAfterGCWorkerMetric = new HeapMemoryAfterGCWorkerMetric(
                 OperatingRange.builder()
                               .maxUtilization(100)
                               .build());
 
-        assertNotNull(heapMemoryAfterGCSensor.capture().getValue());
+        assertNotNull(heapMemoryAfterGCWorkerMetric.capture().getValue());
 
-        assertEquals(WorkerMetricType.MEMORY, heapMemoryAfterGCSensor.getWorkerMetricType());
-        assertEquals(WorkerMetricType.MEMORY.getShortName(), heapMemoryAfterGCSensor.getShortName());
+        assertEquals(WorkerMetricType.MEMORY, heapMemoryAfterGCWorkerMetric.getWorkerMetricType());
+        assertEquals(WorkerMetricType.MEMORY.getShortName(), heapMemoryAfterGCWorkerMetric.getShortName());
     }
 }

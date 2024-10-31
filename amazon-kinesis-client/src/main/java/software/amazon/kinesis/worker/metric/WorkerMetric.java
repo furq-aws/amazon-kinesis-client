@@ -35,7 +35,7 @@ public interface WorkerMetric {
     WorkerMetricType getWorkerMetricType();
 
     /**
-     * WorkerMetricValue model class is used as return type for the sense() method to have a strong checks at the build
+     * WorkerMetricValue model class is used as return type for the capture() method to have a strong checks at the build
      * time of the object itself.
      */
     @Builder
