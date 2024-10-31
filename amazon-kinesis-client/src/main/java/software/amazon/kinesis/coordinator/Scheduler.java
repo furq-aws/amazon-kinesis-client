@@ -103,7 +103,6 @@ import software.amazon.kinesis.processor.Checkpointer;
 import software.amazon.kinesis.processor.FormerStreamsLeasesDeletionStrategy;
 import software.amazon.kinesis.processor.ProcessorConfig;
 import software.amazon.kinesis.processor.ShardRecordProcessorFactory;
-import software.amazon.kinesis.processor.ShutdownNotificationAware;
 import software.amazon.kinesis.processor.StreamTracker;
 import software.amazon.kinesis.retrieval.AggregatorUtil;
 import software.amazon.kinesis.retrieval.RecordsPublisher;
@@ -881,8 +880,8 @@ public class Scheduler implements Runnable {
     }
 
     /**
-     * Requests a graceful shutdown of the worker, notifying record processors, that implement
-     * {@link ShutdownNotificationAware}, of the impending shutdown. This gives the record processor a final chance to
+     * Requests a graceful shutdown of the worker, notifying record processors
+     * of the impending shutdown. This gives the record processor a final chance to
      * checkpoint.
      *
      * This will only create a single shutdown future. Additional attempts to start a graceful shutdown will return the
@@ -1330,7 +1329,7 @@ public class Scheduler implements Runnable {
         private void resetInfoLogging() {
             if (infoReporting) {
                 // We just logged at INFO level for a pass through worker loop
-                if (log.isInfoEnabled()) {
+                if (!log.isDebugEnabled() && !log.isTraceEnabled()) {
                     infoReporting = false;
                     nextReportTime = System.currentTimeMillis() + reportIntervalMillis;
                 } // else is DEBUG or TRACE so leave reporting true

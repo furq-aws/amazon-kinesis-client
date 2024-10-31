@@ -185,6 +185,8 @@ class DynamoDBLeaseRenewerTest {
         assertTrue(leaseKeyToLeaseMap.containsKey("leaseKey4"));
     }
 
+    // TODO: add testLeaseRenewerDoesNotUpdateInMemoryLeaseIfDDBFailsUpdate
+
     private void createAndPutBadLeaseEntryInTable() {
         final PutItemRequest putItemRequest = PutItemRequest.builder()
                 .tableName(TEST_LEASE_TABLE)

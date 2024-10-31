@@ -107,6 +107,7 @@ public class DynamoDBLeaseManagementFactory implements LeaseManagementFactory {
     private final Duration dynamoDbRequestTimeout;
     private final BillingMode billingMode;
     private final boolean leaseTableDeletionProtectionEnabled;
+    private final boolean leaseTablePitrEnabled;
     private final Collection<Tag> tags;
     private final boolean isMultiStreamMode;
     private final LeaseCleanupConfig leaseCleanupConfig;
@@ -204,6 +205,7 @@ public class DynamoDBLeaseManagementFactory implements LeaseManagementFactory {
                 dynamoDbRequestTimeout,
                 billingMode,
                 LeaseManagementConfig.DEFAULT_LEASE_TABLE_DELETION_PROTECTION_ENABLED,
+                LeaseManagementConfig.DEFAULT_LEASE_TABLE_PITR_ENABLED,
                 tags,
                 new DynamoDBLeaseSerializer(),
                 null,
@@ -249,6 +251,7 @@ public class DynamoDBLeaseManagementFactory implements LeaseManagementFactory {
      * @param isMultiStreamMode
      * @param leaseCleanupConfig
      */
+    @Deprecated
     public DynamoDBLeaseManagementFactory(
             final KinesisAsyncClient kinesisClient,
             final DynamoDbAsyncClient dynamoDBClient,
@@ -277,6 +280,7 @@ public class DynamoDBLeaseManagementFactory implements LeaseManagementFactory {
             Duration dynamoDbRequestTimeout,
             BillingMode billingMode,
             final boolean leaseTableDeletionProtectionEnabled,
+            final boolean leaseTablePitrEnabled,
             Collection<Tag> tags,
             LeaseSerializer leaseSerializer,
             Function<StreamConfig, ShardDetector> customShardDetectorProvider,
@@ -311,6 +315,7 @@ public class DynamoDBLeaseManagementFactory implements LeaseManagementFactory {
         this.dynamoDbRequestTimeout = dynamoDbRequestTimeout;
         this.billingMode = billingMode;
         this.leaseTableDeletionProtectionEnabled = leaseTableDeletionProtectionEnabled;
+        this.leaseTablePitrEnabled = leaseTablePitrEnabled;
         this.leaseSerializer = leaseSerializer;
         this.customShardDetectorProvider = customShardDetectorProvider;
         this.isMultiStreamMode = isMultiStreamMode;
@@ -416,6 +421,7 @@ public class DynamoDBLeaseManagementFactory implements LeaseManagementFactory {
                 dynamoDbRequestTimeout,
                 ddbTableConfig,
                 leaseTableDeletionProtectionEnabled,
+                leaseTablePitrEnabled,
                 tags);
     }
 

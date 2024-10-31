@@ -65,6 +65,7 @@ import software.amazon.awssdk.services.dynamodb.model.ScanResponse;
 import software.amazon.awssdk.services.dynamodb.model.TableDescription;
 import software.amazon.awssdk.services.dynamodb.model.TableStatus;
 import software.amazon.awssdk.services.dynamodb.model.Tag;
+import software.amazon.awssdk.services.dynamodb.model.UpdateContinuousBackupsRequest;
 import software.amazon.awssdk.services.dynamodb.model.UpdateItemRequest;
 import software.amazon.awssdk.services.dynamodb.model.UpdateItemResponse;
 import software.amazon.awssdk.services.dynamodb.model.UpdateTableRequest;
@@ -108,6 +109,7 @@ public class DynamoDBLeaseRefresher implements LeaseRefresher {
     private final Duration dynamoDbRequestTimeout;
     private final DdbTableConfig ddbTableConfig;
     private final boolean leaseTableDeletionProtectionEnabled;
+    private final boolean leaseTablePitrEnabled;
     private final Collection<Tag> tags;
 
     private boolean newTableCreated = false;
@@ -136,6 +138,7 @@ public class DynamoDBLeaseRefresher implements LeaseRefresher {
      * @param dynamoDbRequestTimeout
      * @param ddbTableConfig
      * @param leaseTableDeletionProtectionEnabled
+     * @param leaseTablePitrEnabled
      * @param tags
      */
     public DynamoDBLeaseRefresher(
@@ -147,6 +150,7 @@ public class DynamoDBLeaseRefresher implements LeaseRefresher {
             Duration dynamoDbRequestTimeout,
             final DdbTableConfig ddbTableConfig,
             final boolean leaseTableDeletionProtectionEnabled,
+            final boolean leaseTablePitrEnabled,
             final Collection<Tag> tags) {
         this.table = table;
         this.dynamoDBClient = dynamoDBClient;
@@ -156,6 +160,7 @@ public class DynamoDBLeaseRefresher implements LeaseRefresher {
         this.dynamoDbRequestTimeout = dynamoDbRequestTimeout;
         this.ddbTableConfig = ddbTableConfig;
         this.leaseTableDeletionProtectionEnabled = leaseTableDeletionProtectionEnabled;
+        this.leaseTablePitrEnabled = leaseTablePitrEnabled;
         this.tags = tags;
     }
 
@@ -182,7 +187,31 @@ public class DynamoDBLeaseRefresher implements LeaseRefresher {
         final CreateTableRequest request =
                 createTableRequestBuilder(ddbTableConfig).build();
 
-        return createTableIfNotExists(request);
+        boolean tableExists = createTableIfNotExists(request);
+        if (leaseTablePitrEnabled) {
+            enablePitr();
+            log.info("Enabled PITR on table {}", table);
+        }
+        return tableExists;
+    }
+
+    private void enablePitr() throws DependencyException {
+        final UpdateContinuousBackupsRequest request = UpdateContinuousBackupsRequest.builder()
+                .tableName(table)
+                .pointInTimeRecoverySpecification(builder -> builder.pointInTimeRecoveryEnabled(true))
+                .build();
+
+        final AWSExceptionManager exceptionManager = createExceptionManager();
+        exceptionManager.add(ResourceNotFoundException.class, t -> t);
+        exceptionManager.add(ProvisionedThroughputExceededException.class, t -> t);
+
+        try {
+            FutureUtils.resolveOrCancelFuture(dynamoDBClient.updateContinuousBackups(request), dynamoDbRequestTimeout);
+        } catch (ExecutionException e) {
+            throw exceptionManager.apply(e.getCause());
+        } catch (InterruptedException | DynamoDbException | TimeoutException e) {
+            throw new DependencyException(e);
+        }
     }
 
     private boolean createTableIfNotExists(CreateTableRequest request)

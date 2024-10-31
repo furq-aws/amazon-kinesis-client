@@ -65,8 +65,9 @@ public class LeaseManagementConfig {
     public static final long DEFAULT_GARBAGE_LEASE_CLEANUP_INTERVAL_MILLIS =
             Duration.ofMinutes(30).toMillis();
     public static final long DEFAULT_PERIODIC_SHARD_SYNC_INTERVAL_MILLIS = 2 * 60 * 1000L;
-    public static final boolean DEFAULT_ENABLE_PRIORITY_LEASE_ASSIGNMENT = true;
     public static final boolean DEFAULT_LEASE_TABLE_DELETION_PROTECTION_ENABLED = false;
+    public static final boolean DEFAULT_LEASE_TABLE_PITR_ENABLED = false;
+    public static final boolean DEFAULT_ENABLE_PRIORITY_LEASE_ASSIGNMENT = true;
     public static final int DEFAULT_CONSECUTIVE_HOLES_FOR_TRIGGERING_LEASE_RECOVERY = 3;
 
     public static final LeaseCleanupConfig DEFAULT_LEASE_CLEANUP_CONFIG = LeaseCleanupConfig.builder()
@@ -218,11 +219,20 @@ public class LeaseManagementConfig {
             new WorkerUtilizationAwareAssignmentConfig();
 
     /**
-     * Whether to enabled deletion protection on the DynamoDB lease table created by KCL.
+     * Whether to enable deletion protection on the DynamoDB lease table created by KCL. This does not update
+     * already existing tables.
      *
      * <p>Default value: false
      */
     private boolean leaseTableDeletionProtectionEnabled = DEFAULT_LEASE_TABLE_DELETION_PROTECTION_ENABLED;
+
+    /**
+     * Whether to enable PITR (point in time recovery) on the DynamoDB lease table created by KCL. If true, this can
+     * update existing table's PITR.
+     *
+     * <p>Default value: false
+     */
+    private boolean leaseTablePitrEnabled = DEFAULT_LEASE_TABLE_PITR_ENABLED;
 
     /**
      * The list of tags to be applied to the DynamoDB table created for lease management.
@@ -484,6 +494,7 @@ public class LeaseManagementConfig {
                     dynamoDbRequestTimeout(),
                     billingMode(),
                     leaseTableDeletionProtectionEnabled(),
+                    leaseTablePitrEnabled(),
                     tags(),
                     leaseSerializer,
                     customShardDetectorProvider(),

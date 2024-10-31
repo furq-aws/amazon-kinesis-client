@@ -95,6 +95,8 @@ class DynamoDBLeaseRefresherTest {
                 describeTableResponse.table().globalSecondaryIndexes().get(0).indexStatus());
     }
 
+    // TODO Add CreateLeaseTablePITR test and CreateLeaseTableDeletionProtection test
+
     @Test
     void waitUntilLeaseOwnerToLeaseKeyIndexExists_noTransitionToActive_assertFalse() throws DependencyException {
         dynamoDbAsyncClient.deleteTable(
@@ -116,6 +118,7 @@ class DynamoDBLeaseRefresherTest {
                 NOOP_TABLE_CREATOR_CALLBACK,
                 Duration.ofSeconds(10),
                 new DdbTableConfig(),
+                true,
                 true,
                 new ArrayList<>());
 
@@ -706,6 +709,7 @@ class DynamoDBLeaseRefresherTest {
                 NOOP_TABLE_CREATOR_CALLBACK,
                 Duration.ofSeconds(10),
                 ddbTableConfig,
+                true,
                 true,
                 new ArrayList<>());
     }
