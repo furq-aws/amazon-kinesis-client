@@ -317,6 +317,7 @@ public class DynamoDBLeaseRefresherIntegrationTest extends LeaseIntegrationTest 
                 LeaseManagementConfig.DEFAULT_REQUEST_TIMEOUT,
                 new DdbTableConfig(),
                 LeaseManagementConfig.DEFAULT_LEASE_TABLE_DELETION_PROTECTION_ENABLED,
+                LeaseManagementConfig.DEFAULT_LEASE_TABLE_PITR_ENABLED,
                 DefaultSdkAutoConstructList.getInstance());
 
         refresher.createLeaseTableIfNotExists();
@@ -339,6 +340,7 @@ public class DynamoDBLeaseRefresherIntegrationTest extends LeaseIntegrationTest 
                         LeaseManagementConfig.DEFAULT_REQUEST_TIMEOUT,
                         new DdbTableConfig(),
                         LeaseManagementConfig.DEFAULT_LEASE_TABLE_DELETION_PROTECTION_ENABLED,
+                        LeaseManagementConfig.DEFAULT_LEASE_TABLE_PITR_ENABLED,
                         DefaultSdkAutoConstructList.getInstance()) {
                     @Override
                     long sleep(long timeToSleepMillis) {
@@ -363,6 +365,7 @@ public class DynamoDBLeaseRefresherIntegrationTest extends LeaseIntegrationTest 
                 LeaseManagementConfig.DEFAULT_REQUEST_TIMEOUT,
                 new DdbTableConfig(),
                 LeaseManagementConfig.DEFAULT_LEASE_TABLE_DELETION_PROTECTION_ENABLED,
+                LeaseManagementConfig.DEFAULT_LEASE_TABLE_PITR_ENABLED,
                 DefaultSdkAutoConstructList.getInstance());
 
         refresher.performPostTableCreationAction();

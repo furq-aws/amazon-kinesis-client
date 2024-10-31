@@ -84,6 +84,7 @@ public class LeaseIntegrationTest {
                 LeaseManagementConfig.DEFAULT_REQUEST_TIMEOUT,
                 new DdbTableConfig().billingMode(BillingMode.PAY_PER_REQUEST),
                 LeaseManagementConfig.DEFAULT_LEASE_TABLE_DELETION_PROTECTION_ENABLED,
+                LeaseManagementConfig.DEFAULT_LEASE_TABLE_PITR_ENABLED,
                 DefaultSdkAutoConstructList.getInstance());
     }
 }

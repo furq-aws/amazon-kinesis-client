@@ -40,6 +40,7 @@ class DynamoDBLeaseCoordinatorTest {
                 Duration.ofSeconds(10),
                 new DdbTableConfig(),
                 true,
+                true,
                 new ArrayList<>());
     }
 

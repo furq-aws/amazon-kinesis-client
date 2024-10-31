@@ -47,6 +47,7 @@ class DynamoDBLeaseDiscovererTest {
             Duration.ofSeconds(10),
             new DdbTableConfig(),
             true,
+            true,
             new ArrayList<>());
     private final LeaseRenewer leaseRenewer = new DynamoDBLeaseRenewer(
             leaseRefresher,

@@ -92,6 +92,7 @@ public class DynamoDBLeaseCoordinatorIntegrationTest {
                     LeaseManagementConfig.DEFAULT_REQUEST_TIMEOUT,
                     new DdbTableConfig(),
                     LeaseManagementConfig.DEFAULT_LEASE_TABLE_DELETION_PROTECTION_ENABLED,
+                    LeaseManagementConfig.DEFAULT_LEASE_TABLE_PITR_ENABLED,
                     DefaultSdkAutoConstructList.getInstance());
         }
         leaseRefresher.createLeaseTableIfNotExists(10L, 10L);
