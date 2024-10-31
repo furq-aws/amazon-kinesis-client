@@ -214,8 +214,6 @@ public class SchedulerTest {
         when(leaseCoordinator.leaseRefresher()).thenReturn(dynamoDBLeaseRefresher);
         when(leaseCoordinator.workerIdentifier()).thenReturn(workerIdentifier);
         when(dynamoDBLeaseRefresher.waitUntilLeaseOwnerToLeaseKeyIndexExists(anyLong(), anyLong())).thenReturn(true);
-        when(shardSyncTaskManager.shardDetector()).thenReturn(shardDetector);
-        when(shardSyncTaskManager.hierarchicalShardSyncer()).thenReturn(new HierarchicalShardSyncer());
         when(retrievalFactory.createGetRecordsCache(any(ShardInfo.class), any(StreamConfig.class),
                 any(MetricsFactory.class))).thenReturn(recordsPublisher);
         when(kinesisClient.serviceClientConfiguration())
@@ -902,11 +900,6 @@ public class SchedulerTest {
         scheduler = spy(new Scheduler(checkpointConfig, coordinatorConfig, leaseManagementConfig, lifecycleConfig,
                 metricsConfig, processorConfig, retrievalConfig));
         when(scheduler.shouldSyncStreamsNow()).thenReturn(true);
-        when(multiStreamTracker.formerStreamsLeasesDeletionStrategy()).thenReturn(new AutoDetectionAndDeferredDeletionStrategy() {
-            @Override public Duration waitPeriodToDeleteFormerStreams() {
-                return Duration.ZERO;
-            }
-        });
         Set<StreamIdentifier> syncedStreams = scheduler.checkAndSyncStreamShardsAndLeases();
         Set<StreamIdentifier> expectedSyncedStreams = IntStream.concat(IntStream.range(1, 3), IntStream.range(5, 7))
                 .mapToObj(streamId -> StreamIdentifier.multiStreamInstance(
