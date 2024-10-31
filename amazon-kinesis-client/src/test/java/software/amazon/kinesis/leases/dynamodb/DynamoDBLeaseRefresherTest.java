@@ -710,7 +710,7 @@ class DynamoDBLeaseRefresherTest {
                 Duration.ofSeconds(10),
                 ddbTableConfig,
                 true,
-                true,
+                false,
                 new ArrayList<>());
     }
 
