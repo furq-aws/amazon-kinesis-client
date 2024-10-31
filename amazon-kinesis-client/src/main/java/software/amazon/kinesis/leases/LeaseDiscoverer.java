@@ -16,6 +16,5 @@ public interface LeaseDiscoverer {
      * @throws InvalidStateException if lease table does not exist
      * @throws ProvisionedThroughputException if DynamoDB scan fails due to lack of capacity
      */
-    List<Lease> discoverNewLeases()
-            throws ProvisionedThroughputException, InvalidStateException, DependencyException;
+    List<Lease> discoverNewLeases() throws ProvisionedThroughputException, InvalidStateException, DependencyException;
 }

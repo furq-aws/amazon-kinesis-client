@@ -1,5 +1,38 @@
 package software.amazon.kinesis.leases.dynamodb;
 
+import java.time.Duration;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executors;
+
+import com.amazonaws.services.dynamodbv2.local.embedded.DynamoDBEmbedded;
+import com.google.common.collect.ImmutableMap;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
+import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
+import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
+import software.amazon.awssdk.services.dynamodb.model.BillingMode;
+import software.amazon.awssdk.services.dynamodb.model.DeleteTableRequest;
+import software.amazon.awssdk.services.dynamodb.model.DescribeTableRequest;
+import software.amazon.awssdk.services.dynamodb.model.DescribeTableResponse;
+import software.amazon.awssdk.services.dynamodb.model.GlobalSecondaryIndexDescription;
+import software.amazon.awssdk.services.dynamodb.model.IndexStatus;
+import software.amazon.awssdk.services.dynamodb.model.PutItemRequest;
+import software.amazon.awssdk.services.dynamodb.model.ResourceNotFoundException;
+import software.amazon.awssdk.services.dynamodb.model.TableDescription;
+import software.amazon.awssdk.services.dynamodb.model.TableStatus;
+import software.amazon.kinesis.common.DdbTableConfig;
+import software.amazon.kinesis.leases.Lease;
+import software.amazon.kinesis.leases.LeaseRefresher;
+import software.amazon.kinesis.leases.exceptions.DependencyException;
+import software.amazon.kinesis.leases.exceptions.InvalidStateException;
+import software.amazon.kinesis.leases.exceptions.ProvisionedThroughputException;
+import software.amazon.kinesis.retrieval.kpl.ExtendedSequenceNumber;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -17,46 +50,12 @@ import static software.amazon.awssdk.services.dynamodb.model.IndexStatus.CREATIN
 import static software.amazon.kinesis.leases.dynamodb.DynamoDBLeaseRefresher.LEASE_OWNER_TO_LEASE_KEY_INDEX_NAME;
 import static software.amazon.kinesis.leases.dynamodb.TableCreatorCallback.NOOP_TABLE_CREATOR_CALLBACK;
 
-import java.time.Duration;
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.Executors;
-import java.util.concurrent.CompletableFuture;
-
-import com.google.common.collect.ImmutableMap;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-
-import com.amazonaws.services.dynamodbv2.local.embedded.DynamoDBEmbedded;
-import org.mockito.Mockito;
-import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
-import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
-import software.amazon.awssdk.services.dynamodb.model.BillingMode;
-import software.amazon.awssdk.services.dynamodb.model.DeleteTableRequest;
-import software.amazon.awssdk.services.dynamodb.model.DescribeTableRequest;
-import software.amazon.awssdk.services.dynamodb.model.DescribeTableResponse;
-import software.amazon.awssdk.services.dynamodb.model.GlobalSecondaryIndexDescription;
-import software.amazon.awssdk.services.dynamodb.model.IndexStatus;
-import software.amazon.awssdk.services.dynamodb.model.PutItemRequest;
-import software.amazon.kinesis.common.DdbTableConfig;
-import software.amazon.kinesis.leases.Lease;
-import software.amazon.awssdk.services.dynamodb.model.ResourceNotFoundException;
-import software.amazon.awssdk.services.dynamodb.model.TableDescription;
-import software.amazon.awssdk.services.dynamodb.model.TableStatus;
-import software.amazon.kinesis.leases.LeaseRefresher;
-import software.amazon.kinesis.leases.exceptions.DependencyException;
-import software.amazon.kinesis.leases.exceptions.InvalidStateException;
-import software.amazon.kinesis.leases.exceptions.ProvisionedThroughputException;
-import software.amazon.kinesis.retrieval.kpl.ExtendedSequenceNumber;
-
 class DynamoDBLeaseRefresherTest {
 
     private static final String TEST_LEASE_TABLE = "SomeTable";
     private DynamoDBLeaseRefresher leaseRefresher;
-    private final DynamoDbAsyncClient dynamoDbAsyncClient = DynamoDBEmbedded.create()
-                                                                            .dynamoDbAsyncClient();
+    private final DynamoDbAsyncClient dynamoDbAsyncClient =
+            DynamoDBEmbedded.create().dynamoDbAsyncClient();
 
     @BeforeEach
     void setup() throws ProvisionedThroughputException, DependencyException {
@@ -78,21 +77,28 @@ class DynamoDBLeaseRefresherTest {
         assertEquals(creationResponse, CREATING.toString(), "Index status mismatch");
         assertTrue(waitResponse);
 
-        final DescribeTableResponse describeTableResponse = dynamoDbAsyncClient.describeTable(DescribeTableRequest.builder()
-                                                                                          .tableName(TEST_LEASE_TABLE)
-                                                                                          .build()).join();
-        assertEquals(1, describeTableResponse.table().globalSecondaryIndexes().size(),
+        final DescribeTableResponse describeTableResponse = dynamoDbAsyncClient
+                .describeTable(DescribeTableRequest.builder()
+                        .tableName(TEST_LEASE_TABLE)
+                        .build())
+                .join();
+        assertEquals(
+                1,
+                describeTableResponse.table().globalSecondaryIndexes().size(),
                 "No. of index on lease table is not 1");
-        assertEquals(LEASE_OWNER_TO_LEASE_KEY_INDEX_NAME, describeTableResponse
-                .table().globalSecondaryIndexes().get(0).indexName(), "Index name mismatch");
-        assertEquals(IndexStatus.ACTIVE, describeTableResponse.table().globalSecondaryIndexes().get(0).indexStatus());
+        assertEquals(
+                LEASE_OWNER_TO_LEASE_KEY_INDEX_NAME,
+                describeTableResponse.table().globalSecondaryIndexes().get(0).indexName(),
+                "Index name mismatch");
+        assertEquals(
+                IndexStatus.ACTIVE,
+                describeTableResponse.table().globalSecondaryIndexes().get(0).indexStatus());
     }
 
     @Test
     void waitUntilLeaseOwnerToLeaseKeyIndexExists_noTransitionToActive_assertFalse() throws DependencyException {
-        dynamoDbAsyncClient.deleteTable(DeleteTableRequest.builder()
-                                                          .tableName(TEST_LEASE_TABLE)
-                                                          .build());
+        dynamoDbAsyncClient.deleteTable(
+                DeleteTableRequest.builder().tableName(TEST_LEASE_TABLE).build());
 
         final boolean response = leaseRefresher.waitUntilLeaseOwnerToLeaseKeyIndexExists(1, 3);
         assertFalse(response);
@@ -102,14 +108,21 @@ class DynamoDBLeaseRefresherTest {
     @Test
     void isLeaseOwnerGsiIndexActive() throws DependencyException {
         final DynamoDbAsyncClient mockDdbClient = mock(DynamoDbAsyncClient.class, Mockito.RETURNS_MOCKS);
-        final LeaseRefresher leaseRefresherForTest = new DynamoDBLeaseRefresher(TEST_LEASE_TABLE, mockDdbClient, new DynamoDBLeaseSerializer(),
-            true, NOOP_TABLE_CREATOR_CALLBACK, Duration.ofSeconds(10), new DdbTableConfig(), true,
-            new ArrayList<>());
+        final LeaseRefresher leaseRefresherForTest = new DynamoDBLeaseRefresher(
+                TEST_LEASE_TABLE,
+                mockDdbClient,
+                new DynamoDBLeaseSerializer(),
+                true,
+                NOOP_TABLE_CREATOR_CALLBACK,
+                Duration.ofSeconds(10),
+                new DdbTableConfig(),
+                true,
+                new ArrayList<>());
 
         when(mockDdbClient.describeTable(any(DescribeTableRequest.class)))
-            .thenThrow(ResourceNotFoundException.builder()
-                .message("Mock table does not exist scenario")
-                .build());
+                .thenThrow(ResourceNotFoundException.builder()
+                        .message("Mock table does not exist scenario")
+                        .build());
 
         // before creating the GSI it is not active
         assertFalse(leaseRefresherForTest.isLeaseOwnerToLeaseKeyIndexActive());
@@ -117,12 +130,11 @@ class DynamoDBLeaseRefresherTest {
         reset(mockDdbClient);
         final CompletableFuture<DescribeTableResponse> creatingTableFuture = new CompletableFuture<>();
         creatingTableFuture.complete(DescribeTableResponse.builder()
-            .table(TableDescription.builder()
-                .tableStatus(TableStatus.CREATING)
-                .build())
-            .build());
-        when(mockDdbClient.describeTable(any(DescribeTableRequest.class)))
-            .thenReturn(creatingTableFuture);
+                .table(TableDescription.builder()
+                        .tableStatus(TableStatus.CREATING)
+                        .build())
+                .build());
+        when(mockDdbClient.describeTable(any(DescribeTableRequest.class))).thenReturn(creatingTableFuture);
 
         // If describe table does not have gsi status, it will be false
         assertFalse(leaseRefresherForTest.isLeaseOwnerToLeaseKeyIndexActive());
@@ -131,17 +143,16 @@ class DynamoDBLeaseRefresherTest {
         final CompletableFuture<DescribeTableResponse> noGsiFuture = new CompletableFuture<>();
         noGsiFuture.complete(DescribeTableResponse.builder()
                 .table(TableDescription.builder()
-                    .creationDateTime(Instant.now())
-                    .itemCount(100L)
-                    .tableStatus(TableStatus.ACTIVE)
-                    .globalSecondaryIndexes(GlobalSecondaryIndexDescription.builder()
-                        .indexName("A_DIFFERENT_INDEX")
-                        .indexStatus(ACTIVE)
+                        .creationDateTime(Instant.now())
+                        .itemCount(100L)
+                        .tableStatus(TableStatus.ACTIVE)
+                        .globalSecondaryIndexes(GlobalSecondaryIndexDescription.builder()
+                                .indexName("A_DIFFERENT_INDEX")
+                                .indexStatus(ACTIVE)
+                                .build())
                         .build())
-                    .build())
                 .build());
-        when(mockDdbClient.describeTable(any(DescribeTableRequest.class)))
-            .thenReturn(noGsiFuture);
+        when(mockDdbClient.describeTable(any(DescribeTableRequest.class))).thenReturn(noGsiFuture);
 
         // before creating the GSI it is not active
         assertFalse(leaseRefresherForTest.isLeaseOwnerToLeaseKeyIndexActive());
@@ -149,23 +160,22 @@ class DynamoDBLeaseRefresherTest {
         reset(mockDdbClient);
         final CompletableFuture<DescribeTableResponse> gsiInactiveFuture = new CompletableFuture<>();
         gsiInactiveFuture.complete(DescribeTableResponse.builder()
-            .table(TableDescription.builder()
-                .creationDateTime(Instant.now())
-                .itemCount(100L)
-                .tableStatus(TableStatus.ACTIVE)
-                .globalSecondaryIndexes(
-                    GlobalSecondaryIndexDescription.builder()
-                        .indexName("A_DIFFERENT_INDEX")
-                        .indexStatus(ACTIVE)
-                        .build(),
-                    GlobalSecondaryIndexDescription.builder()
-                        .indexName(LEASE_OWNER_TO_LEASE_KEY_INDEX_NAME)
-                        .indexStatus(CREATING)
+                .table(TableDescription.builder()
+                        .creationDateTime(Instant.now())
+                        .itemCount(100L)
+                        .tableStatus(TableStatus.ACTIVE)
+                        .globalSecondaryIndexes(
+                                GlobalSecondaryIndexDescription.builder()
+                                        .indexName("A_DIFFERENT_INDEX")
+                                        .indexStatus(ACTIVE)
+                                        .build(),
+                                GlobalSecondaryIndexDescription.builder()
+                                        .indexName(LEASE_OWNER_TO_LEASE_KEY_INDEX_NAME)
+                                        .indexStatus(CREATING)
+                                        .build())
                         .build())
-                .build())
-            .build());
-        when(mockDdbClient.describeTable(any(DescribeTableRequest.class)))
-            .thenReturn(gsiInactiveFuture);
+                .build());
+        when(mockDdbClient.describeTable(any(DescribeTableRequest.class))).thenReturn(gsiInactiveFuture);
 
         // returns false if GSI is not active
         assertFalse(leaseRefresherForTest.isLeaseOwnerToLeaseKeyIndexActive());
@@ -173,23 +183,22 @@ class DynamoDBLeaseRefresherTest {
         reset(mockDdbClient);
         final CompletableFuture<DescribeTableResponse> gsiActiveFuture = new CompletableFuture<>();
         gsiActiveFuture.complete(DescribeTableResponse.builder()
-            .table(TableDescription.builder()
-                .creationDateTime(Instant.now())
-                .itemCount(100L)
-                .tableStatus(TableStatus.ACTIVE)
-                .globalSecondaryIndexes(
-                    GlobalSecondaryIndexDescription.builder()
-                        .indexName("A_DIFFERENT_INDEX")
-                        .indexStatus(ACTIVE)
-                        .build(),
-                    GlobalSecondaryIndexDescription.builder()
-                        .indexName(LEASE_OWNER_TO_LEASE_KEY_INDEX_NAME)
-                        .indexStatus(ACTIVE)
+                .table(TableDescription.builder()
+                        .creationDateTime(Instant.now())
+                        .itemCount(100L)
+                        .tableStatus(TableStatus.ACTIVE)
+                        .globalSecondaryIndexes(
+                                GlobalSecondaryIndexDescription.builder()
+                                        .indexName("A_DIFFERENT_INDEX")
+                                        .indexStatus(ACTIVE)
+                                        .build(),
+                                GlobalSecondaryIndexDescription.builder()
+                                        .indexName(LEASE_OWNER_TO_LEASE_KEY_INDEX_NAME)
+                                        .indexStatus(ACTIVE)
+                                        .build())
                         .build())
-                .build())
-            .build());
-        when(mockDdbClient.describeTable(any(DescribeTableRequest.class)))
-            .thenReturn(gsiActiveFuture);
+                .build());
+        when(mockDdbClient.describeTable(any(DescribeTableRequest.class))).thenReturn(gsiActiveFuture);
 
         // returns true if GSI is not active
         assertTrue(leaseRefresherForTest.isLeaseOwnerToLeaseKeyIndexActive());
@@ -208,7 +217,8 @@ class DynamoDBLeaseRefresherTest {
     }
 
     @Test
-    void assignLease_unassignedLease_assertAssignmentToNewOwner() throws ProvisionedThroughputException, DependencyException, InvalidStateException {
+    void assignLease_unassignedLease_assertAssignmentToNewOwner()
+            throws ProvisionedThroughputException, DependencyException, InvalidStateException {
         setupTable();
         leaseRefresher.createLeaseIfNotExists(createDummyLease("lease1", null));
 
@@ -303,8 +313,8 @@ class DynamoDBLeaseRefresherTest {
     }
 
     @Test
-    void listLeasesParallely_sanity() throws ProvisionedThroughputException, DependencyException,
-            InvalidStateException {
+    void listLeasesParallely_sanity()
+            throws ProvisionedThroughputException, DependencyException, InvalidStateException {
         setupTable();
         leaseRefresher.createLeaseIfNotExists(createDummyLease("lease1", "leaseOwner1"));
         leaseRefresher.createLeaseIfNotExists(createDummyLease("lease2", "leaseOwner2"));
@@ -456,9 +466,11 @@ class DynamoDBLeaseRefresherTest {
         leaseRefresher.createLeaseTableIfNotExists();
         leaseRefresher.waitUntilLeaseTableExists(1, 1000);
 
-        final DescribeTableResponse describeTableResponse =
-                dbAsyncClient.describeTable(DescribeTableRequest.builder().tableName(TEST_LEASE_TABLE).build())
-                        .join();
+        final DescribeTableResponse describeTableResponse = dbAsyncClient
+                .describeTable(DescribeTableRequest.builder()
+                        .tableName(TEST_LEASE_TABLE)
+                        .build())
+                .join();
 
         assertProvisionTableMode(describeTableResponse, 100L, 200L);
     }
@@ -470,9 +482,11 @@ class DynamoDBLeaseRefresherTest {
         leaseRefresher.createLeaseTableIfNotExists();
         leaseRefresher.waitUntilLeaseTableExists(1, 1000);
 
-        final DescribeTableResponse describeTableResponse =
-                dbAsyncClient.describeTable(DescribeTableRequest.builder().tableName(TEST_LEASE_TABLE).build())
-                        .join();
+        final DescribeTableResponse describeTableResponse = dbAsyncClient
+                .describeTable(DescribeTableRequest.builder()
+                        .tableName(TEST_LEASE_TABLE)
+                        .build())
+                .join();
 
         assertOnDemandTableMode(describeTableResponse);
     }
@@ -485,9 +499,11 @@ class DynamoDBLeaseRefresherTest {
         leaseRefresher.createLeaseTableIfNotExists(50L, 100L);
         leaseRefresher.waitUntilLeaseTableExists(1, 1000);
 
-        final DescribeTableResponse describeTableResponse =
-                dbAsyncClient.describeTable(DescribeTableRequest.builder().tableName(TEST_LEASE_TABLE).build())
-                        .join();
+        final DescribeTableResponse describeTableResponse = dbAsyncClient
+                .describeTable(DescribeTableRequest.builder()
+                        .tableName(TEST_LEASE_TABLE)
+                        .build())
+                .join();
 
         assertProvisionTableMode(describeTableResponse, 50L, 100L);
     }
@@ -500,9 +516,11 @@ class DynamoDBLeaseRefresherTest {
         leaseRefresher.createLeaseTableIfNotExists(50L, 100L);
         leaseRefresher.waitUntilLeaseTableExists(1, 1000);
 
-        final DescribeTableResponse describeTableResponse =
-                dbAsyncClient.describeTable(DescribeTableRequest.builder().tableName(TEST_LEASE_TABLE).build())
-                        .join();
+        final DescribeTableResponse describeTableResponse = dbAsyncClient
+                .describeTable(DescribeTableRequest.builder()
+                        .tableName(TEST_LEASE_TABLE)
+                        .build())
+                .join();
 
         assertProvisionTableMode(describeTableResponse, 50L, 100L);
     }
@@ -516,16 +534,30 @@ class DynamoDBLeaseRefresherTest {
         // Creates base table and GSI
         setupTable(leaseRefresher);
 
-        final DescribeTableResponse describeTableResponse =
-                dbAsyncClient.describeTable(DescribeTableRequest.builder().tableName(TEST_LEASE_TABLE).build())
-                        .join();
+        final DescribeTableResponse describeTableResponse = dbAsyncClient
+                .describeTable(DescribeTableRequest.builder()
+                        .tableName(TEST_LEASE_TABLE)
+                        .build())
+                .join();
 
         assertProvisionTableMode(describeTableResponse, 100L, 200L);
-        assertEquals(100L,
-                describeTableResponse.table().globalSecondaryIndexes().get(0).provisionedThroughput().readCapacityUnits(),
+        assertEquals(
+                100L,
+                describeTableResponse
+                        .table()
+                        .globalSecondaryIndexes()
+                        .get(0)
+                        .provisionedThroughput()
+                        .readCapacityUnits(),
                 "GSI RCU is not 100L");
-        assertEquals(200L,
-                describeTableResponse.table().globalSecondaryIndexes().get(0).provisionedThroughput().writeCapacityUnits(),
+        assertEquals(
+                200L,
+                describeTableResponse
+                        .table()
+                        .globalSecondaryIndexes()
+                        .get(0)
+                        .provisionedThroughput()
+                        .writeCapacityUnits(),
                 "GSI RCU is not 100L");
     }
 
@@ -538,16 +570,30 @@ class DynamoDBLeaseRefresherTest {
         // Creates base table and GSI
         setupTable(leaseRefresher);
 
-        final DescribeTableResponse describeTableResponse =
-                dbAsyncClient.describeTable(DescribeTableRequest.builder().tableName(TEST_LEASE_TABLE).build())
-                        .join();
+        final DescribeTableResponse describeTableResponse = dbAsyncClient
+                .describeTable(DescribeTableRequest.builder()
+                        .tableName(TEST_LEASE_TABLE)
+                        .build())
+                .join();
 
         assertOnDemandTableMode(describeTableResponse);
-        assertEquals(0L,
-                describeTableResponse.table().globalSecondaryIndexes().get(0).provisionedThroughput().readCapacityUnits(),
+        assertEquals(
+                0L,
+                describeTableResponse
+                        .table()
+                        .globalSecondaryIndexes()
+                        .get(0)
+                        .provisionedThroughput()
+                        .readCapacityUnits(),
                 "GSI RCU is not 100L");
-        assertEquals(0L,
-                describeTableResponse.table().globalSecondaryIndexes().get(0).provisionedThroughput().writeCapacityUnits(),
+        assertEquals(
+                0L,
+                describeTableResponse
+                        .table()
+                        .globalSecondaryIndexes()
+                        .get(0)
+                        .provisionedThroughput()
+                        .writeCapacityUnits(),
                 "GSI RCU is not 100L");
     }
 
@@ -607,27 +653,31 @@ class DynamoDBLeaseRefresherTest {
     }
 
     private static void assertOnDemandTableMode(final DescribeTableResponse describeTableResponse) {
-        assertEquals(BillingMode.PAY_PER_REQUEST,
+        assertEquals(
+                BillingMode.PAY_PER_REQUEST,
                 describeTableResponse.table().billingModeSummary().billingMode(),
                 "Table mode is not PAY_PER_REQUEST");
-        assertEquals(0L,
+        assertEquals(
+                0L,
                 describeTableResponse.table().provisionedThroughput().readCapacityUnits(),
                 "PAY_PER_REQUEST mode on table does not have 0 RCU");
-        assertEquals(0L,
+        assertEquals(
+                0L,
                 describeTableResponse.table().provisionedThroughput().writeCapacityUnits(),
                 "PAY_PER_REQUEST mode on table does not have 0 WCU");
     }
 
-    private static void assertProvisionTableMode(final DescribeTableResponse describeTableResponse,
-            final long rcu,
-            final long wcu) {
+    private static void assertProvisionTableMode(
+            final DescribeTableResponse describeTableResponse, final long rcu, final long wcu) {
         // BillingModeSummary is null in case of PROVISIONED
-        assertNull(describeTableResponse.table().billingModeSummary(),
-                "BillingModeSummary is not null for provisionMode");
-        assertEquals(rcu,
+        assertNull(
+                describeTableResponse.table().billingModeSummary(), "BillingModeSummary is not null for provisionMode");
+        assertEquals(
+                rcu,
                 describeTableResponse.table().provisionedThroughput().readCapacityUnits(),
                 "RCU set on the Table is incorrect");
-        assertEquals(wcu,
+        assertEquals(
+                wcu,
                 describeTableResponse.table().provisionedThroughput().writeCapacityUnits(),
                 "WCU set on the Table is incorrect");
     }
@@ -646,9 +696,10 @@ class DynamoDBLeaseRefresherTest {
         return ddbTableConfig;
     }
 
-    private DynamoDBLeaseRefresher createLeaseRefresher(final DdbTableConfig ddbTableConfig,
-            final DynamoDbAsyncClient dynamoDbAsyncClient) {
-        return new DynamoDBLeaseRefresher(TEST_LEASE_TABLE,
+    private DynamoDBLeaseRefresher createLeaseRefresher(
+            final DdbTableConfig ddbTableConfig, final DynamoDbAsyncClient dynamoDbAsyncClient) {
+        return new DynamoDBLeaseRefresher(
+                TEST_LEASE_TABLE,
                 dynamoDbAsyncClient,
                 new DynamoDBLeaseSerializer(),
                 true,
@@ -682,7 +733,8 @@ class DynamoDBLeaseRefresherTest {
     private void createAndPutBadLeaseEntryInTable() {
         final PutItemRequest putItemRequest = PutItemRequest.builder()
                 .tableName(TEST_LEASE_TABLE)
-                .item(ImmutableMap.of("leaseKey", AttributeValue.builder().s("badLeaseKey").build()))
+                .item(ImmutableMap.of(
+                        "leaseKey", AttributeValue.builder().s("badLeaseKey").build()))
                 .build();
 
         dynamoDbAsyncClient.putItem(putItemRequest);

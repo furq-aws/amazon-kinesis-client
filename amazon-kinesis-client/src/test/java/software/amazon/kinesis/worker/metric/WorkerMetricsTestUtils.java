@@ -9,7 +9,7 @@ public class WorkerMetricsTestUtils {
 
     public static void writeLineToFile(final File file, final String line) throws IOException {
         final FileOutputStream fileOutputStream = new FileOutputStream(file);
-        final OutputStreamWriter outputStreamWriter =  new OutputStreamWriter(fileOutputStream);
+        final OutputStreamWriter outputStreamWriter = new OutputStreamWriter(fileOutputStream);
         outputStreamWriter.write(line);
         outputStreamWriter.close();
         fileOutputStream.close();

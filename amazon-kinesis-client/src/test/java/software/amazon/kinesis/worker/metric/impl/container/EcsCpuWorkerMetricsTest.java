@@ -1,15 +1,14 @@
 package software.amazon.kinesis.worker.metric.impl.container;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-
 import java.io.IOException;
 import java.nio.file.Paths;
 
 import org.junit.jupiter.api.Test;
-
 import software.amazon.kinesis.worker.metric.OperatingRange;
 import software.amazon.kinesis.worker.metric.WorkerMetric;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class EcsCpuWorkerMetricsTest {
 
@@ -25,7 +24,7 @@ class EcsCpuWorkerMetricsTest {
      * Total CPU core time the container can use is 2 * 100% = 2
      * CPU usage is 50000000 / 100000000 * 2 = 1 CPU core time
      * 1 CPU core time used / 2 available = 50% usage
-    */
+     */
     @Test
     void sanity_capture_noTaskCpuLimitOneContainer() throws IOException {
         final String testDataPath = "src/test/data/ecstestdata/noTaskCpuLimitOneContainer";
@@ -44,7 +43,7 @@ class EcsCpuWorkerMetricsTest {
      * Total CPU core time the container can use is 2 * 62.5% = 1.25
      * CPU usage is 50000000 / 100000000 * 2 = 1 CPU core time
      * 1 CPU core time used / 1.25 available = 80% usage
-    */
+     */
     @Test
     void sanity_capture_noTaskCpuLimitTwoContainers() throws IOException {
         final String testDataPath = "src/test/data/ecstestdata/noTaskCpuLimitTwoContainers";
@@ -73,7 +72,7 @@ class EcsCpuWorkerMetricsTest {
      * Total CPU core time the container can use is 2 * 100% = 2
      * CPU usage is 50000000 / 100000000 * 2 = 1 CPU core time
      * 1 CPU core time used / 4 available = 25% usage
-   */
+     */
     @Test
     void sanity_capture_taskCpuLimitOneContainer() throws IOException {
         final String testDataPath = "src/test/data/ecstestdata/taskCpuLimitOneContainer";
@@ -97,25 +96,34 @@ class EcsCpuWorkerMetricsTest {
 
     @Test
     void sanity_capture_bad_metadata_url() {
-        final OperatingRange operatingRange = OperatingRange.builder()
-                                                            .maxUtilization(80)
-                                                            .build();
-        final EcsCpuWorkerMetric ecsCpuWorkerMetric = new EcsCpuWorkerMetric(operatingRange,
-                "/someBadPath", "/someBadPath", "/someBadPath");
+        final OperatingRange operatingRange =
+                OperatingRange.builder().maxUtilization(80).build();
+        final EcsCpuWorkerMetric ecsCpuWorkerMetric =
+                new EcsCpuWorkerMetric(operatingRange, "/someBadPath", "/someBadPath", "/someBadPath");
         assertThrows(IllegalArgumentException.class, () -> ecsCpuWorkerMetric.capture());
     }
 
     void runWorkerMetricTest(String testDataPath, double expectedCpuUtilization) throws IOException {
-        final OperatingRange operatingRange = OperatingRange.builder()
-                                                            .maxUtilization(80)
-                                                            .build();
+        final OperatingRange operatingRange =
+                OperatingRange.builder().maxUtilization(80).build();
 
-
-        final String containerStatsPath = Paths.get(testDataPath + "/stats").toAbsolutePath().toUri().toURL().toString();
-        final String taskMetadataPath = Paths.get(testDataPath + "/task").toAbsolutePath().toUri().toURL().toString();
-        final String containerMetadataPath = Paths.get(testDataPath + "/root").toAbsolutePath().toUri().toURL().toString();
-        final EcsCpuWorkerMetric ecsCpuWorkerMetric = new EcsCpuWorkerMetric(operatingRange, containerStatsPath,
-            taskMetadataPath, containerMetadataPath);
+        final String containerStatsPath = Paths.get(testDataPath + "/stats")
+                .toAbsolutePath()
+                .toUri()
+                .toURL()
+                .toString();
+        final String taskMetadataPath = Paths.get(testDataPath + "/task")
+                .toAbsolutePath()
+                .toUri()
+                .toURL()
+                .toString();
+        final String containerMetadataPath = Paths.get(testDataPath + "/root")
+                .toAbsolutePath()
+                .toUri()
+                .toURL()
+                .toString();
+        final EcsCpuWorkerMetric ecsCpuWorkerMetric =
+                new EcsCpuWorkerMetric(operatingRange, containerStatsPath, taskMetadataPath, containerMetadataPath);
 
         final WorkerMetric.WorkerMetricValue response1 = ecsCpuWorkerMetric.capture();
         assertEquals(expectedCpuUtilization, response1.getValue());

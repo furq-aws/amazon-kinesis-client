@@ -1,8 +1,5 @@
 package software.amazon.kinesis.coordinator.assignment;
 
-import static java.util.Objects.isNull;
-import static java.util.Objects.nonNull;
-
 import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -18,10 +15,12 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
-
 import software.amazon.kinesis.annotations.KinesisClientInternalApi;
 import software.amazon.kinesis.leases.Lease;
 import software.amazon.kinesis.worker.metricstats.WorkerMetricStats;
+
+import static java.util.Objects.isNull;
+import static java.util.Objects.nonNull;
 
 /**
  * VarianceBasedLeaseAssignmentDecider
@@ -57,37 +56,36 @@ public final class VarianceBasedLeaseAssignmentDecider implements LeaseAssignmen
         this.reBalanceThreshold = reBalanceThreshold;
         this.allowThroughputOvershoot = allowThroughputOvershoot;
         initialize();
-        final Comparator<WorkerMetricStats> comparator = Comparator.comparingDouble(workerMetrics -> workerMetrics.computePercentageToReachAverage(
-                workerMetricsToFleetLevelAverageMap));
+        final Comparator<WorkerMetricStats> comparator = Comparator.comparingDouble(
+                workerMetrics -> workerMetrics.computePercentageToReachAverage(workerMetricsToFleetLevelAverageMap));
         this.assignableWorkerSortedByAvailableCapacity = new PriorityQueue<>(comparator.reversed());
-        this.assignableWorkerSortedByAvailableCapacity.addAll(getAvailableWorkersForAssignment(inMemoryStorageView.getActiveWorkerMetrics()));
+        this.assignableWorkerSortedByAvailableCapacity.addAll(
+                getAvailableWorkersForAssignment(inMemoryStorageView.getActiveWorkerMetrics()));
     }
 
     private void initialize() {
-        final Map<String, Double> workerMetricsNameToAverage = inMemoryStorageView.getActiveWorkerMetrics()
-                .stream()
-                .flatMap(workerMetrics -> workerMetrics.getMetricStats()
-                        .keySet()
-                        .stream()
-                        .map(workerMetricsName -> new SimpleEntry<>(workerMetricsName, workerMetrics.getMetricStat(workerMetricsName))))
-                .collect(Collectors.groupingBy(SimpleEntry::getKey,
-                        HashMap::new,
-                        Collectors.averagingDouble(SimpleEntry::getValue)));
+        final Map<String, Double> workerMetricsNameToAverage = inMemoryStorageView.getActiveWorkerMetrics().stream()
+                .flatMap(workerMetrics -> workerMetrics.getMetricStats().keySet().stream()
+                        .map(workerMetricsName ->
+                                new SimpleEntry<>(workerMetricsName, workerMetrics.getMetricStat(workerMetricsName))))
+                .collect(Collectors.groupingBy(
+                        SimpleEntry::getKey, HashMap::new, Collectors.averagingDouble(SimpleEntry::getValue)));
 
         workerMetricsToFleetLevelAverageMap.putAll(workerMetricsNameToAverage);
 
-        final int totalWorkers = Math.max(inMemoryStorageView.getActiveWorkerMetrics().size(), 1);
+        final int totalWorkers =
+                Math.max(inMemoryStorageView.getActiveWorkerMetrics().size(), 1);
         this.targetLeasePerWorker = Math.max(inMemoryStorageView.getLeaseList().size() / totalWorkers, 1);
     }
 
     private List<WorkerMetricStats> getAvailableWorkersForAssignment(final List<WorkerMetricStats> workerMetricsList) {
-        // Workers with WorkerMetricStats running hot are also available for assignment as the goal is to balance utilization
+        // Workers with WorkerMetricStats running hot are also available for assignment as the goal is to balance
+        // utilization
         // always (e.g., if all workers have hot WorkerMetricStats, balance the variance between them too)
-        return workerMetricsList
-                .stream()
-                .filter(workerMetrics ->
-                        inMemoryStorageView.isWorkerTotalThroughputLessThanMaxThroughput(workerMetrics.getWorkerId()) &&
-                                inMemoryStorageView.isWorkerAssignedLeasesLessThanMaxLeases(workerMetrics.getWorkerId()))
+        return workerMetricsList.stream()
+                .filter(workerMetrics -> inMemoryStorageView.isWorkerTotalThroughputLessThanMaxThroughput(
+                                workerMetrics.getWorkerId())
+                        && inMemoryStorageView.isWorkerAssignedLeasesLessThanMaxLeases(workerMetrics.getWorkerId()))
                 .collect(Collectors.toList());
     }
 
@@ -111,8 +109,10 @@ public final class VarianceBasedLeaseAssignmentDecider implements LeaseAssignmen
         expiredOrUnAssignedLeases.removeAll(assignedLeases);
     }
 
-    private List<WorkerMetricStats> getWorkersToTakeLeasesFromIfRequired(final List<WorkerMetricStats> currentWorkerMetrics,
-            final String workerMetricsName, final double workerMetricsValueAvg) {
+    private List<WorkerMetricStats> getWorkersToTakeLeasesFromIfRequired(
+            final List<WorkerMetricStats> currentWorkerMetrics,
+            final String workerMetricsName,
+            final double workerMetricsValueAvg) {
         final List<WorkerMetricStats> workerIdsAboveAverage = new ArrayList<>();
 
         final double upperLimit = workerMetricsValueAvg * (1.0D + (double) reBalanceThreshold / 100);
@@ -125,33 +125,38 @@ public final class VarianceBasedLeaseAssignmentDecider implements LeaseAssignmen
         boolean shouldTriggerReBalance = false;
         for (final WorkerMetricStats workerMetrics : currentWorkerMetrics) {
             final double currentWorkerMetricsValue = workerMetrics.getMetricStat(workerMetricsName);
-            final boolean isCurrentWorkerMetricsAboveOperatingRange = workerMetrics.isWorkerMetricAboveOperatingRange(workerMetricsName);
+            final boolean isCurrentWorkerMetricsAboveOperatingRange =
+                    workerMetrics.isWorkerMetricAboveOperatingRange(workerMetricsName);
             /*
             If there is any worker, whose WorkerMetricStats value is between +/- reBalanceThreshold % of workerMetricsValueAvg or if
             worker's WorkerMetricStats value is above operating range trigger re-balance
              */
-            if (currentWorkerMetricsValue > upperLimit || currentWorkerMetricsValue < lowerLimit || isCurrentWorkerMetricsAboveOperatingRange) {
+            if (currentWorkerMetricsValue > upperLimit
+                    || currentWorkerMetricsValue < lowerLimit
+                    || isCurrentWorkerMetricsAboveOperatingRange) {
                 shouldTriggerReBalance = true;
             }
-            // Perform re-balance on the worker if its above upperLimit or if current WorkerMetricStats is above operating range.
+            // Perform re-balance on the worker if its above upperLimit or if current WorkerMetricStats is above
+            // operating range.
             if (currentWorkerMetricsValue >= upperLimit || isCurrentWorkerMetricsAboveOperatingRange) {
                 workerIdsAboveAverage.add(workerMetrics);
             }
-            if (mostLoadedWorker == null || mostLoadedWorker.getMetricStat(workerMetricsName) < currentWorkerMetricsValue) {
+            if (mostLoadedWorker == null
+                    || mostLoadedWorker.getMetricStat(workerMetricsName) < currentWorkerMetricsValue) {
                 mostLoadedWorker = workerMetrics;
             }
         }
 
         /*
-         If workerIdsAboveAverage is empty that means there is no worker with WorkerMetricStats value above upperLimit so pick
-         the worker with higher CPU. This can happen when there is worker with WorkerMetricStats value below lowerLimit but
-         all other workers are within upperLimit.
-         */
+        If workerIdsAboveAverage is empty that means there is no worker with WorkerMetricStats value above upperLimit so pick
+        the worker with higher CPU. This can happen when there is worker with WorkerMetricStats value below lowerLimit but
+        all other workers are within upperLimit.
+        */
         if (workerIdsAboveAverage.isEmpty()) {
             workerIdsAboveAverage.add(mostLoadedWorker);
         }
 
-        return  shouldTriggerReBalance ? workerIdsAboveAverage: Collections.emptyList();
+        return shouldTriggerReBalance ? workerIdsAboveAverage : Collections.emptyList();
     }
 
     /**
@@ -173,7 +178,8 @@ public final class VarianceBasedLeaseAssignmentDecider implements LeaseAssignmen
         String largestOutlierWorkerMetricsName = "";
         double maxThroughputTake = -1.0D;
 
-        for (final Map.Entry<String, Double> workerMetricsToFleetLevelAverageEntry : workerMetricsToFleetLevelAverageMap.entrySet()) {
+        for (final Map.Entry<String, Double> workerMetricsToFleetLevelAverageEntry :
+                workerMetricsToFleetLevelAverageMap.entrySet()) {
             final String workerMetricsName = workerMetricsToFleetLevelAverageEntry.getKey();
 
             // Filter workers that does not have current WorkerMetricStats. This is possible if application is adding a
@@ -184,31 +190,36 @@ public final class VarianceBasedLeaseAssignmentDecider implements LeaseAssignmen
 
             final double fleetAverageForWorkerMetrics = workerMetricsToFleetLevelAverageEntry.getValue();
 
-            final List<WorkerMetricStats> workerToTakeLeasesFrom =
-                    getWorkersToTakeLeasesFromIfRequired(currentWorkerMetrics, workerMetricsName, fleetAverageForWorkerMetrics);
+            final List<WorkerMetricStats> workerToTakeLeasesFrom = getWorkersToTakeLeasesFromIfRequired(
+                    currentWorkerMetrics, workerMetricsName, fleetAverageForWorkerMetrics);
 
             final Map<String, Double> workerIdToThroughputToTakeForCurrentWorkerMetrics = new HashMap<>();
             double totalThroughputToTakeForCurrentWorkerMetrics = 0D;
             for (final WorkerMetricStats workerToTakeLease : workerToTakeLeasesFrom) {
                 final double workerMetricsValueForWorker = workerToTakeLease.getMetricStat(workerMetricsName);
                 // Load to take based on the difference compared to the fleet level average
-                final double loadPercentageToTake = (workerMetricsValueForWorker - fleetAverageForWorkerMetrics) / workerMetricsValueForWorker;
+                final double loadPercentageToTake =
+                        (workerMetricsValueForWorker - fleetAverageForWorkerMetrics) / workerMetricsValueForWorker;
                 // Dampen the load based on dampeningPercentageValue
-                final double dampenedLoadPercentageToTake = loadPercentageToTake * ((double) dampeningPercentageValue / 100);
+                final double dampenedLoadPercentageToTake =
+                        loadPercentageToTake * ((double) dampeningPercentageValue / 100);
                 final double throughputToTake =
-                        inMemoryStorageView.getTotalAssignedThroughput(workerToTakeLease.getWorkerId()) * dampenedLoadPercentageToTake;
-                log.info("For worker : {} taking throughput : {} after dampening based on WorkerMetricStats : {}",
+                        inMemoryStorageView.getTotalAssignedThroughput(workerToTakeLease.getWorkerId())
+                                * dampenedLoadPercentageToTake;
+                log.info(
+                        "For worker : {} taking throughput : {} after dampening based on WorkerMetricStats : {}",
                         workerToTakeLease.getWorkerId(),
                         throughputToTake,
                         workerMetricsName);
                 totalThroughputToTakeForCurrentWorkerMetrics += throughputToTake;
-                workerIdToThroughputToTakeForCurrentWorkerMetrics.put(workerToTakeLease.getWorkerId(), throughputToTake);
+                workerIdToThroughputToTakeForCurrentWorkerMetrics.put(
+                        workerToTakeLease.getWorkerId(), throughputToTake);
             }
 
             /*
-                If totalThroughputToTakeForCurrentWorkerMetrics is more than maxThroughputTake that means this WorkerMetricStats is more
-                outlier so consider this for reBalancing
-             */
+               If totalThroughputToTakeForCurrentWorkerMetrics is more than maxThroughputTake that means this WorkerMetricStats is more
+               outlier so consider this for reBalancing
+            */
             if (maxThroughputTake < totalThroughputToTakeForCurrentWorkerMetrics) {
                 largestOutlierWorkerMetricsName = workerMetricsName;
                 workerIdToThroughputToTakeMap.clear();
@@ -217,7 +228,8 @@ public final class VarianceBasedLeaseAssignmentDecider implements LeaseAssignmen
             }
         }
 
-        log.info("Largest outlier WorkerMetricStats is : {} and total of {} throughput will be rebalanced",
+        log.info(
+                "Largest outlier WorkerMetricStats is : {} and total of {} throughput will be rebalanced",
                 largestOutlierWorkerMetricsName,
                 maxThroughputTake);
         log.info("Workers to throughput taken from them is : {}", workerIdToThroughputToTakeMap);
@@ -225,25 +237,30 @@ public final class VarianceBasedLeaseAssignmentDecider implements LeaseAssignmen
         final List<Map.Entry<String, Double>> sortedWorkerIdToThroughputToTakeEntries =
                 new ArrayList<>(workerIdToThroughputToTakeMap.entrySet());
         // sort entries by values.
-        Collections.sort(sortedWorkerIdToThroughputToTakeEntries, (e1, e2) -> e2.getValue().compareTo(e1.getValue()));
+        Collections.sort(sortedWorkerIdToThroughputToTakeEntries, (e1, e2) -> e2.getValue()
+                .compareTo(e1.getValue()));
 
-        for (final Map.Entry<String, Double> workerIdToThroughputToTakeEntry : sortedWorkerIdToThroughputToTakeEntries) {
+        for (final Map.Entry<String, Double> workerIdToThroughputToTakeEntry :
+                sortedWorkerIdToThroughputToTakeEntries) {
             final String workerId = workerIdToThroughputToTakeEntry.getKey();
 
             final double throughputToTake = workerIdToThroughputToTakeEntry.getValue();
 
             final Queue<Lease> leasesToTake = getLeasesToTake(workerId, throughputToTake);
 
-            log.info("Leases taken from worker : {} are : {}",
+            log.info(
+                    "Leases taken from worker : {} are : {}",
                     workerId,
                     leasesToTake.stream().map(Lease::leaseKey).collect(Collectors.toSet()));
 
             for (final Lease lease : leasesToTake) {
                 final WorkerMetricStats workerToAssign = assignableWorkerSortedByAvailableCapacity.poll();
-                if (nonNull(workerToAssign) && workerToAssign.willAnyMetricStatsGoAboveAverageUtilizationOrOperatingRange(
-                        workerMetricsToFleetLevelAverageMap,
-                        inMemoryStorageView.getTargetAverageThroughput(),
-                        lease.throughputKBps(), targetLeasePerWorker)) {
+                if (nonNull(workerToAssign)
+                        && workerToAssign.willAnyMetricStatsGoAboveAverageUtilizationOrOperatingRange(
+                                workerMetricsToFleetLevelAverageMap,
+                                inMemoryStorageView.getTargetAverageThroughput(),
+                                lease.throughputKBps(),
+                                targetLeasePerWorker)) {
                     log.info("No worker to assign anymore in this iteration due to hitting average values");
                     break;
                 }
@@ -254,11 +271,11 @@ public final class VarianceBasedLeaseAssignmentDecider implements LeaseAssignmen
         }
 
         printWorkerToUtilizationLog(inMemoryStorageView.getActiveWorkerMetrics());
-
     }
 
     private Queue<Lease> getLeasesToTake(final String workerId, final double throughputToTake) {
-        final Set<Lease> existingLeases = inMemoryStorageView.getWorkerToLeasesMap().get(workerId);
+        final Set<Lease> existingLeases =
+                inMemoryStorageView.getWorkerToLeasesMap().get(workerId);
 
         if (isNull(existingLeases) || existingLeases.isEmpty()) {
             return new ArrayDeque<>();
@@ -280,26 +297,29 @@ public final class VarianceBasedLeaseAssignmentDecider implements LeaseAssignmen
             assignableWorkerSortedByAvailableCapacity.add(workerMetrics);
             return;
         }
-        workerMetrics.extrapolateMetricStatValuesForAddedThroughput(workerMetricsToFleetLevelAverageMap,
+        workerMetrics.extrapolateMetricStatValuesForAddedThroughput(
+                workerMetricsToFleetLevelAverageMap,
                 inMemoryStorageView.getTargetAverageThroughput(),
                 lease.throughputKBps(),
                 targetLeasePerWorker);
         log.info("Assigning lease : {} to worker : {}", lease.leaseKey(), workerMetrics.getWorkerId());
         inMemoryStorageView.performLeaseAssignment(lease, workerMetrics.getWorkerId());
-        if (inMemoryStorageView.isWorkerTotalThroughputLessThanMaxThroughput(workerMetrics.getWorkerId()) &&
-                inMemoryStorageView.isWorkerAssignedLeasesLessThanMaxLeases(workerMetrics.getWorkerId())) {
+        if (inMemoryStorageView.isWorkerTotalThroughputLessThanMaxThroughput(workerMetrics.getWorkerId())
+                && inMemoryStorageView.isWorkerAssignedLeasesLessThanMaxLeases(workerMetrics.getWorkerId())) {
             assignableWorkerSortedByAvailableCapacity.add(workerMetrics);
         }
     }
 
     private void printWorkerToUtilizationLog(final List<WorkerMetricStats> activeWorkerMetrics) {
-        activeWorkerMetrics.forEach(workerMetrics -> log.info("WorkerId : {} and average WorkerMetricStats data : {}",
+        activeWorkerMetrics.forEach(workerMetrics -> log.info(
+                "WorkerId : {} and average WorkerMetricStats data : {}",
                 workerMetrics.getWorkerId(),
                 workerMetrics.getMetricStatsMap()));
     }
 
     private Queue<Lease> getLeasesCombiningToThroughput(final String workerId, final double throughputToGet) {
-        final List<Lease> assignedLeases = new ArrayList<>(inMemoryStorageView.getWorkerToLeasesMap().get(workerId));
+        final List<Lease> assignedLeases =
+                new ArrayList<>(inMemoryStorageView.getWorkerToLeasesMap().get(workerId));
         if (assignedLeases.isEmpty()) {
             // This is possible if the worker is having high utilization but does not have any leases assigned to it
             return new ArrayDeque<>();
@@ -325,5 +345,4 @@ public final class VarianceBasedLeaseAssignmentDecider implements LeaseAssignmen
         }
         return response;
     }
-
 }

@@ -14,6 +14,10 @@
  */
 package software.amazon.kinesis.coordinator.migration;
 
+import java.util.Random;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ScheduledExecutorService;
+
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,10 +31,6 @@ import software.amazon.kinesis.leases.exceptions.InvalidStateException;
 import software.amazon.kinesis.metrics.MetricsLevel;
 import software.amazon.kinesis.metrics.MetricsScope;
 import software.amazon.kinesis.metrics.MetricsUtil;
-
-import java.util.Random;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ScheduledExecutorService;
 
 import static software.amazon.kinesis.coordinator.migration.ClientVersion.CLIENT_VERSION_2x;
 import static software.amazon.kinesis.coordinator.migration.ClientVersion.CLIENT_VERSION_UPGRADE_FROM_2x;
@@ -71,12 +71,12 @@ public class MigrationClientVersion2xState implements MigrationClientVersionStat
 
             log.info("Starting roll-forward monitor");
             rollForwardMonitor = new ClientVersionChangeMonitor(
-                initializer.metricsFactory(),
-                coordinatorStateDAO,
-                stateMachineThreadPool,
-                this::onClientVersionChange,
-                clientVersion(),
-                random);
+                    initializer.metricsFactory(),
+                    coordinatorStateDAO,
+                    stateMachineThreadPool,
+                    this::onClientVersionChange,
+                    clientVersion(),
+                    random);
             rollForwardMonitor.startMonitor();
             entered = true;
         } else {
@@ -107,18 +107,18 @@ public class MigrationClientVersion2xState implements MigrationClientVersionStat
      *                                  or if the new state in DDB is unexpected.
      */
     private synchronized void onClientVersionChange(@NonNull final MigrationState newState)
-        throws InvalidStateException, DependencyException
-    {
+            throws InvalidStateException, DependencyException {
         if (!entered || left) {
             log.warn("Received client version change notification on inactive state {}", this);
             return;
         }
-        final MetricsScope scope = MetricsUtil.createMetricsWithOperation(initializer.metricsFactory(),
-            METRICS_OPERATION);
+        final MetricsScope scope =
+                MetricsUtil.createMetricsWithOperation(initializer.metricsFactory(), METRICS_OPERATION);
         try {
             if (newState.getClientVersion() == CLIENT_VERSION_UPGRADE_FROM_2x) {
-                log.info("A roll-forward has been initiated for the application. Transition to {}",
-                    CLIENT_VERSION_UPGRADE_FROM_2x);
+                log.info(
+                        "A roll-forward has been initiated for the application. Transition to {}",
+                        CLIENT_VERSION_UPGRADE_FROM_2x);
                 // If this succeeds, the monitor will cancel itself.
                 stateMachine.transitionTo(CLIENT_VERSION_UPGRADE_FROM_2x, newState);
             } else {
@@ -131,8 +131,10 @@ public class MigrationClientVersion2xState implements MigrationClientVersionStat
                 // Ideally we don't expect modifications to DDB table out of the KCL migration tool scope,
                 // so keeping it simple and not writing back to DDB, the error log below would help capture
                 // any strange behavior if this happens.
-                log.error("Migration state has invalid client version {}. Transition from {} is not supported", newState,
-                    CLIENT_VERSION_2x);
+                log.error(
+                        "Migration state has invalid client version {}. Transition from {} is not supported",
+                        newState,
+                        CLIENT_VERSION_2x);
                 throw new InvalidStateException(String.format("Unexpected new state %s", newState));
             }
         } catch (final InvalidStateException | DependencyException e) {

@@ -103,8 +103,12 @@ public final class MigrationAdaptiveLeaseAssignmentModeProvider {
             this.initialized = true;
             return;
         }
-        log.info("Already initialized dynamicModeChangeSupportNeeded {} mode {}. Ignoring new values {}, {}",
-            this.dynamicModeChangeSupportNeeded, this.currentMode, dynamicModeChangeSupportNeeded, mode);
+        log.info(
+                "Already initialized dynamicModeChangeSupportNeeded {} mode {}. Ignoring new values {}, {}",
+                this.dynamicModeChangeSupportNeeded,
+                this.currentMode,
+                dynamicModeChangeSupportNeeded,
+                mode);
     }
 
     synchronized void updateLeaseAssignmentMode(final LeaseAssignmentMode mode) {
@@ -116,7 +120,7 @@ public final class MigrationAdaptiveLeaseAssignmentModeProvider {
             this.currentMode = mode;
             return;
         }
-        throw new IllegalStateException(String.format("Lease assignment mode already initialized to %s cannot" +
-            " change to %s", this.currentMode, mode));
+        throw new IllegalStateException(String.format(
+                "Lease assignment mode already initialized to %s cannot" + " change to %s", this.currentMode, mode));
     }
 }

@@ -226,17 +226,17 @@ public class ShardConsumerTest {
 
         TestPublisher(boolean enableCancelAwait) {
             doAnswer(a -> {
-                requestBarrier.await();
-                return null;
-            })
+                        requestBarrier.await();
+                        return null;
+                    })
                     .when(subscription)
                     .request(anyLong());
             doAnswer(a -> {
-                if (enableCancelAwait) {
-                    requestBarrier.await();
-                }
-                return null;
-            })
+                        if (enableCancelAwait) {
+                            requestBarrier.await();
+                        }
+                        return null;
+                    })
                     .when(subscription)
                     .cancel();
         }
@@ -990,29 +990,29 @@ public class ShardConsumerTest {
         // to control the precise timing of the thread execution, this is the best way
         final CountDownLatch processTaskLatch = new CountDownLatch(1);
         new Thread(() -> {
-            reset(mockState);
-            when(mockState.taskType()).thenReturn(TaskType.PROCESS);
-            final ConsumerTask mockProcessTask = mock(ConsumerTask.class);
-            when(mockState.createTask(any(), any(), any())).thenReturn(mockProcessTask);
-            when(mockProcessTask.call()).then(input -> {
-                // first we want to wait for subscribe to be called,
-                // but we cannot control the timing, so wait for 10 seconds
-                // to let the main thread invoke executeLifecyle which
-                // will perform subscribe
-                processTaskLatch.countDown();
-                log.info("Record Processor Thread: Holding shardConsumer lock, waiting for 10 seconds to"
-                        + " let subscribe be called by scheduler thread");
-                Thread.sleep(10 * 1000);
-                log.info("RecordProcessor Thread: Done waiting");
-                // then return shard end result
-                log.info(
-                        "RecordProcessor Thread: Simulating execution of ProcessTask and returning shard-end result");
-                return new TaskResult(true);
-            });
-            final Subscription mockSubscription = mock(Subscription.class);
-            consumer.handleInput(
-                    ProcessRecordsInput.builder().isAtShardEnd(true).build(), mockSubscription);
-        })
+                    reset(mockState);
+                    when(mockState.taskType()).thenReturn(TaskType.PROCESS);
+                    final ConsumerTask mockProcessTask = mock(ConsumerTask.class);
+                    when(mockState.createTask(any(), any(), any())).thenReturn(mockProcessTask);
+                    when(mockProcessTask.call()).then(input -> {
+                        // first we want to wait for subscribe to be called,
+                        // but we cannot control the timing, so wait for 10 seconds
+                        // to let the main thread invoke executeLifecyle which
+                        // will perform subscribe
+                        processTaskLatch.countDown();
+                        log.info("Record Processor Thread: Holding shardConsumer lock, waiting for 10 seconds to"
+                                + " let subscribe be called by scheduler thread");
+                        Thread.sleep(10 * 1000);
+                        log.info("RecordProcessor Thread: Done waiting");
+                        // then return shard end result
+                        log.info(
+                                "RecordProcessor Thread: Simulating execution of ProcessTask and returning shard-end result");
+                        return new TaskResult(true);
+                    });
+                    final Subscription mockSubscription = mock(Subscription.class);
+                    consumer.handleInput(
+                            ProcessRecordsInput.builder().isAtShardEnd(true).build(), mockSubscription);
+                })
                 .start();
 
         processTaskLatch.await();

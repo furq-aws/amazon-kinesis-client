@@ -1,15 +1,14 @@
 package software.amazon.kinesis.leases;
 
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.concurrent.TimeUnit;
+
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.runners.MockitoJUnitRunner;
-
 import software.amazon.kinesis.retrieval.kpl.ExtendedSequenceNumber;
-
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -26,7 +25,7 @@ public class LeaseTest {
     private final Lease shutdownRequestedLease = createShutdownRequestedLease();
     private final Lease eligibleForGracefulShutdownLease = createisEligibleForGracefulShutdownLease();
 
-    //Write a unit test for software.amazon.kinesis.leases.Lease to test leaseOwner as null and epired
+    // Write a unit test for software.amazon.kinesis.leases.Lease to test leaseOwner as null and epired
     @Test
     public void testLeaseOwnerNullAndExpired() {
         long expiredTime = MOCK_CURRENT_TIME - LEASE_DURATION_NANOS - 1;
@@ -137,5 +136,4 @@ public class LeaseTest {
         lease.checkpoint(ExtendedSequenceNumber.TRIM_HORIZON);
         return lease;
     }
-
 }

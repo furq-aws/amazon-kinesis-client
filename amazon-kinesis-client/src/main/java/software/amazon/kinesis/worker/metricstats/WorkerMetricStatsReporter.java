@@ -14,6 +14,8 @@
  */
 package software.amazon.kinesis.worker.metricstats;
 
+import java.time.Instant;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import software.amazon.kinesis.annotations.KinesisClientInternalApi;
@@ -21,8 +23,6 @@ import software.amazon.kinesis.metrics.MetricsFactory;
 import software.amazon.kinesis.metrics.MetricsLevel;
 import software.amazon.kinesis.metrics.MetricsScope;
 import software.amazon.kinesis.metrics.MetricsUtil;
-
-import java.time.Instant;
 
 /**
  * Reporter that is periodically executed to report WorkerMetricStats. It collects
@@ -49,13 +49,12 @@ public class WorkerMetricStatsReporter implements Runnable {
              * case where a worker can have a failure for some time and thus does not update the workerMetrics entry
              * and LeaseAssigmentManager cleans it and then worker ends updating entry without operating range.
              */
-            final WorkerMetricStats workerMetrics = WorkerMetricStats
-                .builder()
-                .workerId(workerIdentifier)
-                .metricStats(workerMetricsManager.computeMetrics())
-                .operatingRange(workerMetricsManager.getOperatingRange())
-                .lastUpdateTime(Instant.now().getEpochSecond())
-                .build();
+            final WorkerMetricStats workerMetrics = WorkerMetricStats.builder()
+                    .workerId(workerIdentifier)
+                    .metricStats(workerMetricsManager.computeMetrics())
+                    .operatingRange(workerMetricsManager.getOperatingRange())
+                    .lastUpdateTime(Instant.now().getEpochSecond())
+                    .build();
             workerMetricsDAO.updateMetrics(workerMetrics);
             success = true;
         } catch (final Exception e) {

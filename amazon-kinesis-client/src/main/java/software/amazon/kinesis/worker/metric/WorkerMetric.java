@@ -1,10 +1,9 @@
 package software.amazon.kinesis.worker.metric;
 
+import com.google.common.base.Preconditions;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NonNull;
-
-import com.google.common.base.Preconditions;
 
 public interface WorkerMetric {
     /**
@@ -45,8 +44,8 @@ public interface WorkerMetric {
         private final Double value;
 
         private WorkerMetricValue(@NonNull final Double value) {
-            Preconditions.checkArgument(!(value < 0 || value > 100),
-                    value + " is either less than 0 or greater than 100");
+            Preconditions.checkArgument(
+                    !(value < 0 || value > 100), value + " is either less than 0 or greater than 100");
             this.value = value;
         }
     }

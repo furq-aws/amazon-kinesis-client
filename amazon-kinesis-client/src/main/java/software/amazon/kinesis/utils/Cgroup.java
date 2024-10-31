@@ -17,8 +17,7 @@ public class Cgroup {
                 bufferedReader = new BufferedReader(new FileReader(file));
                 return bufferedReader.readLine();
             } else {
-                throw new IllegalArgumentException(
-                        String.format("Failed to read file. %s does not exist", path));
+                throw new IllegalArgumentException(String.format("Failed to read file. %s does not exist", path));
             }
         } catch (final Throwable t) {
             if (t instanceof IllegalArgumentException) {
@@ -59,5 +58,4 @@ public class Cgroup {
         }
         return sumCpus;
     }
-
 }

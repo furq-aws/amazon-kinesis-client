@@ -24,7 +24,7 @@ import software.amazon.kinesis.retrieval.ThrottlingReporter;
  * and state transitions is contained within the {@link ConsumerState} objects.
  *
  * <h2>State Diagram</h2>
- * 
+ *
  * <pre>
  *       +-------------------+
  *       | Waiting on Parent |                               +------------------+
@@ -82,7 +82,7 @@ class ConsumerStates {
         SHUTDOWN_REQUESTED(new ShutdownNotificationState()),
         SHUTTING_DOWN(new ShuttingDownState()),
         SHUTDOWN_COMPLETE(new ShutdownCompleteState());
-        //@formatter:on
+        // @formatter:on
 
         @Getter
         @Accessors(fluent = true)
@@ -120,8 +120,10 @@ class ConsumerStates {
     static class BlockedOnParentState implements ConsumerState {
 
         @Override
-        public ConsumerTask createTask(ShardConsumerArgument consumerArgument, ShardConsumer consumer, ProcessRecordsInput input) {
-            return new BlockOnParentShardTask(consumerArgument.shardInfo(),
+        public ConsumerTask createTask(
+                ShardConsumerArgument consumerArgument, ShardConsumer consumer, ProcessRecordsInput input) {
+            return new BlockOnParentShardTask(
+                    consumerArgument.shardInfo(),
                     consumerArgument.leaseCoordinator().leaseRefresher(),
                     consumerArgument.parentShardPollIntervalMillis());
         }
@@ -184,11 +186,14 @@ class ConsumerStates {
     static class InitializingState implements ConsumerState {
 
         @Override
-        public ConsumerTask createTask(ShardConsumerArgument argument, ShardConsumer consumer, ProcessRecordsInput input) {
-            return new InitializeTask(argument.shardInfo(),
+        public ConsumerTask createTask(
+                ShardConsumerArgument argument, ShardConsumer consumer, ProcessRecordsInput input) {
+            return new InitializeTask(
+                    argument.shardInfo(),
                     argument.shardRecordProcessor(),
                     argument.checkpoint(),
-                    argument.recordProcessorCheckpointer(), argument.initialPositionInStream(),
+                    argument.recordProcessorCheckpointer(),
+                    argument.initialPositionInStream(),
                     argument.recordsPublisher(),
                     argument.taskBackoffTimeMillis(),
                     argument.metricsFactory());
@@ -244,9 +249,12 @@ class ConsumerStates {
     static class ProcessingState implements ConsumerState {
 
         @Override
-        public ConsumerTask createTask(ShardConsumerArgument argument, ShardConsumer consumer, ProcessRecordsInput input) {
-            ThrottlingReporter throttlingReporter = new ThrottlingReporter(5, argument.shardInfo().shardId());
-            return new ProcessTask(argument.shardInfo(),
+        public ConsumerTask createTask(
+                ShardConsumerArgument argument, ShardConsumer consumer, ProcessRecordsInput input) {
+            ThrottlingReporter throttlingReporter =
+                    new ThrottlingReporter(5, argument.shardInfo().shardId());
+            return new ProcessTask(
+                    argument.shardInfo(),
                     argument.shardRecordProcessor(),
                     argument.recordProcessorCheckpointer(),
                     argument.taskBackoffTimeMillis(),
@@ -259,8 +267,7 @@ class ConsumerStates {
                     argument.aggregatorUtil(),
                     argument.metricsFactory(),
                     argument.schemaRegistryDecoder(),
-                    argument.leaseCoordinator().leaseStatsRecorder()
-            );
+                    argument.leaseCoordinator().leaseStatsRecorder());
         }
 
         @Override
@@ -323,9 +330,11 @@ class ConsumerStates {
     static class ShutdownNotificationState implements ConsumerState {
 
         @Override
-        public ConsumerTask createTask(ShardConsumerArgument argument, ShardConsumer consumer, ProcessRecordsInput input) {
+        public ConsumerTask createTask(
+                ShardConsumerArgument argument, ShardConsumer consumer, ProcessRecordsInput input) {
             // TODO: notify shutdownrequested
-            return new ShutdownNotificationTask(argument.shardRecordProcessor(),
+            return new ShutdownNotificationTask(
+                    argument.shardRecordProcessor(),
                     argument.recordProcessorCheckpointer(),
                     consumer.shutdownNotification(),
                     argument.shardInfo(),
@@ -359,7 +368,6 @@ class ConsumerStates {
         public boolean isTerminal() {
             return false;
         }
-
     }
 
     /**
@@ -396,7 +404,8 @@ class ConsumerStates {
     static class ShutdownNotificationCompletionState implements ConsumerState {
 
         @Override
-        public ConsumerTask createTask(ShardConsumerArgument argument, ShardConsumer consumer, ProcessRecordsInput input) {
+        public ConsumerTask createTask(
+                ShardConsumerArgument argument, ShardConsumer consumer, ProcessRecordsInput input) {
             return null;
         }
 
@@ -473,9 +482,11 @@ class ConsumerStates {
     static class ShuttingDownState implements ConsumerState {
 
         @Override
-        public ConsumerTask createTask(ShardConsumerArgument argument, ShardConsumer consumer, ProcessRecordsInput input) {
+        public ConsumerTask createTask(
+                ShardConsumerArgument argument, ShardConsumer consumer, ProcessRecordsInput input) {
             // TODO: set shutdown reason
-            return new ShutdownTask(argument.shardInfo(),
+            return new ShutdownTask(
+                    argument.shardInfo(),
                     argument.shardDetector(),
                     argument.shardRecordProcessor(),
                     argument.recordProcessorCheckpointer(),
@@ -517,7 +528,6 @@ class ConsumerStates {
         public boolean isTerminal() {
             return false;
         }
-
     }
 
     /**
@@ -558,7 +568,8 @@ class ConsumerStates {
     static class ShutdownCompleteState implements ConsumerState {
 
         @Override
-        public ConsumerTask createTask(ShardConsumerArgument argument, ShardConsumer consumer, ProcessRecordsInput input) {
+        public ConsumerTask createTask(
+                ShardConsumerArgument argument, ShardConsumer consumer, ProcessRecordsInput input) {
             return null;
         }
 
@@ -586,7 +597,5 @@ class ConsumerStates {
         public boolean isTerminal() {
             return true;
         }
-
     }
-
 }

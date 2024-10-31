@@ -2,20 +2,18 @@ package software.amazon.kinesis.worker.metric.impl.container;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.net.URL;
 import java.net.MalformedURLException;
+import java.net.URL;
 import java.nio.charset.Charset;
 import java.util.Iterator;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import software.amazon.kinesis.worker.metric.WorkerMetric;
 import software.amazon.kinesis.worker.metric.OperatingRange;
+import software.amazon.kinesis.worker.metric.WorkerMetric;
 import software.amazon.kinesis.worker.metric.WorkerMetricType;
 
 /**
@@ -64,22 +62,35 @@ public class EcsCpuWorkerMetric implements WorkerMetric {
 
     @Override
     public WorkerMetricValue capture() {
-        return WorkerMetricValue.builder()
-                .value(calculateCpuUsage())
-                .build();
+        return WorkerMetricValue.builder().value(calculateCpuUsage()).build();
     }
 
     private double calculateCpuUsage() {
         // Read current container metrics
         final JsonNode containerStatsRootNode = readEcsMetadata(containerStatsUri);
 
-        final long cpuUsage = containerStatsRootNode.path("cpu_stats").path("cpu_usage").path("total_usage").asLong();
-        final long systemCpuUsage = containerStatsRootNode.path("cpu_stats").path("system_cpu_usage").asLong();
-        final long prevCpuUsage = containerStatsRootNode.path("precpu_stats").path("cpu_usage").path("total_usage").asLong();
-        final long prevSystemCpuUsage = containerStatsRootNode.path("precpu_stats").path("system_cpu_usage").asLong();
+        final long cpuUsage = containerStatsRootNode
+                .path("cpu_stats")
+                .path("cpu_usage")
+                .path("total_usage")
+                .asLong();
+        final long systemCpuUsage = containerStatsRootNode
+                .path("cpu_stats")
+                .path("system_cpu_usage")
+                .asLong();
+        final long prevCpuUsage = containerStatsRootNode
+                .path("precpu_stats")
+                .path("cpu_usage")
+                .path("total_usage")
+                .asLong();
+        final long prevSystemCpuUsage = containerStatsRootNode
+                .path("precpu_stats")
+                .path("system_cpu_usage")
+                .asLong();
 
         if (containerCpuLimit == -1 && onlineCpus == -1) {
-            onlineCpus = containerStatsRootNode.path("cpu_stats").path("online_cpus").asDouble();
+            onlineCpus =
+                    containerStatsRootNode.path("cpu_stats").path("online_cpus").asDouble();
             containerCpuLimit = calculateContainerCpuLimit(onlineCpus);
         }
 
@@ -124,15 +135,18 @@ public class EcsCpuWorkerMetric implements WorkerMetric {
         double taskCpuLimit = calculateTaskCpuLimit(taskStatsRootNode, onlineCpus);
 
         // Read current container metadata
-        final String currentContainerId = readEcsMetadata(containerMetadataUri).path("DockerId").asText();
-        final Iterator<JsonNode> containersIterator = taskStatsRootNode.path("Containers").iterator();
+        final String currentContainerId =
+                readEcsMetadata(containerMetadataUri).path("DockerId").asText();
+        final Iterator<JsonNode> containersIterator =
+                taskStatsRootNode.path("Containers").iterator();
 
         // The default if this value is not provided is 2 CPU shares (in ECS agent versions >= 1.2.0)
         int currentContainerCpuShare = 2;
         int containersCpuShareSum = 0;
         while (containersIterator.hasNext()) {
             final JsonNode containerNode = containersIterator.next();
-            final int containerCpuShare = containerNode.path("Limits").path("CPU").asInt();
+            final int containerCpuShare =
+                    containerNode.path("Limits").path("CPU").asInt();
             if (containerNode.path("DockerId").asText().equals(currentContainerId)) {
                 currentContainerCpuShare = containerCpuShare;
             }
@@ -164,18 +178,18 @@ public class EcsCpuWorkerMetric implements WorkerMetric {
         try {
             url = new URL(uri);
         } catch (MalformedURLException e) {
-            throw new IllegalArgumentException("CpuWorkerMetrics is not configured properly. ECS metadata url is malformed", e);
+            throw new IllegalArgumentException(
+                    "CpuWorkerMetrics is not configured properly. ECS metadata url is malformed", e);
         }
         try {
             final ObjectMapper mapper = new ObjectMapper();
-            final JsonNode rootNode = mapper.readValue(new InputStreamReader(url.openStream(), Charset.defaultCharset()),
-                    JsonNode.class);
+            final JsonNode rootNode =
+                    mapper.readValue(new InputStreamReader(url.openStream(), Charset.defaultCharset()), JsonNode.class);
             return rootNode;
         } catch (IOException e) {
             throw new IllegalArgumentException("Error in parsing ECS metadata", e);
         }
     }
-
 
     @Override
     public OperatingRange getOperatingRange() {
@@ -186,5 +200,4 @@ public class EcsCpuWorkerMetric implements WorkerMetric {
     public WorkerMetricType getWorkerMetricType() {
         return CPU_WORKER_METRICS_TYPE;
     }
-
 }

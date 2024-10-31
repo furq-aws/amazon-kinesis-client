@@ -14,6 +14,12 @@
  */
 package software.amazon.kinesis.coordinator.migration;
 
+import java.time.Duration;
+import java.util.Random;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import software.amazon.awssdk.annotations.ThreadSafe;
@@ -25,12 +31,6 @@ import software.amazon.kinesis.metrics.MetricsFactory;
 import software.amazon.kinesis.metrics.MetricsLevel;
 import software.amazon.kinesis.metrics.MetricsScope;
 import software.amazon.kinesis.metrics.MetricsUtil;
-
-import java.time.Duration;
-import java.util.Random;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
 
 import static software.amazon.kinesis.coordinator.migration.MigrationState.MIGRATION_HASH_KEY;
 import static software.amazon.kinesis.coordinator.migration.MigrationStateMachineImpl.METRICS_OPERATION;
@@ -75,20 +75,22 @@ public class ClientVersionChangeMonitor implements Runnable {
         if (scheduledFuture == null) {
             final long jitter = (long) (random.nextDouble() * MONITOR_INTERVAL_MILLIS * JITTER_FACTOR);
             monitorIntervalMillis = MONITOR_INTERVAL_MILLIS + jitter;
-            log.info("Monitoring for MigrationState client version change from {} every {}ms", expectedVersion,
-                monitorIntervalMillis);
-            scheduledFuture = stateMachineThreadPool.scheduleWithFixedDelay(this, monitorIntervalMillis,
-                monitorIntervalMillis, TimeUnit.MILLISECONDS);
+            log.info(
+                    "Monitoring for MigrationState client version change from {} every {}ms",
+                    expectedVersion,
+                    monitorIntervalMillis);
+            scheduledFuture = stateMachineThreadPool.scheduleWithFixedDelay(
+                    this, monitorIntervalMillis, monitorIntervalMillis, TimeUnit.MILLISECONDS);
         }
     }
 
     @Override
     public String toString() {
         return new StringBuilder(getClass().getSimpleName())
-            .append("[")
-            .append(expectedVersion)
-            .append("]")
-            .toString();
+                .append("[")
+                .append(expectedVersion)
+                .append("]")
+                .toString();
     }
 
     /**
@@ -114,8 +116,8 @@ public class ClientVersionChangeMonitor implements Runnable {
                 return;
             }
 
-            final MigrationState migrationState = (MigrationState) coordinatorStateDAO.getCoordinatorState(
-                MIGRATION_HASH_KEY);
+            final MigrationState migrationState =
+                    (MigrationState) coordinatorStateDAO.getCoordinatorState(MIGRATION_HASH_KEY);
             if (migrationState != null) {
                 if (migrationState.getClientVersion() != expectedVersion) {
                     log.info("MigrationState client version has changed {}, invoking monitor callback", migrationState);
@@ -130,8 +132,11 @@ public class ClientVersionChangeMonitor implements Runnable {
                 }
             }
         } catch (final Exception e) {
-            log.warn("Exception occurred when monitoring for client version change from {}, will retry in {}",
-                expectedVersion, monitorIntervalMillis, e);
+            log.warn(
+                    "Exception occurred when monitoring for client version change from {}, will retry in {}",
+                    expectedVersion,
+                    monitorIntervalMillis,
+                    e);
         }
     }
 
@@ -144,8 +149,7 @@ public class ClientVersionChangeMonitor implements Runnable {
                     break;
                 case CLIENT_VERSION_2x:
                 case CLIENT_VERSION_UPGRADE_FROM_2x:
-                    scope.addData("CurrentState:2xCompatibleWorker", 1, StandardUnit.COUNT,
-                        MetricsLevel.SUMMARY);
+                    scope.addData("CurrentState:2xCompatibleWorker", 1, StandardUnit.COUNT, MetricsLevel.SUMMARY);
                     break;
                 default:
                     throw new IllegalStateException(String.format("Unexpected version %s", expectedVersion.name()));

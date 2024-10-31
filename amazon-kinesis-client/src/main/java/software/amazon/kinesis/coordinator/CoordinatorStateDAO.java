@@ -14,6 +14,14 @@
  */
 package software.amazon.kinesis.coordinator;
 
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBLockClientOptions;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBLockClientOptions.AmazonDynamoDBLockClientOptionsBuilder;
 import lombok.NonNull;
@@ -58,14 +66,6 @@ import software.amazon.kinesis.leases.exceptions.DependencyException;
 import software.amazon.kinesis.leases.exceptions.InvalidStateException;
 import software.amazon.kinesis.leases.exceptions.ProvisionedThroughputException;
 
-import java.time.Duration;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-
 import static software.amazon.kinesis.common.FutureUtils.unwrappingFuture;
 import static software.amazon.kinesis.coordinator.CoordinatorState.COORDINATOR_STATE_TABLE_HASH_KEY_ATTRIBUTE_NAME;
 
@@ -81,9 +81,7 @@ public class CoordinatorStateDAO {
     private final CoordinatorStateTableConfig config;
 
     public CoordinatorStateDAO(
-        final DynamoDbAsyncClient dynamoDbAsyncClient,
-        final CoordinatorStateTableConfig config
-    ) {
+            final DynamoDbAsyncClient dynamoDbAsyncClient, final CoordinatorStateTableConfig config) {
         this.dynamoDbAsyncClient = dynamoDbAsyncClient;
         this.config = config;
         this.dynamoDbSyncClient = createDelegateClient();
@@ -97,10 +95,9 @@ public class CoordinatorStateDAO {
         return new DynamoDbAsyncToSyncClientAdapter(dynamoDbAsyncClient);
     }
 
-    public AmazonDynamoDBLockClientOptionsBuilder getDDBLockClientOptionsBuilder(
-        ) {
+    public AmazonDynamoDBLockClientOptionsBuilder getDDBLockClientOptionsBuilder() {
         return AmazonDynamoDBLockClientOptions.builder(dynamoDbSyncClient, config.tableName())
-            .withPartitionKeyName(COORDINATOR_STATE_TABLE_HASH_KEY_ATTRIBUTE_NAME);
+                .withPartitionKeyName(COORDINATOR_STATE_TABLE_HASH_KEY_ATTRIBUTE_NAME);
     }
 
     /**
@@ -113,11 +110,11 @@ public class CoordinatorStateDAO {
      * @return list of state
      */
     public List<CoordinatorState> listCoordinatorState()
-        throws ProvisionedThroughputException, DependencyException, InvalidStateException
-    {
+            throws ProvisionedThroughputException, DependencyException, InvalidStateException {
         log.debug("Listing coordinatorState");
 
-        final ScanRequest request = ScanRequest.builder().tableName(config.tableName()).build();
+        final ScanRequest request =
+                ScanRequest.builder().tableName(config.tableName()).build();
 
         try {
             ScanResponse response = FutureUtils.unwrappingFuture(() -> dynamoDbAsyncClient.scan(request));
@@ -127,8 +124,9 @@ public class CoordinatorStateDAO {
 
                 response.items().stream().map(this::fromDynamoRecord).forEach(stateList::add);
                 if (!CollectionUtils.isNullOrEmpty(response.lastEvaluatedKey())) {
-                    final ScanRequest continuationRequest = request.toBuilder().exclusiveStartKey(
-                        response.lastEvaluatedKey()).build();
+                    final ScanRequest continuationRequest = request.toBuilder()
+                            .exclusiveStartKey(response.lastEvaluatedKey())
+                            .build();
                     log.debug("Scan request {}", continuationRequest);
                     response = FutureUtils.unwrappingFuture(() -> dynamoDbAsyncClient.scan(continuationRequest));
                 } else {
@@ -138,12 +136,14 @@ public class CoordinatorStateDAO {
             }
             return stateList;
         } catch (final ProvisionedThroughputExceededException e) {
-            log.warn("Provisioned throughput on {} has exceeded. It is recommended to increase the IOPs" +
-                " on the table.", config.tableName());
+            log.warn(
+                    "Provisioned throughput on {} has exceeded. It is recommended to increase the IOPs"
+                            + " on the table.",
+                    config.tableName());
             throw new ProvisionedThroughputException(e);
         } catch (final ResourceNotFoundException e) {
             throw new InvalidStateException(
-                String.format("Cannot list coordinatorState, because table %s does not exist", config.tableName()));
+                    String.format("Cannot list coordinatorState, because table %s does not exist", config.tableName()));
         } catch (final DynamoDbException e) {
             throw new DependencyException(e);
         }
@@ -159,28 +159,29 @@ public class CoordinatorStateDAO {
      * @throws ProvisionedThroughputException if DynamoDB put fails due to lack of capacity
      */
     public boolean createCoordinatorStateIfNotExists(final CoordinatorState state)
-        throws DependencyException, InvalidStateException, ProvisionedThroughputException {
+            throws DependencyException, InvalidStateException, ProvisionedThroughputException {
         log.debug("Creating coordinatorState {}", state);
 
         final PutItemRequest request = PutItemRequest.builder()
-            .tableName(config.tableName())
-            .item(toDynamoRecord(state))
-            .expected(getDynamoNonExistentExpectation())
-            .build();
+                .tableName(config.tableName())
+                .item(toDynamoRecord(state))
+                .expected(getDynamoNonExistentExpectation())
+                .build();
 
         try {
             FutureUtils.unwrappingFuture(() -> dynamoDbAsyncClient.putItem(request));
         } catch (final ConditionalCheckFailedException e) {
-          log.info("Not creating coordinator state because the key already exists");
-          return false;
+            log.info("Not creating coordinator state because the key already exists");
+            return false;
         } catch (final ProvisionedThroughputExceededException e) {
-            log.warn("Provisioned throughput on {} has exceeded. It is recommended to increase the IOPs" +
-                " on the table.", config.tableName());
+            log.warn(
+                    "Provisioned throughput on {} has exceeded. It is recommended to increase the IOPs"
+                            + " on the table.",
+                    config.tableName());
             throw new ProvisionedThroughputException(e);
         } catch (final ResourceNotFoundException e) {
-            throw new InvalidStateException(
-                String.format("Cannot create coordinatorState %s, because table %s does not exist",
-                    state, config.tableName()));
+            throw new InvalidStateException(String.format(
+                    "Cannot create coordinatorState %s, because table %s does not exist", state, config.tableName()));
         } catch (final DynamoDbException e) {
             throw new DependencyException(e);
         }
@@ -199,18 +200,17 @@ public class CoordinatorStateDAO {
      * @return state for the specified key, or null if one doesn't exist
      */
     public CoordinatorState getCoordinatorState(@NonNull final String key)
-        throws DependencyException, InvalidStateException, ProvisionedThroughputException {
+            throws DependencyException, InvalidStateException, ProvisionedThroughputException {
         log.debug("Getting coordinatorState with key {}", key);
 
         final GetItemRequest request = GetItemRequest.builder()
-            .tableName(config.tableName())
-            .key(getCoordinatorStateKey(key))
-            .consistentRead(true)
-            .build();
+                .tableName(config.tableName())
+                .key(getCoordinatorStateKey(key))
+                .consistentRead(true)
+                .build();
 
         try {
-            final GetItemResponse result = FutureUtils.unwrappingFuture(() ->
-                dynamoDbAsyncClient.getItem(request));
+            final GetItemResponse result = FutureUtils.unwrappingFuture(() -> dynamoDbAsyncClient.getItem(request));
 
             final Map<String, AttributeValue> dynamoRecord = result.item();
             if (CollectionUtils.isNullOrEmpty(dynamoRecord)) {
@@ -219,12 +219,14 @@ public class CoordinatorStateDAO {
             }
             return fromDynamoRecord(dynamoRecord);
         } catch (final ProvisionedThroughputExceededException e) {
-            log.warn("Provisioned throughput on {} has exceeded. It is recommended to increase the IOPs" +
-                " on the table.", config.tableName());
+            log.warn(
+                    "Provisioned throughput on {} has exceeded. It is recommended to increase the IOPs"
+                            + " on the table.",
+                    config.tableName());
             throw new ProvisionedThroughputException(e);
         } catch (final ResourceNotFoundException e) {
-            throw new InvalidStateException(
-                String.format("Cannot get coordinatorState for key %s, because table %s does not exist",
+            throw new InvalidStateException(String.format(
+                    "Cannot get coordinatorState for key %s, because table %s does not exist",
                     key, config.tableName()));
         } catch (final DynamoDbException e) {
             throw new DependencyException(e);
@@ -240,34 +242,35 @@ public class CoordinatorStateDAO {
      * @throws ProvisionedThroughputException if DynamoDB update fails due to lack of capacity
      * @throws DependencyException if DynamoDB update fails in an unexpected way
      */
-    public boolean updateCoordinatorStateWithExpectation(@NonNull final CoordinatorState state,
-        final Map<String, ExpectedAttributeValue> expectations) throws DependencyException, InvalidStateException,
-        ProvisionedThroughputException
-    {
+    public boolean updateCoordinatorStateWithExpectation(
+            @NonNull final CoordinatorState state, final Map<String, ExpectedAttributeValue> expectations)
+            throws DependencyException, InvalidStateException, ProvisionedThroughputException {
         final Map<String, ExpectedAttributeValue> expectationMap = getDynamoExistentExpectation(state.getKey());
         expectationMap.putAll(MapUtils.emptyIfNull(expectations));
 
         final Map<String, AttributeValueUpdate> updateMap = getDynamoCoordinatorStateUpdate(state);
 
         final UpdateItemRequest request = UpdateItemRequest.builder()
-            .tableName(config.tableName())
-            .key(getCoordinatorStateKey(state.getKey()))
-            .expected(expectationMap)
-            .attributeUpdates(updateMap)
-            .build();
+                .tableName(config.tableName())
+                .key(getCoordinatorStateKey(state.getKey()))
+                .expected(expectationMap)
+                .attributeUpdates(updateMap)
+                .build();
 
         try {
             FutureUtils.unwrappingFuture(() -> dynamoDbAsyncClient.updateItem(request));
-        }  catch (final ConditionalCheckFailedException e) {
+        } catch (final ConditionalCheckFailedException e) {
             log.debug("CoordinatorState update {} failed because conditions were not met", state);
             return false;
         } catch (final ProvisionedThroughputExceededException e) {
-            log.warn("Provisioned throughput on {} has exceeded. It is recommended to increase the IOPs" +
-                " on the table.", config.tableName());
+            log.warn(
+                    "Provisioned throughput on {} has exceeded. It is recommended to increase the IOPs"
+                            + " on the table.",
+                    config.tableName());
             throw new ProvisionedThroughputException(e);
         } catch (final ResourceNotFoundException e) {
-            throw new InvalidStateException(
-                String.format("Cannot update coordinatorState for key %s, because table %s does not exist",
+            throw new InvalidStateException(String.format(
+                    "Cannot update coordinatorState for key %s, because table %s does not exist",
                     state.getKey(), config.tableName()));
         } catch (final DynamoDbException e) {
             throw new DependencyException(e);
@@ -290,32 +293,31 @@ public class CoordinatorStateDAO {
         if (tableDescription.tableStatus() != TableStatus.ACTIVE) {
             log.info("Waiting for DDB Table: {} to become active", config.tableName());
             try (final DynamoDbAsyncWaiter waiter = dynamoDbAsyncClient.waiter()) {
-                final WaiterResponse<DescribeTableResponse> response
-                    = unwrappingFuture(() -> waiter.waitUntilTableExists(
-                        r -> r.tableName(config.tableName()),
-                        o -> o.waitTimeout(Duration.ofMinutes(10))));
-                response.matched().response().orElseThrow(
-                    () -> new DependencyException(
-                        new IllegalStateException("Creating CoordinatorState table timed out",
-                            response.matched().exception().orElse(null))));
+                final WaiterResponse<DescribeTableResponse> response =
+                        unwrappingFuture(() -> waiter.waitUntilTableExists(
+                                r -> r.tableName(config.tableName()), o -> o.waitTimeout(Duration.ofMinutes(10))));
+                response.matched()
+                        .response()
+                        .orElseThrow(() -> new DependencyException(new IllegalStateException(
+                                "Creating CoordinatorState table timed out",
+                                response.matched().exception().orElse(null))));
             }
         }
     }
 
     private CreateTableRequest getRequest() {
         final CreateTableRequest.Builder requestBuilder = CreateTableRequest.builder()
-            .tableName(config.tableName())
-            .keySchema(KeySchemaElement.builder()
-                .attributeName(COORDINATOR_STATE_TABLE_HASH_KEY_ATTRIBUTE_NAME)
-                .keyType(KeyType.HASH)
-                .build())
-            .attributeDefinitions(
-                AttributeDefinition.builder()
-                    .attributeName(COORDINATOR_STATE_TABLE_HASH_KEY_ATTRIBUTE_NAME)
-                    .attributeType(ScalarAttributeType.S)
-                    .build());
+                .tableName(config.tableName())
+                .keySchema(KeySchemaElement.builder()
+                        .attributeName(COORDINATOR_STATE_TABLE_HASH_KEY_ATTRIBUTE_NAME)
+                        .keyType(KeyType.HASH)
+                        .build())
+                .attributeDefinitions(AttributeDefinition.builder()
+                        .attributeName(COORDINATOR_STATE_TABLE_HASH_KEY_ATTRIBUTE_NAME)
+                        .attributeType(ScalarAttributeType.S)
+                        .build());
 
-        switch(config.billingMode()) {
+        switch (config.billingMode()) {
             case PAY_PER_REQUEST:
                 requestBuilder.billingMode(BillingMode.PAY_PER_REQUEST);
                 break;
@@ -323,24 +325,24 @@ public class CoordinatorStateDAO {
                 requestBuilder.billingMode(BillingMode.PROVISIONED);
 
                 final ProvisionedThroughput throughput = ProvisionedThroughput.builder()
-                    .readCapacityUnits(config.readCapacity())
-                    .writeCapacityUnits(config.writeCapacity())
-                    .build();
-                 requestBuilder.provisionedThroughput(throughput);
-                 break;
+                        .readCapacityUnits(config.readCapacity())
+                        .writeCapacityUnits(config.writeCapacity())
+                        .build();
+                requestBuilder.provisionedThroughput(throughput);
+                break;
         }
         return requestBuilder.build();
     }
 
     private Map<String, AttributeValue> getCoordinatorStateKey(@NonNull final String key) {
-        return Collections.singletonMap(COORDINATOR_STATE_TABLE_HASH_KEY_ATTRIBUTE_NAME,
-            DynamoUtils.createAttributeValue(key));
+        return Collections.singletonMap(
+                COORDINATOR_STATE_TABLE_HASH_KEY_ATTRIBUTE_NAME, DynamoUtils.createAttributeValue(key));
     }
 
     private CoordinatorState fromDynamoRecord(final Map<String, AttributeValue> dynamoRecord) {
         final HashMap<String, AttributeValue> attributes = new HashMap<>(dynamoRecord);
-        final String keyValue = DynamoUtils.safeGetString(
-            attributes.remove(COORDINATOR_STATE_TABLE_HASH_KEY_ATTRIBUTE_NAME));
+        final String keyValue =
+                DynamoUtils.safeGetString(attributes.remove(COORDINATOR_STATE_TABLE_HASH_KEY_ATTRIBUTE_NAME));
 
         final MigrationState migrationState = MigrationState.deserialize(keyValue, attributes);
         if (migrationState != null) {
@@ -348,10 +350,8 @@ public class CoordinatorStateDAO {
             return migrationState;
         }
 
-        final CoordinatorState c = CoordinatorState.builder()
-            .key(keyValue)
-            .attributes(attributes)
-            .build();
+        final CoordinatorState c =
+                CoordinatorState.builder().key(keyValue).attributes(attributes).build();
         log.debug("Retrieved coordinatorState {}", c);
 
         return c;
@@ -372,7 +372,8 @@ public class CoordinatorStateDAO {
     private Map<String, ExpectedAttributeValue> getDynamoNonExistentExpectation() {
         final Map<String, ExpectedAttributeValue> result = new HashMap<>();
 
-        final ExpectedAttributeValue expectedAV = ExpectedAttributeValue.builder().exists(false).build();
+        final ExpectedAttributeValue expectedAV =
+                ExpectedAttributeValue.builder().exists(false).build();
         result.put(COORDINATOR_STATE_TABLE_HASH_KEY_ATTRIBUTE_NAME, expectedAV);
 
         return result;
@@ -381,8 +382,9 @@ public class CoordinatorStateDAO {
     private Map<String, ExpectedAttributeValue> getDynamoExistentExpectation(final String keyValue) {
         final Map<String, ExpectedAttributeValue> result = new HashMap<>();
 
-        final ExpectedAttributeValue expectedAV = ExpectedAttributeValue.builder().value(
-            AttributeValue.fromS(keyValue)).build();
+        final ExpectedAttributeValue expectedAV = ExpectedAttributeValue.builder()
+                .value(AttributeValue.fromS(keyValue))
+                .build();
         result.put(COORDINATOR_STATE_TABLE_HASH_KEY_ATTRIBUTE_NAME, expectedAV);
 
         return result;
@@ -393,20 +395,20 @@ public class CoordinatorStateDAO {
         if (state instanceof MigrationState) {
             updates.putAll(((MigrationState) state).getDynamoUpdate());
         }
-        state.getAttributes().forEach((attribute, value) -> updates.put(attribute, AttributeValueUpdate.builder()
-            .value(value)
-            .action(AttributeAction.PUT)
-            .build()));
+        state.getAttributes()
+                .forEach((attribute, value) -> updates.put(
+                        attribute,
+                        AttributeValueUpdate.builder()
+                                .value(value)
+                                .action(AttributeAction.PUT)
+                                .build()));
         return updates;
     }
 
     private TableDescription getTableDescription() {
         try {
             final DescribeTableResponse response = unwrappingFuture(() -> dynamoDbAsyncClient.describeTable(
-                DescribeTableRequest.builder()
-                    .tableName(config.tableName())
-                    .build()
-            ));
+                    DescribeTableRequest.builder().tableName(config.tableName()).build()));
             return response.table();
         } catch (final ResourceNotFoundException e) {
             return null;

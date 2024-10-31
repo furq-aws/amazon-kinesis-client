@@ -14,6 +14,9 @@
  */
 package software.amazon.kinesis.coordinator.migration;
 
+import java.util.Random;
+import java.util.concurrent.ScheduledExecutorService;
+
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -27,9 +30,6 @@ import software.amazon.kinesis.leases.exceptions.InvalidStateException;
 import software.amazon.kinesis.metrics.MetricsFactory;
 import software.amazon.kinesis.metrics.NullMetricsFactory;
 
-import java.util.Random;
-import java.util.concurrent.ScheduledExecutorService;
-
 import static org.mockito.ArgumentMatchers.anyObject;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyLong;
@@ -41,17 +41,16 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.amazon.kinesis.coordinator.migration.MigrationState.MIGRATION_HASH_KEY;
 
-
 public class ClientVersionChangeMonitorTest {
     private ClientVersionChangeMonitor monitorUnderTest;
 
     private final MetricsFactory nullMetricsFactory = new NullMetricsFactory();
-    private final CoordinatorStateDAO mockCoordinatorStateDAO = Mockito.mock(CoordinatorStateDAO.class,
-        Mockito.RETURNS_MOCKS);
-    private final ScheduledExecutorService mockScheduler = Mockito.mock(ScheduledExecutorService.class,
-        Mockito.RETURNS_MOCKS);
-    private final ClientVersionChangeCallback mockCallback = Mockito.mock(ClientVersionChangeCallback.class,
-        Mockito.RETURNS_MOCKS);
+    private final CoordinatorStateDAO mockCoordinatorStateDAO =
+            Mockito.mock(CoordinatorStateDAO.class, Mockito.RETURNS_MOCKS);
+    private final ScheduledExecutorService mockScheduler =
+            Mockito.mock(ScheduledExecutorService.class, Mockito.RETURNS_MOCKS);
+    private final ClientVersionChangeCallback mockCallback =
+            Mockito.mock(ClientVersionChangeCallback.class, Mockito.RETURNS_MOCKS);
     private final Random mockRandom = Mockito.mock(Random.class, Mockito.RETURNS_MOCKS);
 
     @BeforeEach
@@ -60,34 +59,32 @@ public class ClientVersionChangeMonitorTest {
     }
 
     @ParameterizedTest
-    @CsvSource ({
+    @CsvSource({
         "CLIENT_VERSION_2x, CLIENT_VERSION_UPGRADE_FROM_2x",
         "CLIENT_VERSION_3x_WITH_ROLLBACK, CLIENT_VERSION_2x",
         "CLIENT_VERSION_UPGRADE_FROM_2x, CLIENT_VERSION_3x_WITH_ROLLBACK",
         "CLIENT_VERSION_3x_WITH_ROLLBACK, CLIENT_VERSION_3x"
     })
     public void testMonitor(final ClientVersion currentClientVersion, final ClientVersion changedClientVersion)
-        throws Exception
-    {
+            throws Exception {
         monitorUnderTest = new ClientVersionChangeMonitor(
-            nullMetricsFactory,
-            mockCoordinatorStateDAO,
-            mockScheduler,
-            mockCallback,
-            currentClientVersion,
-            mockRandom
-        );
+                nullMetricsFactory,
+                mockCoordinatorStateDAO,
+                mockScheduler,
+                mockCallback,
+                currentClientVersion,
+                mockRandom);
 
         monitorUnderTest.startMonitor();
         final ArgumentCaptor<Runnable> argumentCaptor = ArgumentCaptor.forClass(Runnable.class);
         verify(mockScheduler).scheduleWithFixedDelay(argumentCaptor.capture(), anyLong(), anyLong(), anyObject());
 
-        final MigrationState initialState = new MigrationState(MIGRATION_HASH_KEY, "DUMMY_WORKER")
-            .update(currentClientVersion, "DUMMY_WORKER");
+        final MigrationState initialState =
+                new MigrationState(MIGRATION_HASH_KEY, "DUMMY_WORKER").update(currentClientVersion, "DUMMY_WORKER");
         final MigrationState changedState = initialState.copy().update(changedClientVersion, "DUMMY_WORKER2");
         when(mockCoordinatorStateDAO.getCoordinatorState(MIGRATION_HASH_KEY))
-            .thenReturn(initialState)
-            .thenReturn(changedState);
+                .thenReturn(initialState)
+                .thenReturn(changedState);
         argumentCaptor.getValue().run();
 
         verify(mockCallback, never()).accept(anyObject());
@@ -103,22 +100,20 @@ public class ClientVersionChangeMonitorTest {
     @Test
     public void testCallIsInvokedOnlyOnceIfSuccessful() throws Exception {
         monitorUnderTest = new ClientVersionChangeMonitor(
-            nullMetricsFactory,
-            mockCoordinatorStateDAO,
-            mockScheduler,
-            mockCallback,
-            ClientVersion.CLIENT_VERSION_2x,
-            mockRandom
-        );
+                nullMetricsFactory,
+                mockCoordinatorStateDAO,
+                mockScheduler,
+                mockCallback,
+                ClientVersion.CLIENT_VERSION_2x,
+                mockRandom);
 
         monitorUnderTest.startMonitor();
         final ArgumentCaptor<Runnable> argumentCaptor = ArgumentCaptor.forClass(Runnable.class);
         verify(mockScheduler).scheduleWithFixedDelay(argumentCaptor.capture(), anyLong(), anyLong(), anyObject());
 
         final MigrationState state = new MigrationState(MIGRATION_HASH_KEY, "DUMMY_WORKER")
-            .update(ClientVersion.CLIENT_VERSION_UPGRADE_FROM_2x, "DUMMY_WORKER");
-        when(mockCoordinatorStateDAO.getCoordinatorState(MIGRATION_HASH_KEY))
-            .thenReturn(state);
+                .update(ClientVersion.CLIENT_VERSION_UPGRADE_FROM_2x, "DUMMY_WORKER");
+        when(mockCoordinatorStateDAO.getCoordinatorState(MIGRATION_HASH_KEY)).thenReturn(state);
 
         argumentCaptor.getValue().run();
         verify(mockCallback, times(1)).accept(anyObject());
@@ -128,29 +123,25 @@ public class ClientVersionChangeMonitorTest {
         verify(mockCallback, never()).accept(anyObject());
     }
 
-
     @Test
     public void testCallIsInvokedAgainIfFailed() throws Exception {
         monitorUnderTest = new ClientVersionChangeMonitor(
-            nullMetricsFactory,
-            mockCoordinatorStateDAO,
-            mockScheduler,
-            mockCallback,
-            ClientVersion.CLIENT_VERSION_2x,
-            mockRandom
-        );
+                nullMetricsFactory,
+                mockCoordinatorStateDAO,
+                mockScheduler,
+                mockCallback,
+                ClientVersion.CLIENT_VERSION_2x,
+                mockRandom);
 
         monitorUnderTest.startMonitor();
         final ArgumentCaptor<Runnable> argumentCaptor = ArgumentCaptor.forClass(Runnable.class);
         verify(mockScheduler).scheduleWithFixedDelay(argumentCaptor.capture(), anyLong(), anyLong(), anyObject());
 
         final MigrationState state = new MigrationState(MIGRATION_HASH_KEY, "DUMMY_WORKER")
-            .update(ClientVersion.CLIENT_VERSION_UPGRADE_FROM_2x, "DUMMY_WORKER");
-        when(mockCoordinatorStateDAO.getCoordinatorState(MIGRATION_HASH_KEY))
-            .thenReturn(state);
+                .update(ClientVersion.CLIENT_VERSION_UPGRADE_FROM_2x, "DUMMY_WORKER");
+        when(mockCoordinatorStateDAO.getCoordinatorState(MIGRATION_HASH_KEY)).thenReturn(state);
 
-        doThrow(new InvalidStateException("test exception"))
-            .when(mockCallback).accept(any());
+        doThrow(new InvalidStateException("test exception")).when(mockCallback).accept(any());
 
         argumentCaptor.getValue().run();
         verify(mockCallback, times(1)).accept(anyObject());

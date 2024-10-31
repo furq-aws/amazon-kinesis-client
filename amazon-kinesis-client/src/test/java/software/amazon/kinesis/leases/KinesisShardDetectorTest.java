@@ -15,6 +15,16 @@
 
 package software.amazon.kinesis.leases;
 
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
@@ -31,16 +41,6 @@ import software.amazon.awssdk.services.kinesis.model.ResourceInUseException;
 import software.amazon.awssdk.services.kinesis.model.ResourceNotFoundException;
 import software.amazon.awssdk.services.kinesis.model.Shard;
 import software.amazon.kinesis.common.StreamIdentifier;
-
-import java.time.Duration;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.isA;
@@ -75,22 +75,30 @@ public class KinesisShardDetectorTest {
 
     @Mock
     private KinesisAsyncClient client;
+
     @Mock
     private CompletableFuture<ListShardsResponse> mockFuture;
 
     @Before
     public void setup() {
-        shardDetector = new KinesisShardDetector(client, StreamIdentifier.singleStreamInstance(STREAM_NAME),
-                LIST_SHARDS_BACKOFF_TIME_IN_MILLIS, MAX_LIST_SHARDS_RETRY_ATTEMPTS,
-                LIST_SHARDS_CACHE_ALLOWED_AGE_IN_SECONDS, MAX_CACHE_MISSES_BEFORE_RELOAD, CACHE_MISS_WARNING_MODULUS,
+        shardDetector = new KinesisShardDetector(
+                client,
+                StreamIdentifier.singleStreamInstance(STREAM_NAME),
+                LIST_SHARDS_BACKOFF_TIME_IN_MILLIS,
+                MAX_LIST_SHARDS_RETRY_ATTEMPTS,
+                LIST_SHARDS_CACHE_ALLOWED_AGE_IN_SECONDS,
+                MAX_CACHE_MISSES_BEFORE_RELOAD,
+                CACHE_MISS_WARNING_MODULUS,
                 KINESIS_REQUEST_TIMEOUT);
     }
 
     @Test
     public void testListShardsSingleResponse() {
         final List<Shard> expectedShards = new ArrayList<>();
-        final ListShardsResponse listShardsResponse = ListShardsResponse.builder().nextToken(null)
-                .shards(expectedShards).build();
+        final ListShardsResponse listShardsResponse = ListShardsResponse.builder()
+                .nextToken(null)
+                .shards(expectedShards)
+                .build();
         final CompletableFuture<ListShardsResponse> future = CompletableFuture.completedFuture(listShardsResponse);
 
         when(client.listShards(any(ListShardsRequest.class))).thenReturn(future);
@@ -110,8 +118,7 @@ public class KinesisShardDetectorTest {
         try {
             shardDetector.listShards();
         } finally {
-            verify(client, times(MAX_LIST_SHARDS_RETRY_ATTEMPTS))
-                    .listShards(any(ListShardsRequest.class));
+            verify(client, times(MAX_LIST_SHARDS_RETRY_ATTEMPTS)).listShards(any(ListShardsRequest.class));
         }
     }
 
@@ -127,7 +134,6 @@ public class KinesisShardDetectorTest {
 
         assertThat(shards, nullValue());
         verify(client).listShards(any(ListShardsRequest.class));
-
     }
 
     @Test(expected = LimitExceededException.class)
@@ -141,8 +147,7 @@ public class KinesisShardDetectorTest {
         try {
             shardDetector.listShards();
         } finally {
-            verify(client, times(MAX_LIST_SHARDS_RETRY_ATTEMPTS))
-                    .listShards(any(ListShardsRequest.class));
+            verify(client, times(MAX_LIST_SHARDS_RETRY_ATTEMPTS)).listShards(any(ListShardsRequest.class));
         }
     }
 
@@ -169,7 +174,6 @@ public class KinesisShardDetectorTest {
         when(client.listShards(any(ListShardsRequest.class))).thenReturn(mockFuture);
 
         shardDetector.listShards();
-
     }
 
     @Test
@@ -187,8 +191,8 @@ public class KinesisShardDetectorTest {
     @Test
     public void testGetShardEmptyCache() {
         final String shardId = String.format(SHARD_ID, 1);
-        final CompletableFuture<ListShardsResponse> future = CompletableFuture
-                .completedFuture(ListShardsResponse.builder().shards(createShardList()).build());
+        final CompletableFuture<ListShardsResponse> future = CompletableFuture.completedFuture(
+                ListShardsResponse.builder().shards(createShardList()).build());
 
         when(client.listShards(any(ListShardsRequest.class))).thenReturn(future);
 
@@ -217,36 +221,40 @@ public class KinesisShardDetectorTest {
         final List<Shard> shards = new ArrayList<>(createShardList());
         shards.add(Shard.builder().shardId(shardId).build());
 
-        final CompletableFuture<ListShardsResponse> future = CompletableFuture
-                .completedFuture(ListShardsResponse.builder().shards(shards).build());
+        final CompletableFuture<ListShardsResponse> future = CompletableFuture.completedFuture(
+                ListShardsResponse.builder().shards(shards).build());
 
         shardDetector.cachedShardMap(createShardList());
 
         when(client.listShards(any(ListShardsRequest.class))).thenReturn(future);
 
         final List<Shard> responses = IntStream.range(0, MAX_CACHE_MISSES_BEFORE_RELOAD + 1)
-                .mapToObj(x -> shardDetector.shard(shardId)).collect(Collectors.toList());
+                .mapToObj(x -> shardDetector.shard(shardId))
+                .collect(Collectors.toList());
 
         IntStream.range(0, MAX_CACHE_MISSES_BEFORE_RELOAD).forEach(x -> {
             assertThat(responses.get(x), nullValue());
         });
 
-        assertThat(responses.get(MAX_CACHE_MISSES_BEFORE_RELOAD), equalTo(Shard.builder().shardId(shardId).build()));
+        assertThat(
+                responses.get(MAX_CACHE_MISSES_BEFORE_RELOAD),
+                equalTo(Shard.builder().shardId(shardId).build()));
         verify(client).listShards(any(ListShardsRequest.class));
     }
 
     @Test
     public void testGetShardNonExistentShardForceRefresh() {
         final String shardId = String.format(SHARD_ID, 5);
-        final CompletableFuture<ListShardsResponse> future = CompletableFuture
-                .completedFuture(ListShardsResponse.builder().shards(createShardList()).build());
+        final CompletableFuture<ListShardsResponse> future = CompletableFuture.completedFuture(
+                ListShardsResponse.builder().shards(createShardList()).build());
 
         shardDetector.cachedShardMap(createShardList());
 
         when(client.listShards(any(ListShardsRequest.class))).thenReturn(future);
 
         final List<Shard> responses = IntStream.range(0, MAX_CACHE_MISSES_BEFORE_RELOAD + 1)
-                .mapToObj(x -> shardDetector.shard(shardId)).collect(Collectors.toList());
+                .mapToObj(x -> shardDetector.shard(shardId))
+                .collect(Collectors.toList());
 
         responses.forEach(response -> assertThat(response, nullValue()));
         assertThat(shardDetector.cacheMisses().get(), equalTo(0));
@@ -254,7 +262,8 @@ public class KinesisShardDetectorTest {
     }
 
     private List<Shard> createShardList() {
-        return Arrays.asList(Shard.builder().shardId(String.format(SHARD_ID, 0)).build(),
+        return Arrays.asList(
+                Shard.builder().shardId(String.format(SHARD_ID, 0)).build(),
                 Shard.builder().shardId(String.format(SHARD_ID, 1)).build(),
                 Shard.builder().shardId(String.format(SHARD_ID, 2)).build(),
                 Shard.builder().shardId(String.format(SHARD_ID, 3)).build(),

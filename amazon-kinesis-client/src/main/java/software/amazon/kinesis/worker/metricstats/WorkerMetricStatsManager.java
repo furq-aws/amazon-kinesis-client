@@ -13,13 +13,12 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
-
 import com.google.common.collect.EvictingQueue;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Queues;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import software.amazon.awssdk.services.cloudwatch.model.StandardUnit;
 import software.amazon.awssdk.utils.ThreadFactoryBuilder;
 import software.amazon.kinesis.annotations.KinesisClientInternalApi;
@@ -48,6 +47,7 @@ public final class WorkerMetricStatsManager {
      * 6 digit after decimal
      */
     private static final int DEFAULT_AVERAGE_VALUES_DIGIT_AFTER_DECIMAL = 6;
+
     private static final String METRICS_OPERATION_WORKER_STATS_REPORTER = "WorkerMetricStatsReporter";
     static final String METRICS_IN_MEMORY_REPORTER_FAILURE = "InMemoryMetricStatsReporterFailure";
     // 1 value per sec gives 5 minutes worth of past data for 300 count which is sufficient.
@@ -78,16 +78,22 @@ public final class WorkerMetricStatsManager {
      * Frequency for capturing raw WorkerMetricsValues in millis.
      */
     private final long inMemoryStatsCaptureThreadFrequencyMillis;
+
     private final MetricsFactory metricsFactory;
     private ScheduledFuture<?> managerProcessFuture;
 
-    public WorkerMetricStatsManager(final int maxMetricStatsCount, final List<WorkerMetric> workerMetricList,
-            final MetricsFactory metricsFactory, long inMemoryStatsCaptureThreadFrequencyMillis) {
+    public WorkerMetricStatsManager(
+            final int maxMetricStatsCount,
+            final List<WorkerMetric> workerMetricList,
+            final MetricsFactory metricsFactory,
+            long inMemoryStatsCaptureThreadFrequencyMillis) {
         // Set thread as daemon to not block VM from exit.
-        this.scheduledExecutorService = Executors.newScheduledThreadPool(1,
-                                                    new ThreadFactoryBuilder().daemonThreads(true)
-                                                                              .threadNamePrefix("worker-metrics-manager")
-                                                                              .build());
+        this.scheduledExecutorService = Executors.newScheduledThreadPool(
+                1,
+                new ThreadFactoryBuilder()
+                        .daemonThreads(true)
+                        .threadNamePrefix("worker-metrics-manager")
+                        .build());
         this.maxMetricStatsCount = maxMetricStatsCount;
         this.workerMetricList = workerMetricList;
         this.computedAverageMetrics = new HashMap<>();
@@ -100,16 +106,18 @@ public final class WorkerMetricStatsManager {
     private void init() {
         for (final WorkerMetric workerMetric : workerMetricList) {
             computedAverageMetrics.put(workerMetric, EvictingQueue.create(maxMetricStatsCount));
-            workerMetricsToRawHighFreqValuesMap.put(workerMetric,
-                    Queues.synchronizedQueue(EvictingQueue.create(HIGH_FREQUENCY_STATS_COUNT)));
+            workerMetricsToRawHighFreqValuesMap.put(
+                    workerMetric, Queues.synchronizedQueue(EvictingQueue.create(HIGH_FREQUENCY_STATS_COUNT)));
         }
-        log.info("Completed initialization with maxMetricStatsCount : {} and total WorkerMetricStats : {}", maxMetricStatsCount,
+        log.info(
+                "Completed initialization with maxMetricStatsCount : {} and total WorkerMetricStats : {}",
+                maxMetricStatsCount,
                 workerMetricList.size());
     }
 
     public void startManager() {
-        managerProcessFuture = scheduledExecutorService.scheduleWithFixedDelay(this::recordWorkerMetrics, 0,
-                inMemoryStatsCaptureThreadFrequencyMillis, TimeUnit.MILLISECONDS);
+        managerProcessFuture = scheduledExecutorService.scheduleWithFixedDelay(
+                this::recordWorkerMetrics, 0, inMemoryStatsCaptureThreadFrequencyMillis, TimeUnit.MILLISECONDS);
         log.info("Started manager process...");
     }
 
@@ -134,7 +142,8 @@ public final class WorkerMetricStatsManager {
     private void recordWorkerMetrics() {
         for (final WorkerMetric workerMetric : workerMetricList) {
             final Optional<Double> value = fetchWorkerMetricsValue(workerMetric);
-            value.ifPresent(aDouble -> workerMetricsToRawHighFreqValuesMap.get(workerMetric).add(aDouble));
+            value.ifPresent(aDouble ->
+                    workerMetricsToRawHighFreqValuesMap.get(workerMetric).add(aDouble));
         }
     }
 
@@ -143,7 +152,10 @@ public final class WorkerMetricStatsManager {
             final Double value = workerMetric.capture().getValue();
             return Optional.of(value);
         } catch (final Throwable throwable) {
-            log.error("WorkerMetricStats {} failure : ", workerMetric.getWorkerMetricType().name(), throwable);
+            log.error(
+                    "WorkerMetricStats {} failure : ",
+                    workerMetric.getWorkerMetricType().name(),
+                    throwable);
             final MetricsScope scope =
                     MetricsUtil.createMetricsWithOperation(metricsFactory, METRICS_OPERATION_WORKER_STATS_REPORTER);
             try {
@@ -170,8 +182,10 @@ public final class WorkerMetricStatsManager {
             final Queue<Double> computedMetrics = computedAverageMetrics.get(workerMetrics);
 
             if (currentWorkerMetricsStats.isEmpty()) {
-                // In case currentWorkerMetricsStats is empty that means values from workerMetrics were not capture due to some
-                // reason, and thus there are no recent values, compute the value to be -1 to denote workerMetrics failure
+                // In case currentWorkerMetricsStats is empty that means values from workerMetrics were not capture due
+                // to some
+                // reason, and thus there are no recent values, compute the value to be -1 to denote workerMetrics
+                // failure
                 computedMetrics.add(-1D);
             } else {
                 computedMetrics.add(computeAverage(currentWorkerMetricsStats));
@@ -188,9 +202,9 @@ public final class WorkerMetricStatsManager {
      */
     public Map<String, List<Long>> getOperatingRange() {
         final Map<String, List<Long>> operatingRange = new HashMap<>();
-        workerMetricList.forEach(workerMetrics -> operatingRange.put(workerMetrics.getShortName(), ImmutableList.of(
-                (long) workerMetrics.getOperatingRange()
-                             .getMaxUtilization())));
+        workerMetricList.forEach(
+                workerMetrics -> operatingRange.put(workerMetrics.getShortName(), ImmutableList.of((long)
+                        workerMetrics.getOperatingRange().getMaxUtilization())));
         return operatingRange;
     }
 
@@ -204,10 +218,8 @@ public final class WorkerMetricStatsManager {
     }
 
     private Double computeAverage(final List<Double> values) {
-        final double average = values.stream()
-                .mapToDouble(Double::doubleValue)
-                .average()
-                .orElse(0D);
+        final double average =
+                values.stream().mapToDouble(Double::doubleValue).average().orElse(0D);
         return BigDecimal.valueOf(average)
                 .setScale(DEFAULT_AVERAGE_VALUES_DIGIT_AFTER_DECIMAL, RoundingMode.HALF_UP)
                 .doubleValue();

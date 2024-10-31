@@ -486,5 +486,4 @@ public class ShardConsumer {
             return shutdownReason != null;
         }
     }
-
 }

@@ -4,16 +4,14 @@ import java.lang.management.ManagementFactory;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
-
 import javax.management.MBeanServerConnection;
 import javax.management.ObjectName;
 import javax.management.openmbean.CompositeDataSupport;
 
 import lombok.RequiredArgsConstructor;
-
 import software.amazon.kinesis.worker.metric.OperatingRange;
-import software.amazon.kinesis.worker.metric.WorkerMetricType;
 import software.amazon.kinesis.worker.metric.WorkerMetric;
+import software.amazon.kinesis.worker.metric.WorkerMetricType;
 
 /**
  * Memory WorkerMetricStats that reads the heap memory after GC. The way memory usage is calculated that, all the
@@ -66,19 +64,20 @@ public class HeapMemoryAfterGCWorkerMetric implements WorkerMetric {
             for (String poolName : memoryPoolNames) {
                 if (!poolName.contains("Eden")) {
                     // Ignore Eden, since it's just an allocation buffer
-                    ObjectName on = new ObjectName(
-                            ManagementFactory.MEMORY_POOL_MXBEAN_DOMAIN_TYPE + ",name=" + poolName);
+                    ObjectName on =
+                            new ObjectName(ManagementFactory.MEMORY_POOL_MXBEAN_DOMAIN_TYPE + ",name=" + poolName);
                     String mt = (String) connection.getAttribute(on, "Type");
                     if (mt.equals("HEAP")) {
                         // Paranoia: ignore non-HEAP memory pools
-                        CompositeDataSupport data = (CompositeDataSupport) connection.getAttribute(on,
-                                "CollectionUsage");
+                        CompositeDataSupport data =
+                                (CompositeDataSupport) connection.getAttribute(on, "CollectionUsage");
 
                         used = (Long) data.get("used");
                         usedKb += used / 1024;
 
                         max = (Long) data.get("max");
-                        // max can be undefined (-1) http://docs.oracle.com/javase/7/docs/api/java/lang/management/MemoryUsage.html
+                        // max can be undefined (-1)
+                        // http://docs.oracle.com/javase/7/docs/api/java/lang/management/MemoryUsage.html
                         totalKb += max == -1 ? 0 : max / 1024;
                     }
                 }

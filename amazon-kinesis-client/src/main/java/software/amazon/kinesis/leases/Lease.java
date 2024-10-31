@@ -19,6 +19,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -39,9 +40,18 @@ import software.amazon.kinesis.retrieval.kpl.ExtendedSequenceNumber;
 @NoArgsConstructor
 @Getter
 @Accessors(fluent = true)
-@EqualsAndHashCode(exclude = {"concurrencyToken", "lastCounterIncrementNanos", "childShardIds",
-        "pendingCheckpointState", "isMarkedForLeaseSteal", "throughputKBps", "checkpointOwner",
-        "checkpointOwnerTimeoutTimestampMillis", "isExpiredOrUnassigned"})
+@EqualsAndHashCode(
+        exclude = {
+            "concurrencyToken",
+            "lastCounterIncrementNanos",
+            "childShardIds",
+            "pendingCheckpointState",
+            "isMarkedForLeaseSteal",
+            "throughputKBps",
+            "checkpointOwner",
+            "checkpointOwnerTimeoutTimestampMillis",
+            "isExpiredOrUnassigned"
+        })
 @ToString
 public class Lease {
     /**
@@ -129,6 +139,7 @@ public class Lease {
      * Count of distinct lease holders between checkpoints.
      */
     private Long ownerSwitchesSinceCheckpoint = 0L;
+
     private final Set<String> parentShardIds = new HashSet<>();
     private final Set<String> childShardIds = new HashSet<>();
     private HashKeyRangeForLease hashKeyRangeForLease;
@@ -139,26 +150,60 @@ public class Lease {
      * @param lease lease to copy
      */
     protected Lease(Lease lease) {
-        this(lease.leaseKey(), lease.leaseOwner(), lease.leaseCounter(), lease.concurrencyToken(),
-                lease.lastCounterIncrementNanos(), lease.checkpoint(), lease.pendingCheckpoint(),
-                lease.ownerSwitchesSinceCheckpoint(), lease.parentShardIds(), lease.childShardIds(),
-                lease.pendingCheckpointState(), lease.hashKeyRangeForLease());
+        this(
+                lease.leaseKey(),
+                lease.leaseOwner(),
+                lease.leaseCounter(),
+                lease.concurrencyToken(),
+                lease.lastCounterIncrementNanos(),
+                lease.checkpoint(),
+                lease.pendingCheckpoint(),
+                lease.ownerSwitchesSinceCheckpoint(),
+                lease.parentShardIds(),
+                lease.childShardIds(),
+                lease.pendingCheckpointState(),
+                lease.hashKeyRangeForLease());
     }
 
     @Deprecated
-    public Lease(final String leaseKey, final String leaseOwner, final Long leaseCounter,
-                 final UUID concurrencyToken, final Long lastCounterIncrementNanos,
-                 final ExtendedSequenceNumber checkpoint, final ExtendedSequenceNumber pendingCheckpoint,
-                 final Long ownerSwitchesSinceCheckpoint, final Set<String> parentShardIds) {
-        this(leaseKey, leaseOwner, leaseCounter, concurrencyToken, lastCounterIncrementNanos, checkpoint, pendingCheckpoint,
-                ownerSwitchesSinceCheckpoint, parentShardIds, new HashSet<>(), null, null);
+    public Lease(
+            final String leaseKey,
+            final String leaseOwner,
+            final Long leaseCounter,
+            final UUID concurrencyToken,
+            final Long lastCounterIncrementNanos,
+            final ExtendedSequenceNumber checkpoint,
+            final ExtendedSequenceNumber pendingCheckpoint,
+            final Long ownerSwitchesSinceCheckpoint,
+            final Set<String> parentShardIds) {
+        this(
+                leaseKey,
+                leaseOwner,
+                leaseCounter,
+                concurrencyToken,
+                lastCounterIncrementNanos,
+                checkpoint,
+                pendingCheckpoint,
+                ownerSwitchesSinceCheckpoint,
+                parentShardIds,
+                new HashSet<>(),
+                null,
+                null);
     }
 
-    public Lease(final String leaseKey, final String leaseOwner, final Long leaseCounter,
-                    final UUID concurrencyToken, final Long lastCounterIncrementNanos,
-                    final ExtendedSequenceNumber checkpoint, final ExtendedSequenceNumber pendingCheckpoint,
-                    final Long ownerSwitchesSinceCheckpoint, final Set<String> parentShardIds, final Set<String> childShardIds,
-                    final byte[] pendingCheckpointState, final HashKeyRangeForLease hashKeyRangeForLease) {
+    public Lease(
+            final String leaseKey,
+            final String leaseOwner,
+            final Long leaseCounter,
+            final UUID concurrencyToken,
+            final Long lastCounterIncrementNanos,
+            final ExtendedSequenceNumber checkpoint,
+            final ExtendedSequenceNumber pendingCheckpoint,
+            final Long ownerSwitchesSinceCheckpoint,
+            final Set<String> parentShardIds,
+            final Set<String> childShardIds,
+            final byte[] pendingCheckpointState,
+            final HashKeyRangeForLease hashKeyRangeForLease) {
         this.leaseKey = leaseKey;
         this.leaseOwner = leaseOwner;
         this.leaseCounter = leaseCounter;
@@ -264,9 +309,7 @@ public class Lease {
      * @return true if lease is eligible for graceful shutdown
      */
     public boolean isEligibleForGracefulShutdown() {
-        return !isExpiredOrUnassigned
-                && !ExtendedSequenceNumber.SHARD_END.equals(checkpoint)
-                && !shutdownRequested();
+        return !isExpiredOrUnassigned && !ExtendedSequenceNumber.SHARD_END.equals(checkpoint) && !shutdownRequested();
     }
 
     /**
@@ -419,5 +462,4 @@ public class Lease {
         lease.checkpointOwner(this.checkpointOwner);
         return lease;
     }
-
 }

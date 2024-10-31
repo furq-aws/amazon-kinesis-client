@@ -15,8 +15,6 @@
 
 package software.amazon.kinesis.leases;
 
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
-
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -28,13 +26,13 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.experimental.Accessors;
 import org.apache.commons.lang3.Validate;
-
 import software.amazon.awssdk.core.util.DefaultSdkAutoConstructList;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
 import software.amazon.awssdk.services.dynamodb.model.BillingMode;
@@ -60,14 +58,16 @@ public class LeaseManagementConfig {
 
     public static final Duration DEFAULT_REQUEST_TIMEOUT = Duration.ofMinutes(1);
 
-    public static final long DEFAULT_LEASE_CLEANUP_INTERVAL_MILLIS = Duration.ofMinutes(1).toMillis();
-    public static final long DEFAULT_COMPLETED_LEASE_CLEANUP_INTERVAL_MILLIS = Duration.ofMinutes(5).toMillis();
-    public static final long DEFAULT_GARBAGE_LEASE_CLEANUP_INTERVAL_MILLIS = Duration.ofMinutes(30).toMillis();
+    public static final long DEFAULT_LEASE_CLEANUP_INTERVAL_MILLIS =
+            Duration.ofMinutes(1).toMillis();
+    public static final long DEFAULT_COMPLETED_LEASE_CLEANUP_INTERVAL_MILLIS =
+            Duration.ofMinutes(5).toMillis();
+    public static final long DEFAULT_GARBAGE_LEASE_CLEANUP_INTERVAL_MILLIS =
+            Duration.ofMinutes(30).toMillis();
     public static final long DEFAULT_PERIODIC_SHARD_SYNC_INTERVAL_MILLIS = 2 * 60 * 1000L;
     public static final boolean DEFAULT_ENABLE_PRIORITY_LEASE_ASSIGNMENT = true;
     public static final boolean DEFAULT_LEASE_TABLE_DELETION_PROTECTION_ENABLED = false;
     public static final int DEFAULT_CONSECUTIVE_HOLES_FOR_TRIGGERING_LEASE_RECOVERY = 3;
-
 
     public static final LeaseCleanupConfig DEFAULT_LEASE_CLEANUP_CONFIG = LeaseCleanupConfig.builder()
             .leaseCleanupIntervalMillis(DEFAULT_LEASE_CLEANUP_INTERVAL_MILLIS)
@@ -243,7 +243,8 @@ public class LeaseManagementConfig {
      * is inconsistent. If the auditor finds same set of inconsistencies consecutively for a stream for this many times,
      * then it would trigger a shard sync.
      */
-    private int leasesRecoveryAuditorInconsistencyConfidenceThreshold = DEFAULT_CONSECUTIVE_HOLES_FOR_TRIGGERING_LEASE_RECOVERY;
+    private int leasesRecoveryAuditorInconsistencyConfidenceThreshold =
+            DEFAULT_CONSECUTIVE_HOLES_FOR_TRIGGERING_LEASE_RECOVERY;
 
     /**
      * The initial position for getting records from Kinesis streams.
@@ -260,8 +261,12 @@ public class LeaseManagementConfig {
     private MetricsFactory metricsFactory = new NullMetricsFactory();
 
     @Deprecated
-    public LeaseManagementConfig(String tableName, DynamoDbAsyncClient dynamoDBClient, KinesisAsyncClient kinesisClient,
-            String streamName, String workerIdentifier) {
+    public LeaseManagementConfig(
+            String tableName,
+            DynamoDbAsyncClient dynamoDBClient,
+            KinesisAsyncClient kinesisClient,
+            String streamName,
+            String workerIdentifier) {
         this.tableName = tableName;
         this.dynamoDBClient = dynamoDBClient;
         this.kinesisClient = kinesisClient;
@@ -269,16 +274,18 @@ public class LeaseManagementConfig {
         this.workerIdentifier = workerIdentifier;
     }
 
-    public LeaseManagementConfig(final String tableName, final String applicationName,
-        final DynamoDbAsyncClient dynamoDBClient, final KinesisAsyncClient kinesisClient,
-        final String workerIdentifier)
-    {
+    public LeaseManagementConfig(
+            final String tableName,
+            final String applicationName,
+            final DynamoDbAsyncClient dynamoDBClient,
+            final KinesisAsyncClient kinesisClient,
+            final String workerIdentifier) {
         this.tableName = tableName;
         this.dynamoDBClient = dynamoDBClient;
         this.kinesisClient = kinesisClient;
         this.workerIdentifier = workerIdentifier;
-        this.workerUtilizationAwareAssignmentConfig.workerMetricsTableConfig
-            = new WorkerMetricsTableConfig(applicationName);
+        this.workerUtilizationAwareAssignmentConfig.workerMetricsTableConfig =
+                new WorkerMetricsTableConfig(applicationName);
     }
 
     /**
@@ -317,14 +324,20 @@ public class LeaseManagementConfig {
      *
      * <p>Default value: {@link LeaseManagementThreadPool}</p>
      */
-    private ExecutorService executorService = new LeaseManagementThreadPool(
-            new ThreadFactoryBuilder().setNameFormat("ShardSyncTaskManager-%04d").build());
+    private ExecutorService executorService = new LeaseManagementThreadPool(new ThreadFactoryBuilder()
+            .setNameFormat("ShardSyncTaskManager-%04d")
+            .build());
 
     static class LeaseManagementThreadPool extends ThreadPoolExecutor {
         private static final long DEFAULT_KEEP_ALIVE_TIME = 60L;
 
         LeaseManagementThreadPool(ThreadFactory threadFactory) {
-            super(0, Integer.MAX_VALUE, DEFAULT_KEEP_ALIVE_TIME, TimeUnit.SECONDS, new SynchronousQueue<>(),
+            super(
+                    0,
+                    Integer.MAX_VALUE,
+                    DEFAULT_KEEP_ALIVE_TIME,
+                    TimeUnit.SECONDS,
+                    new SynchronousQueue<>(),
                     threadFactory);
         }
     }
@@ -349,7 +362,6 @@ public class LeaseManagementConfig {
         }
         return hierarchicalShardSyncer;
     }
-
 
     /**
      * Configuration class for controlling the graceful handoff of leases.
@@ -395,13 +407,15 @@ public class LeaseManagementConfig {
         private boolean isGracefulLeaseHandoffEnabled = true;
     }
 
-    private GracefulLeaseHandoffConfig gracefulLeaseHandoffConfig = GracefulLeaseHandoffConfig.builder().build();
+    private GracefulLeaseHandoffConfig gracefulLeaseHandoffConfig =
+            GracefulLeaseHandoffConfig.builder().build();
 
     @Deprecated
     public LeaseManagementFactory leaseManagementFactory() {
         if (leaseManagementFactory == null) {
             Validate.notEmpty(streamName(), "Stream name is empty");
-            leaseManagementFactory = new DynamoDBLeaseManagementFactory(kinesisClient(),
+            leaseManagementFactory = new DynamoDBLeaseManagementFactory(
+                    kinesisClient(),
                     streamName(),
                     dynamoDBClient(),
                     tableName(),
@@ -425,7 +439,10 @@ public class LeaseManagementConfig {
                     initialLeaseTableReadCapacity(),
                     initialLeaseTableWriteCapacity(),
                     hierarchicalShardSyncer(),
-                    tableCreatorCallback(), dynamoDbRequestTimeout(), billingMode(), tags());
+                    tableCreatorCallback(),
+                    dynamoDbRequestTimeout(),
+                    billingMode(),
+                    tags());
         }
         return leaseManagementFactory;
     }
@@ -436,11 +453,11 @@ public class LeaseManagementConfig {
      * @param isMultiStreamingMode
      * @return LeaseManagementFactory
      */
-    public LeaseManagementFactory leaseManagementFactory(final LeaseSerializer leaseSerializer,
-        boolean isMultiStreamingMode
-    ) {
+    public LeaseManagementFactory leaseManagementFactory(
+            final LeaseSerializer leaseSerializer, boolean isMultiStreamingMode) {
         if (leaseManagementFactory == null) {
-            leaseManagementFactory = new DynamoDBLeaseManagementFactory(kinesisClient(),
+            leaseManagementFactory = new DynamoDBLeaseManagementFactory(
+                    kinesisClient(),
                     dynamoDBClient(),
                     tableName(),
                     workerIdentifier(),
@@ -494,7 +511,8 @@ public class LeaseManagementConfig {
         /**
          * This defines the frequency of capturing worker metric stats in memory. Default is 1s
          */
-        private long inMemoryWorkerMetricsCaptureFrequencyMillis = Duration.ofSeconds(1L).toMillis();
+        private long inMemoryWorkerMetricsCaptureFrequencyMillis =
+                Duration.ofSeconds(1L).toMillis();
         /**
          * This defines the frequency of reporting worker metric stats to storage. Default is 30s
          */

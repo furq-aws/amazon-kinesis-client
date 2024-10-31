@@ -1,5 +1,13 @@
 package software.amazon.kinesis.leader;
 
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import software.amazon.kinesis.coordinator.LeaderDecider;
+import software.amazon.kinesis.coordinator.MigrationAdaptiveLeaseAssignmentModeProvider;
+import software.amazon.kinesis.metrics.NullMetricsFactory;
+
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Matchers.anyString;
@@ -8,21 +16,13 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-
-import software.amazon.kinesis.coordinator.LeaderDecider;
-import software.amazon.kinesis.coordinator.MigrationAdaptiveLeaseAssignmentModeProvider;
-import software.amazon.kinesis.metrics.NullMetricsFactory;
-
 class MigrationAdaptiveLeaderDeciderTest {
 
     private static final String TEST_RANDOM_WORKER_ID = "IAmRandomWorkerId";
 
     @Mock
     private LeaderDecider kcl3xLeaderDecider;
+
     @Mock
     private LeaderDecider kcl2xLeaderDecider;
 
@@ -34,8 +34,7 @@ class MigrationAdaptiveLeaderDeciderTest {
     }
 
     private void createLeaderDecider(final LeaderDecider currentLeaderDecider) {
-        this.migrationAdaptiveLeaderDecider = new MigrationAdaptiveLeaderDecider(
-            new NullMetricsFactory());
+        this.migrationAdaptiveLeaderDecider = new MigrationAdaptiveLeaderDecider(new NullMetricsFactory());
         this.migrationAdaptiveLeaderDecider.updateLeaderDecider(currentLeaderDecider);
     }
 
@@ -104,5 +103,4 @@ class MigrationAdaptiveLeaderDeciderTest {
         verify(kcl2xLeaderDecider, times(1)).shutdown();
         verify(kcl3xLeaderDecider, times(0)).shutdown();
     }
-
 }

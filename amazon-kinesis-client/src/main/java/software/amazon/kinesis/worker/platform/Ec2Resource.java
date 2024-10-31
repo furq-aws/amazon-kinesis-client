@@ -1,9 +1,5 @@
 package software.amazon.kinesis.worker.platform;
 
-import lombok.extern.slf4j.Slf4j;
-import org.jetbrains.annotations.VisibleForTesting;
-import software.amazon.kinesis.annotations.KinesisClientInternalApi;
-
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
@@ -11,6 +7,10 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Optional;
 import java.util.stream.Collectors;
+
+import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.VisibleForTesting;
+import software.amazon.kinesis.annotations.KinesisClientInternalApi;
 
 import static software.amazon.kinesis.worker.platform.OperatingRangeDataProvider.LINUX_PROC;
 
@@ -79,7 +79,8 @@ public class Ec2Resource implements ResourceMetadataProvider {
                         .collect(Collectors.joining());
             }
         } catch (Exception e) {
-            log.warn("Unable to retrieve IMDS token. It could mean that the instance is not EC2 or is using IMDS V1", e);
+            log.warn(
+                    "Unable to retrieve IMDS token. It could mean that the instance is not EC2 or is using IMDS V1", e);
         }
         return null;
     }

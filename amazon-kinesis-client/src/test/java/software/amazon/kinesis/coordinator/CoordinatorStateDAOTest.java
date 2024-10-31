@@ -14,6 +14,12 @@
  */
 package software.amazon.kinesis.coordinator;
 
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.ExecutionException;
+
 import com.amazonaws.services.dynamodbv2.AcquireLockOptions;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBLockClient;
 import com.amazonaws.services.dynamodbv2.LockItem;
@@ -42,12 +48,6 @@ import software.amazon.kinesis.leases.exceptions.DependencyException;
 import software.amazon.kinesis.leases.exceptions.InvalidStateException;
 import software.amazon.kinesis.leases.exceptions.ProvisionedThroughputException;
 
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.ExecutionException;
-
 import static software.amazon.kinesis.coordinator.CoordinatorState.COORDINATOR_STATE_TABLE_HASH_KEY_ATTRIBUTE_NAME;
 import static software.amazon.kinesis.coordinator.CoordinatorState.LEADER_HASH_KEY;
 import static software.amazon.kinesis.coordinator.migration.MigrationState.CLIENT_VERSION_ATTRIBUTE_NAME;
@@ -62,158 +62,179 @@ public class CoordinatorStateDAOTest {
 
     @Test
     public void testProvisionedTableCreation_DefaultTableName()
-        throws ExecutionException, InterruptedException, DependencyException
-    {
+            throws ExecutionException, InterruptedException, DependencyException {
         /* Test setup - create class under test **/
         final CoordinatorStateDAO doaUnderTest = new CoordinatorStateDAO(
-            dynamoDbAsyncClient,
-            getCoordinatorStateConfig("testProvisionedTableCreation",
-                ProvisionedThroughput.builder()
-                    .writeCapacityUnits(30L)
-                    .readCapacityUnits(15L)
-                    .build()));
+                dynamoDbAsyncClient,
+                getCoordinatorStateConfig(
+                        "testProvisionedTableCreation",
+                        ProvisionedThroughput.builder()
+                                .writeCapacityUnits(30L)
+                                .readCapacityUnits(15L)
+                                .build()));
 
         /* Test step - initialize to create the table **/
         doaUnderTest.initialize();
 
         /* Verify - table with correct configuration is created */
-        final DescribeTableResponse response = dynamoDbAsyncClient.describeTable(DescribeTableRequest.builder()
-                .tableName("testProvisionedTableCreation-CoordinatorState")
-                .build())
-            .get();
+        final DescribeTableResponse response = dynamoDbAsyncClient
+                .describeTable(DescribeTableRequest.builder()
+                        .tableName("testProvisionedTableCreation-CoordinatorState")
+                        .build())
+                .get();
 
-        Assertions.assertEquals(15L, response.table().provisionedThroughput().readCapacityUnits().longValue());
-        Assertions.assertEquals(30L, response.table().provisionedThroughput().writeCapacityUnits().longValue());
+        Assertions.assertEquals(
+                15L,
+                response.table().provisionedThroughput().readCapacityUnits().longValue());
+        Assertions.assertEquals(
+                30L,
+                response.table().provisionedThroughput().writeCapacityUnits().longValue());
     }
 
     @Test
     public void testPayPerUseTableCreation_DefaultTableName()
-        throws ExecutionException, InterruptedException, DependencyException
-    {
+            throws ExecutionException, InterruptedException, DependencyException {
         /* Test setup - create class under test **/
         final CoordinatorConfig c = new CoordinatorConfig("testPayPerUseTableCreation");
-        c.coordinatorStateConfig()
-            .billingMode(BillingMode.PAY_PER_REQUEST);
+        c.coordinatorStateConfig().billingMode(BillingMode.PAY_PER_REQUEST);
 
-        final CoordinatorStateDAO doaUnderTest = new CoordinatorStateDAO(
-            dynamoDbAsyncClient,
-            c.coordinatorStateConfig());
+        final CoordinatorStateDAO doaUnderTest =
+                new CoordinatorStateDAO(dynamoDbAsyncClient, c.coordinatorStateConfig());
 
         /* Test step - initialize to create the table **/
         doaUnderTest.initialize();
 
         /* Verify - table with correct configuration is created */
-        final DescribeTableResponse response = dynamoDbAsyncClient.describeTable(DescribeTableRequest.builder()
-                .tableName("testPayPerUseTableCreation-CoordinatorState")
-                .build())
-            .get();
+        final DescribeTableResponse response = dynamoDbAsyncClient
+                .describeTable(DescribeTableRequest.builder()
+                        .tableName("testPayPerUseTableCreation-CoordinatorState")
+                        .build())
+                .get();
 
-        Assertions.assertEquals(BillingMode.PAY_PER_REQUEST, response.table().billingModeSummary().billingMode());
+        Assertions.assertEquals(
+                BillingMode.PAY_PER_REQUEST,
+                response.table().billingModeSummary().billingMode());
     }
 
     @Test
     public void testProvisionedTableCreation_CustomTableName()
-        throws ExecutionException, InterruptedException, DependencyException
-    {
+            throws ExecutionException, InterruptedException, DependencyException {
         /* Test setup - create class under test **/
         final CoordinatorStateDAO doaUnderTest = new CoordinatorStateDAO(
-            dynamoDbAsyncClient,
-            getCoordinatorStateConfig("TestApplicationName", BillingMode.PROVISIONED,
-                ProvisionedThroughput.builder()
-                    .readCapacityUnits(10L)
-                    .writeCapacityUnits(20L)
-                    .build(),
-                "MyCustomTableName-testProvisionedTableCreation"));
+                dynamoDbAsyncClient,
+                getCoordinatorStateConfig(
+                        "TestApplicationName",
+                        BillingMode.PROVISIONED,
+                        ProvisionedThroughput.builder()
+                                .readCapacityUnits(10L)
+                                .writeCapacityUnits(20L)
+                                .build(),
+                        "MyCustomTableName-testProvisionedTableCreation"));
 
         /* Test step - initialize to create the table **/
         doaUnderTest.initialize();
 
         /* Verify - table with correct configuration is created */
-        final DescribeTableResponse response = dynamoDbAsyncClient.describeTable(DescribeTableRequest.builder()
-                .tableName("MyCustomTableName-testProvisionedTableCreation")
-                .build())
-            .get();
+        final DescribeTableResponse response = dynamoDbAsyncClient
+                .describeTable(DescribeTableRequest.builder()
+                        .tableName("MyCustomTableName-testProvisionedTableCreation")
+                        .build())
+                .get();
 
-        Assertions.assertEquals(10L, response.table().provisionedThroughput().readCapacityUnits().longValue());
-        Assertions.assertEquals(20L, response.table().provisionedThroughput().writeCapacityUnits().longValue());
+        Assertions.assertEquals(
+                10L,
+                response.table().provisionedThroughput().readCapacityUnits().longValue());
+        Assertions.assertEquals(
+                20L,
+                response.table().provisionedThroughput().writeCapacityUnits().longValue());
     }
 
     @Test
     public void testPayPerUseTableCreation_CustomTableName()
-        throws ExecutionException, InterruptedException, DependencyException
-    {
+            throws ExecutionException, InterruptedException, DependencyException {
         /* Test setup - create class under test **/
         final CoordinatorStateDAO doaUnderTest = new CoordinatorStateDAO(
-            dynamoDbAsyncClient,
-            getCoordinatorStateConfig("TestApplicationName", BillingMode.PAY_PER_REQUEST,
-                null, "MyCustomTableName-testPayPerUseTableCreation"));
+                dynamoDbAsyncClient,
+                getCoordinatorStateConfig(
+                        "TestApplicationName",
+                        BillingMode.PAY_PER_REQUEST,
+                        null,
+                        "MyCustomTableName-testPayPerUseTableCreation"));
 
         /* Test step - initialize to create the table **/
         doaUnderTest.initialize();
 
         /* Verify - table with correct configuration is created */
-        final DescribeTableResponse response = dynamoDbAsyncClient.describeTable(DescribeTableRequest.builder()
-                .tableName("MyCustomTableName-testPayPerUseTableCreation")
-                .build())
-            .get();
+        final DescribeTableResponse response = dynamoDbAsyncClient
+                .describeTable(DescribeTableRequest.builder()
+                        .tableName("MyCustomTableName-testPayPerUseTableCreation")
+                        .build())
+                .get();
 
-        Assertions.assertEquals(BillingMode.PAY_PER_REQUEST, response.table().billingModeSummary().billingMode());
+        Assertions.assertEquals(
+                BillingMode.PAY_PER_REQUEST,
+                response.table().billingModeSummary().billingMode());
     }
 
     @Test
     public void testCreatingLeaderAndMigrationKey()
-        throws ProvisionedThroughputException, InvalidStateException, DependencyException, InterruptedException, IOException {
+            throws ProvisionedThroughputException, InvalidStateException, DependencyException, InterruptedException,
+                    IOException {
         /* Test setup - create class under test and initialize **/
         final CoordinatorStateDAO doaUnderTest = new CoordinatorStateDAO(
-            dynamoDbAsyncClient,
-            getCoordinatorStateConfig("testCreatingLeaderAndMigrationKey"));
+                dynamoDbAsyncClient, getCoordinatorStateConfig("testCreatingLeaderAndMigrationKey"));
         doaUnderTest.initialize();
 
         /* Test steps - create migration item, DDB lease election lock item, and another item with different schema **/
         createCoordinatorState("key1");
 
         final MigrationState migrationState = new MigrationState(MIGRATION_HASH_KEY, WORKER_ID)
-            .update(ClientVersion.CLIENT_VERSION_UPGRADE_FROM_2x, WORKER_ID);
+                .update(ClientVersion.CLIENT_VERSION_UPGRADE_FROM_2x, WORKER_ID);
         doaUnderTest.createCoordinatorStateIfNotExists(migrationState);
 
-        final AmazonDynamoDBLockClient dynamoDBLockClient = new AmazonDynamoDBLockClient(
-            doaUnderTest.getDDBLockClientOptionsBuilder().withOwnerName("TEST_WORKER")
-                .withCreateHeartbeatBackgroundThread(true).build());
+        final AmazonDynamoDBLockClient dynamoDBLockClient = new AmazonDynamoDBLockClient(doaUnderTest
+                .getDDBLockClientOptionsBuilder()
+                .withOwnerName("TEST_WORKER")
+                .withCreateHeartbeatBackgroundThread(true)
+                .build());
         final Optional<LockItem> optionalItem = dynamoDBLockClient.tryAcquireLock(
-            AcquireLockOptions.builder(LEADER_HASH_KEY).build());
+                AcquireLockOptions.builder(LEADER_HASH_KEY).build());
         Assertions.assertTrue(optionalItem.isPresent(), "Lock was not acquired");
 
-        final AmazonDynamoDBLockClient worker2DynamoDBLockClient = new AmazonDynamoDBLockClient(
-            doaUnderTest.getDDBLockClientOptionsBuilder().withOwnerName("TEST_WORKER_2")
-                .withCreateHeartbeatBackgroundThread(true).build());
+        final AmazonDynamoDBLockClient worker2DynamoDBLockClient = new AmazonDynamoDBLockClient(doaUnderTest
+                .getDDBLockClientOptionsBuilder()
+                .withOwnerName("TEST_WORKER_2")
+                .withCreateHeartbeatBackgroundThread(true)
+                .build());
         final Optional<LockItem> worker2OptionalItem = worker2DynamoDBLockClient.tryAcquireLock(
-            AcquireLockOptions.builder(LEADER_HASH_KEY).build());
+                AcquireLockOptions.builder(LEADER_HASH_KEY).build());
         Assertions.assertFalse(worker2OptionalItem.isPresent(), "Second worker was able to acquire the lock");
 
         /* Verify - both items are present with the corresponding content */
-        final ScanResponse response = FutureUtils.unwrappingFuture(() ->
-            dynamoDbAsyncClient.scan(ScanRequest.builder().tableName(tableNameForTest).build()));
+        final ScanResponse response = FutureUtils.unwrappingFuture(() -> dynamoDbAsyncClient.scan(
+                ScanRequest.builder().tableName(tableNameForTest).build()));
         log.info("response {}", response);
 
         Assertions.assertEquals(3, response.scannedCount(), "incorrect item count");
-        response.items()
-            .forEach(item -> {
-                final String key = item.get(COORDINATOR_STATE_TABLE_HASH_KEY_ATTRIBUTE_NAME).s();
-                if (MIGRATION_HASH_KEY.equals(key)) {
-                    // Make sure the record has not changed due to using
-                    // ddb lock client
-                    Assertions.assertEquals(ClientVersion.CLIENT_VERSION_UPGRADE_FROM_2x.toString(),
+        response.items().forEach(item -> {
+            final String key =
+                    item.get(COORDINATOR_STATE_TABLE_HASH_KEY_ATTRIBUTE_NAME).s();
+            if (MIGRATION_HASH_KEY.equals(key)) {
+                // Make sure the record has not changed due to using
+                // ddb lock client
+                Assertions.assertEquals(
+                        ClientVersion.CLIENT_VERSION_UPGRADE_FROM_2x.toString(),
                         item.get(CLIENT_VERSION_ATTRIBUTE_NAME).s());
-                } else if (LEADER_HASH_KEY.equals(key)) {
-                    Assertions.assertEquals("TEST_WORKER", item.get("ownerName").s());
-                } else if ("key1".equals(key)) {
-                    Assertions.assertEquals(4, item.size());
-                    Assertions.assertEquals("key1_strVal", item.get("key1-StrAttr").s());
-                    Assertions.assertEquals(100,
-                        Integer.valueOf(item.get("key1-IntAttr").n()));
-                    Assertions.assertEquals(true, item.get("key1-BoolAttr").bool());
-                }
-            });
+            } else if (LEADER_HASH_KEY.equals(key)) {
+                Assertions.assertEquals("TEST_WORKER", item.get("ownerName").s());
+            } else if ("key1".equals(key)) {
+                Assertions.assertEquals(4, item.size());
+                Assertions.assertEquals("key1_strVal", item.get("key1-StrAttr").s());
+                Assertions.assertEquals(
+                        100, Integer.valueOf(item.get("key1-IntAttr").n()));
+                Assertions.assertEquals(true, item.get("key1-BoolAttr").bool());
+            }
+        });
 
         dynamoDBLockClient.close();
         worker2DynamoDBLockClient.close();
@@ -221,12 +242,10 @@ public class CoordinatorStateDAOTest {
 
     @Test
     public void testListCoordinatorState()
-        throws ProvisionedThroughputException, InvalidStateException, DependencyException
-    {
+            throws ProvisionedThroughputException, InvalidStateException, DependencyException {
         /* Test setup - create class under test and initialize **/
-        final CoordinatorStateDAO doaUnderTest = new CoordinatorStateDAO(
-            dynamoDbAsyncClient,
-            getCoordinatorStateConfig("testListCoordinatorState"));
+        final CoordinatorStateDAO doaUnderTest =
+                new CoordinatorStateDAO(dynamoDbAsyncClient, getCoordinatorStateConfig("testListCoordinatorState"));
         doaUnderTest.initialize();
 
         /* Test step - create a few coordinatorState items with different schema and invoke the test to list items */
@@ -249,31 +268,36 @@ public class CoordinatorStateDAOTest {
                 return;
             }
             Assertions.assertEquals(3, state.getAttributes().size());
-            Assertions.assertEquals(keyValue + "_strVal", state.getAttributes().get(keyValue + "-StrAttr").s());
-            Assertions.assertEquals(100,
-                Integer.valueOf(state.getAttributes().get(keyValue + "-IntAttr").n()));
-            Assertions.assertEquals(true, state.getAttributes().get(keyValue + "-BoolAttr").bool());
+            Assertions.assertEquals(
+                    keyValue + "_strVal",
+                    state.getAttributes().get(keyValue + "-StrAttr").s());
+            Assertions.assertEquals(
+                    100,
+                    Integer.valueOf(
+                            state.getAttributes().get(keyValue + "-IntAttr").n()));
+            Assertions.assertEquals(
+                    true, state.getAttributes().get(keyValue + "-BoolAttr").bool());
         });
     }
 
     @Test
     public void testCreateCoordinatorState_ItemNotExists()
-        throws ProvisionedThroughputException, InvalidStateException, DependencyException
-    {
+            throws ProvisionedThroughputException, InvalidStateException, DependencyException {
         /* Test setup - create class under test and initialize **/
         final CoordinatorStateDAO doaUnderTest = new CoordinatorStateDAO(
-            dynamoDbAsyncClient,
-            getCoordinatorStateConfig("testCreatingLeaderAndMigrationKey"));
+                dynamoDbAsyncClient, getCoordinatorStateConfig("testCreatingLeaderAndMigrationKey"));
         doaUnderTest.initialize();
 
         /* Test step - create a few coordinatorState items with different schema and invoke the test to list items */
         final CoordinatorState s1 = CoordinatorState.builder()
-            .key("key1")
-            .attributes(new HashMap<String, AttributeValue>() {{
-                put("abc", AttributeValue.fromS("abc"));
-                put("xyz", AttributeValue.fromS("xyz"));
-                }})
-            .build();
+                .key("key1")
+                .attributes(new HashMap<String, AttributeValue>() {
+                    {
+                        put("abc", AttributeValue.fromS("abc"));
+                        put("xyz", AttributeValue.fromS("xyz"));
+                    }
+                })
+                .build();
         final boolean result = doaUnderTest.createCoordinatorStateIfNotExists(s1);
 
         /* Verify - insert succeeded and item matches **/
@@ -284,23 +308,23 @@ public class CoordinatorStateDAOTest {
 
     @Test
     public void testCreateCoordinatorState_ItemExists()
-        throws ProvisionedThroughputException, InvalidStateException, DependencyException
-    {
+            throws ProvisionedThroughputException, InvalidStateException, DependencyException {
         /* Test setup - create class under test and initialize **/
         final CoordinatorStateDAO doaUnderTest = new CoordinatorStateDAO(
-            dynamoDbAsyncClient,
-            getCoordinatorStateConfig("testCreatingLeaderAndMigrationKey"));
+                dynamoDbAsyncClient, getCoordinatorStateConfig("testCreatingLeaderAndMigrationKey"));
         doaUnderTest.initialize();
         createCoordinatorState("key1");
 
         /* Test step - create a few coordinatorState items with different schema and invoke the test to list items */
         final CoordinatorState s1 = CoordinatorState.builder()
-            .key("key1")
-            .attributes(new HashMap<String, AttributeValue>() {{
-                put("abc", AttributeValue.fromS("abc"));
-                put("xyz", AttributeValue.fromS("xyz"));
-            }})
-            .build();
+                .key("key1")
+                .attributes(new HashMap<String, AttributeValue>() {
+                    {
+                        put("abc", AttributeValue.fromS("abc"));
+                        put("xyz", AttributeValue.fromS("xyz"));
+                    }
+                })
+                .build();
         final boolean result = doaUnderTest.createCoordinatorStateIfNotExists(s1);
 
         /* Verify - insert succeeded and item matches **/
@@ -314,29 +338,32 @@ public class CoordinatorStateDAOTest {
             throws ProvisionedThroughputException, InvalidStateException, DependencyException {
         /* Test setup - create class under test and initialize **/
         final CoordinatorStateDAO doaUnderTest = new CoordinatorStateDAO(
-            dynamoDbAsyncClient,
-            getCoordinatorStateConfig("testCreatingLeaderAndMigrationKey"));
+                dynamoDbAsyncClient, getCoordinatorStateConfig("testCreatingLeaderAndMigrationKey"));
         doaUnderTest.initialize();
         createCoordinatorState("key1");
 
         /* Test step - update the state */
         final CoordinatorState updatedState = CoordinatorState.builder()
-            .key("key1")
-            .attributes(
-                new HashMap<String, AttributeValue>() {{
-                    put("key1-StrAttr", AttributeValue.fromS("key1_strVal"));
-                    put("key1-IntAttr", AttributeValue.fromN("200"));
-                    put("key1-BoolAttr", AttributeValue.fromBool(false));
-                }})
-            .build();
+                .key("key1")
+                .attributes(new HashMap<String, AttributeValue>() {
+                    {
+                        put("key1-StrAttr", AttributeValue.fromS("key1_strVal"));
+                        put("key1-IntAttr", AttributeValue.fromN("200"));
+                        put("key1-BoolAttr", AttributeValue.fromBool(false));
+                    }
+                })
+                .build();
 
-        final boolean updated = doaUnderTest.updateCoordinatorStateWithExpectation(updatedState,
-            new HashMap<String, ExpectedAttributeValue>() {{
-                put("key1-StrAttr",
-                    ExpectedAttributeValue.builder()
-                        .value(AttributeValue.fromS("key1_strVal"))
-                        .build());
-            }});
+        final boolean updated = doaUnderTest.updateCoordinatorStateWithExpectation(
+                updatedState, new HashMap<String, ExpectedAttributeValue>() {
+                    {
+                        put(
+                                "key1-StrAttr",
+                                ExpectedAttributeValue.builder()
+                                        .value(AttributeValue.fromS("key1_strVal"))
+                                        .build());
+                    }
+                });
 
         /* Verify - update succeeded **/
         Assertions.assertTrue(updated);
@@ -347,56 +374,66 @@ public class CoordinatorStateDAOTest {
             throws ProvisionedThroughputException, InvalidStateException, DependencyException {
         /* Test setup - create class under test and initialize **/
         final CoordinatorStateDAO doaUnderTest = new CoordinatorStateDAO(
-            dynamoDbAsyncClient,
-            getCoordinatorStateConfig("testCreatingLeaderAndMigrationKey"));
+                dynamoDbAsyncClient, getCoordinatorStateConfig("testCreatingLeaderAndMigrationKey"));
         doaUnderTest.initialize();
         final MigrationState state = createMigrationState();
 
         /* Test step - update the state with mismatched condition */
         final MigrationState updatedState = state.copy().update(ClientVersion.CLIENT_VERSION_2x, WORKER_ID);
 
-        boolean updated = doaUnderTest.updateCoordinatorStateWithExpectation(updatedState,
-            updatedState.getDynamoClientVersionExpectation());
+        boolean updated = doaUnderTest.updateCoordinatorStateWithExpectation(
+                updatedState, updatedState.getDynamoClientVersionExpectation());
 
         /* Verify - update failed **/
         Assertions.assertFalse(updated);
 
         /* Verify - update succeeded **/
         final MigrationState currentState = (MigrationState) doaUnderTest.getCoordinatorState("Migration3.0");
-        updated = doaUnderTest.updateCoordinatorStateWithExpectation(updatedState,
-            currentState.getDynamoClientVersionExpectation());
+        updated = doaUnderTest.updateCoordinatorStateWithExpectation(
+                updatedState, currentState.getDynamoClientVersionExpectation());
         Assertions.assertTrue(updated);
-        final GetItemResponse response
-            = dynamoDbAsyncClient.getItem(GetItemRequest.builder()
-                .tableName(tableNameForTest)
-                .key(new HashMap<String, AttributeValue>() {{ put("key", AttributeValue.fromS("Migration3.0")); }})
-                .build())
-            .join();
-        Assertions.assertEquals(ClientVersion.CLIENT_VERSION_2x.name(), response.item().get("cv").s());
+        final GetItemResponse response = dynamoDbAsyncClient
+                .getItem(GetItemRequest.builder()
+                        .tableName(tableNameForTest)
+                        .key(new HashMap<String, AttributeValue>() {
+                            {
+                                put("key", AttributeValue.fromS("Migration3.0"));
+                            }
+                        })
+                        .build())
+                .join();
+        Assertions.assertEquals(
+                ClientVersion.CLIENT_VERSION_2x.name(),
+                response.item().get("cv").s());
         Assertions.assertEquals(WORKER_ID, response.item().get("mb").s());
-        Assertions.assertEquals(String.valueOf(updatedState.getModifiedTimestamp()), response.item().get("mts").n());
+        Assertions.assertEquals(
+                String.valueOf(updatedState.getModifiedTimestamp()),
+                response.item().get("mts").n());
         Assertions.assertEquals(1, response.item().get("h").l().size());
-        Assertions.assertEquals(state.getClientVersion().name(), response.item().get("h").l().get(0).m().get("cv").s());
-        Assertions.assertEquals(state.getModifiedBy(), response.item().get("h").l().get(0).m().get("mb").s());
-        Assertions.assertEquals(String.valueOf(state.getModifiedTimestamp()),
-            response.item().get("h").l().get(0).m().get("mts").n());
+        Assertions.assertEquals(
+                state.getClientVersion().name(),
+                response.item().get("h").l().get(0).m().get("cv").s());
+        Assertions.assertEquals(
+                state.getModifiedBy(),
+                response.item().get("h").l().get(0).m().get("mb").s());
+        Assertions.assertEquals(
+                String.valueOf(state.getModifiedTimestamp()),
+                response.item().get("h").l().get(0).m().get("mts").n());
 
         log.info("Response {}", response);
     }
 
     @Test
     public void testUpdateCoordinatorStateWithExpectation_NonExistentKey()
-        throws ProvisionedThroughputException, InvalidStateException, DependencyException
-    {
+            throws ProvisionedThroughputException, InvalidStateException, DependencyException {
         /* Test setup - create class under test and initialize **/
         final CoordinatorStateDAO doaUnderTest = new CoordinatorStateDAO(
-            dynamoDbAsyncClient,
-            getCoordinatorStateConfig("testCreatingLeaderAndMigrationKey"));
+                dynamoDbAsyncClient, getCoordinatorStateConfig("testCreatingLeaderAndMigrationKey"));
         doaUnderTest.initialize();
 
         /* Test step - update with new state object */
-        final MigrationState updatedState = new MigrationState("Migration3.0",
-            WORKER_ID).update(ClientVersion.CLIENT_VERSION_2x, WORKER_ID);
+        final MigrationState updatedState =
+                new MigrationState("Migration3.0", WORKER_ID).update(ClientVersion.CLIENT_VERSION_2x, WORKER_ID);
 
         boolean updated = doaUnderTest.updateCoordinatorStateWithExpectation(updatedState, null);
 
@@ -408,24 +445,25 @@ public class CoordinatorStateDAOTest {
         return getCoordinatorStateConfig(applicationName, BillingMode.PAY_PER_REQUEST, null, null);
     }
 
-    private CoordinatorStateTableConfig getCoordinatorStateConfig(final String applicationName,
-        final ProvisionedThroughput throughput) {
+    private CoordinatorStateTableConfig getCoordinatorStateConfig(
+            final String applicationName, final ProvisionedThroughput throughput) {
         return getCoordinatorStateConfig(applicationName, BillingMode.PROVISIONED, throughput, null);
     }
 
     private CoordinatorStateTableConfig getCoordinatorStateConfig(
-        final String applicationName, final BillingMode mode, final ProvisionedThroughput throughput,
-        final String tableName
-    ) {
+            final String applicationName,
+            final BillingMode mode,
+            final ProvisionedThroughput throughput,
+            final String tableName) {
         final CoordinatorConfig c = new CoordinatorConfig(applicationName);
-        c.coordinatorStateConfig()
-            .billingMode(mode);
+        c.coordinatorStateConfig().billingMode(mode);
         if (tableName != null) {
             c.coordinatorStateConfig().tableName(tableName);
         }
         if (mode == BillingMode.PROVISIONED) {
-            c.coordinatorStateConfig().writeCapacity(throughput.writeCapacityUnits())
-                .readCapacity(throughput.readCapacityUnits());
+            c.coordinatorStateConfig()
+                    .writeCapacity(throughput.writeCapacityUnits())
+                    .readCapacity(throughput.readCapacityUnits());
         }
 
         tableNameForTest = c.coordinatorStateConfig().tableName();
@@ -434,16 +472,19 @@ public class CoordinatorStateDAOTest {
     }
 
     private void createCoordinatorState(final String keyValue) {
-        dynamoDbAsyncClient.putItem(PutItemRequest.builder()
-            .tableName(tableNameForTest)
-            .item(new HashMap<String, AttributeValue>() {{
-                put("key", AttributeValue.fromS(keyValue));
-                put(keyValue + "-StrAttr", AttributeValue.fromS(keyValue + "_strVal"));
-                put(keyValue + "-IntAttr", AttributeValue.fromN("100"));
-                put(keyValue + "-BoolAttr", AttributeValue.fromBool(true));
-            }})
-            .build()
-        ).join();
+        dynamoDbAsyncClient
+                .putItem(PutItemRequest.builder()
+                        .tableName(tableNameForTest)
+                        .item(new HashMap<String, AttributeValue>() {
+                            {
+                                put("key", AttributeValue.fromS(keyValue));
+                                put(keyValue + "-StrAttr", AttributeValue.fromS(keyValue + "_strVal"));
+                                put(keyValue + "-IntAttr", AttributeValue.fromN("100"));
+                                put(keyValue + "-BoolAttr", AttributeValue.fromBool(true));
+                            }
+                        })
+                        .build())
+                .join();
     }
 
     private MigrationState createMigrationState() {
@@ -453,17 +494,18 @@ public class CoordinatorStateDAOTest {
                 put("cv", AttributeValue.fromS(ClientVersion.CLIENT_VERSION_3x.toString()));
                 put("mb", AttributeValue.fromS("DUMMY_WORKER"));
                 put("mts", AttributeValue.fromN(String.valueOf(System.currentTimeMillis())));
-            }};
+            }
+        };
 
-        dynamoDbAsyncClient.putItem(PutItemRequest.builder()
-            .tableName(tableNameForTest)
-            .item(item)
-            .build()
-        ).join();
+        dynamoDbAsyncClient
+                .putItem(PutItemRequest.builder()
+                        .tableName(tableNameForTest)
+                        .item(item)
+                        .build())
+                .join();
 
         item.remove("key");
 
         return MigrationState.deserialize("Migration3.0", item);
     }
-
 }

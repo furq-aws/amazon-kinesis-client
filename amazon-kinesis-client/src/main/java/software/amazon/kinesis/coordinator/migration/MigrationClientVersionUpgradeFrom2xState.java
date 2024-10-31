@@ -14,6 +14,11 @@
  */
 package software.amazon.kinesis.coordinator.migration;
 
+import java.util.Random;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ScheduledExecutorService;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import software.amazon.awssdk.annotations.ThreadSafe;
@@ -26,11 +31,6 @@ import software.amazon.kinesis.leases.exceptions.InvalidStateException;
 import software.amazon.kinesis.metrics.MetricsLevel;
 import software.amazon.kinesis.metrics.MetricsScope;
 import software.amazon.kinesis.metrics.MetricsUtil;
-
-import java.util.Random;
-import java.util.concurrent.Callable;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ScheduledExecutorService;
 
 import static software.amazon.kinesis.coordinator.migration.ClientVersion.CLIENT_VERSION_2x;
 import static software.amazon.kinesis.coordinator.migration.ClientVersion.CLIENT_VERSION_3x_WITH_ROLLBACK;
@@ -82,27 +82,26 @@ public class MigrationClientVersionUpgradeFrom2xState implements MigrationClient
 
             log.info("Starting migration ready monitor to monitor 3.x compliance of the KCL workers");
             migrationMonitor = new MigrationReadyMonitor(
-                initializer.metricsFactory(),
-                timeProvider,
-                initializer.leaderDecider(),
-                initializer.workerIdentifier(),
-                initializer.workerMetricsDAO(),
-                initializer.workerMetricsExpirySeconds(),
-                initializer.leaseRefresher(),
-                stateMachineThreadPool,
-                this::onMigrationReady,
-                flipTo3XStabilizerTimeInSeconds
-            );
+                    initializer.metricsFactory(),
+                    timeProvider,
+                    initializer.leaderDecider(),
+                    initializer.workerIdentifier(),
+                    initializer.workerMetricsDAO(),
+                    initializer.workerMetricsExpirySeconds(),
+                    initializer.leaseRefresher(),
+                    stateMachineThreadPool,
+                    this::onMigrationReady,
+                    flipTo3XStabilizerTimeInSeconds);
             migrationMonitor.startMonitor();
 
             log.info("Starting monitor for rollback and flip to 3.x");
             clientVersionChangeMonitor = new ClientVersionChangeMonitor(
-                initializer.metricsFactory(),
-                coordinatorStateDAO,
-                stateMachineThreadPool,
-                this::onClientVersionChange,
-                clientVersion(),
-                random);
+                    initializer.metricsFactory(),
+                    coordinatorStateDAO,
+                    stateMachineThreadPool,
+                    this::onClientVersionChange,
+                    clientVersion(),
+                    random);
             clientVersionChangeMonitor.startMonitor();
             entered = true;
         } else {
@@ -176,19 +175,17 @@ public class MigrationClientVersionUpgradeFrom2xState implements MigrationClient
      *                                  or if the new state in DDB is unexpected.
      */
     private synchronized void onClientVersionChange(final MigrationState newState)
-        throws InvalidStateException, DependencyException
-    {
+            throws InvalidStateException, DependencyException {
         if (!entered || left) {
             log.warn("Received client version change notification on inactive state {}", this);
             return;
         }
-        final MetricsScope scope = MetricsUtil.createMetricsWithOperation(initializer.metricsFactory(),
-            METRICS_OPERATION);
+        final MetricsScope scope =
+                MetricsUtil.createMetricsWithOperation(initializer.metricsFactory(), METRICS_OPERATION);
         try {
             switch (newState.getClientVersion()) {
                 case CLIENT_VERSION_2x:
-                    log.info("A rollback has been initiated for the application. Transition to {}",
-                        CLIENT_VERSION_2x);
+                    log.info("A rollback has been initiated for the application. Transition to {}", CLIENT_VERSION_2x);
                     // cancel monitor asynchronously
                     cancelMigrationReadyMonitor();
                     stateMachine.transitionTo(CLIENT_VERSION_2x, newState);
@@ -220,23 +217,25 @@ public class MigrationClientVersionUpgradeFrom2xState implements MigrationClient
     }
 
     private boolean updateDynamoStateForTransition() {
-        final MetricsScope scope = MetricsUtil.createMetricsWithOperation(initializer.metricsFactory(),
-            METRICS_OPERATION);
+        final MetricsScope scope =
+                MetricsUtil.createMetricsWithOperation(initializer.metricsFactory(), METRICS_OPERATION);
         try {
-            final MigrationState newMigrationState = currentMigrationState.copy().update(
-                CLIENT_VERSION_3x_WITH_ROLLBACK, initializer.workerIdentifier());
-            log.info("Updating Migration State in DDB with {} prev state {}", newMigrationState,
-                currentMigrationState);
+            final MigrationState newMigrationState = currentMigrationState
+                    .copy()
+                    .update(CLIENT_VERSION_3x_WITH_ROLLBACK, initializer.workerIdentifier());
+            log.info("Updating Migration State in DDB with {} prev state {}", newMigrationState, currentMigrationState);
             return coordinatorStateDAO.updateCoordinatorStateWithExpectation(
-                newMigrationState, currentMigrationState.getDynamoClientVersionExpectation());
+                    newMigrationState, currentMigrationState.getDynamoClientVersionExpectation());
         } catch (final Exception e) {
-            log.warn("Exception occurred when toggling to {}, upgradeReadyMonitor will retry the update" +
-                " if upgrade condition is still true", CLIENT_VERSION_3x_WITH_ROLLBACK, e);
+            log.warn(
+                    "Exception occurred when toggling to {}, upgradeReadyMonitor will retry the update"
+                            + " if upgrade condition is still true",
+                    CLIENT_VERSION_3x_WITH_ROLLBACK,
+                    e);
             scope.addData(FAULT_METRIC, 1, StandardUnit.COUNT, MetricsLevel.SUMMARY);
             return false;
         } finally {
             MetricsUtil.endScope(scope);
         }
     }
-
 }

@@ -1,5 +1,15 @@
 package software.amazon.kinesis.coordinator;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.function.BiFunction;
+import java.util.function.Supplier;
+
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,16 +32,6 @@ import software.amazon.kinesis.metrics.NullMetricsFactory;
 import software.amazon.kinesis.worker.metricstats.WorkerMetricStats;
 import software.amazon.kinesis.worker.metricstats.WorkerMetricStatsDAO;
 import software.amazon.kinesis.worker.metricstats.WorkerMetricStatsManager;
-
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
-import java.util.function.BiFunction;
-import java.util.function.Supplier;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -56,30 +56,31 @@ public class DynamicMigrationComponentsInitializerTest {
     private final MetricsFactory mockMetricsFactory = new NullMetricsFactory();
     private final LeaseRefresher mockLeaseRefresher = mock(LeaseRefresher.class, Mockito.RETURNS_MOCKS);
     private final CoordinatorStateDAO mockCoordinatorStateDAO = mock(CoordinatorStateDAO.class, Mockito.RETURNS_MOCKS);
-    private final ScheduledExecutorService mockWorkerMetricsScheduler = mock(ScheduledExecutorService.class, RETURNS_MOCKS);
+    private final ScheduledExecutorService mockWorkerMetricsScheduler =
+            mock(ScheduledExecutorService.class, RETURNS_MOCKS);
     private final WorkerMetricStatsDAO mockWorkerMetricsDAO = mock(WorkerMetricStatsDAO.class, RETURNS_MOCKS);
-    private final WorkerMetricStatsManager mockWorkerMetricsManager = mock(WorkerMetricStatsManager.class, RETURNS_MOCKS);
+    private final WorkerMetricStatsManager mockWorkerMetricsManager =
+            mock(WorkerMetricStatsManager.class, RETURNS_MOCKS);
     private final ScheduledExecutorService mockLamThreadPool = mock(ScheduledExecutorService.class, RETURNS_MOCKS);
     private final LeaseAssignmentManager mockLam = mock(LeaseAssignmentManager.class, RETURNS_MOCKS);
-    private final BiFunction<ScheduledExecutorService, LeaderDecider, LeaseAssignmentManager> mockLamCreator
-        = mock(LeaseAssignmentManagerSupplier.class);
-    private final MigrationAdaptiveLeaderDecider mockMigrationAdaptiveLeaderDecider
-        = mock(MigrationAdaptiveLeaderDecider.class);
-    private final Supplier<MigrationAdaptiveLeaderDecider> mockAdaptiveLeaderDeciderCreator
-        = mock(MigrationAdaptiveLeaderDeciderSupplier.class);
-    private final DeterministicShuffleShardSyncLeaderDecider mockDeterministicLeaderDecider
-        = mock(DeterministicShuffleShardSyncLeaderDecider.class);
-    private final Supplier<DeterministicShuffleShardSyncLeaderDecider> mockDeterministicLeaderDeciderCreator
-        = mock(DeterministicShuffleShardSyncLeaderDeciderSupplier.class);
-    private final DynamoDBLockBasedLeaderDecider mockDdbLockLeaderDecider
-        = mock(DynamoDBLockBasedLeaderDecider.class);
-    private final Supplier<DynamoDBLockBasedLeaderDecider> mockDdbLockBasedLeaderDeciderCreator
-        = mock(DynamoDBLockBasedLeaderDeciderSupplier.class);
+    private final BiFunction<ScheduledExecutorService, LeaderDecider, LeaseAssignmentManager> mockLamCreator =
+            mock(LeaseAssignmentManagerSupplier.class);
+    private final MigrationAdaptiveLeaderDecider mockMigrationAdaptiveLeaderDecider =
+            mock(MigrationAdaptiveLeaderDecider.class);
+    private final Supplier<MigrationAdaptiveLeaderDecider> mockAdaptiveLeaderDeciderCreator =
+            mock(MigrationAdaptiveLeaderDeciderSupplier.class);
+    private final DeterministicShuffleShardSyncLeaderDecider mockDeterministicLeaderDecider =
+            mock(DeterministicShuffleShardSyncLeaderDecider.class);
+    private final Supplier<DeterministicShuffleShardSyncLeaderDecider> mockDeterministicLeaderDeciderCreator =
+            mock(DeterministicShuffleShardSyncLeaderDeciderSupplier.class);
+    private final DynamoDBLockBasedLeaderDecider mockDdbLockLeaderDecider = mock(DynamoDBLockBasedLeaderDecider.class);
+    private final Supplier<DynamoDBLockBasedLeaderDecider> mockDdbLockBasedLeaderDeciderCreator =
+            mock(DynamoDBLockBasedLeaderDeciderSupplier.class);
     private final String workerIdentifier = "TEST_WORKER_ID";
-    private final WorkerUtilizationAwareAssignmentConfig workerUtilizationAwareAssignmentConfig
-        = new WorkerUtilizationAwareAssignmentConfig();
-    final MigrationAdaptiveLeaseAssignmentModeProvider mockConsumer
-        = mock(MigrationAdaptiveLeaseAssignmentModeProvider.class);
+    private final WorkerUtilizationAwareAssignmentConfig workerUtilizationAwareAssignmentConfig =
+            new WorkerUtilizationAwareAssignmentConfig();
+    final MigrationAdaptiveLeaseAssignmentModeProvider mockConsumer =
+            mock(MigrationAdaptiveLeaseAssignmentModeProvider.class);
 
     private static final String APPLICATION_NAME = "TEST_APPLICATION";
 
@@ -92,17 +93,20 @@ public class DynamicMigrationComponentsInitializerTest {
         when(mockDeterministicLeaderDeciderCreator.get()).thenReturn(mockDeterministicLeaderDecider);
 
         migrationInitializer = new DynamicMigrationComponentsInitializer(
-            mockMetricsFactory,
-            mockLeaseRefresher,
-            mockCoordinatorStateDAO, mockWorkerMetricsScheduler, mockWorkerMetricsDAO, mockWorkerMetricsManager,
-            mockLamThreadPool,
-            mockLamCreator,
-            mockAdaptiveLeaderDeciderCreator,
-            mockDeterministicLeaderDeciderCreator,
-            mockDdbLockBasedLeaderDeciderCreator,
-            workerIdentifier,
-            workerUtilizationAwareAssignmentConfig,
-            mockConsumer);
+                mockMetricsFactory,
+                mockLeaseRefresher,
+                mockCoordinatorStateDAO,
+                mockWorkerMetricsScheduler,
+                mockWorkerMetricsDAO,
+                mockWorkerMetricsManager,
+                mockLamThreadPool,
+                mockLamCreator,
+                mockAdaptiveLeaderDeciderCreator,
+                mockDeterministicLeaderDeciderCreator,
+                mockDdbLockBasedLeaderDeciderCreator,
+                workerIdentifier,
+                workerUtilizationAwareAssignmentConfig,
+                mockConsumer);
     }
 
     @Test
@@ -119,7 +123,8 @@ public class DynamicMigrationComponentsInitializerTest {
         // verify LeaseAssignmentModeChange consumer initialization
         verify(mockConsumer).initialize(eq(false), eq(LeaseAssignmentMode.WORKER_UTILIZATION_AWARE_ASSIGNMENT));
 
-        when(mockLeaseRefresher.waitUntilLeaseOwnerToLeaseKeyIndexExists(anyLong(), anyLong())).thenReturn(true);
+        when(mockLeaseRefresher.waitUntilLeaseOwnerToLeaseKeyIndexExists(anyLong(), anyLong()))
+                .thenReturn(true);
 
         // test initialization from state machine
         migrationInitializer.initializeClientVersionFor3x(ClientVersion.CLIENT_VERSION_INIT);
@@ -215,7 +220,7 @@ public class DynamicMigrationComponentsInitializerTest {
         verify(mockLam).stop();
         // leader decider is not shutdown from DynamicMigrationComponentsInitializer
         // scheduler does the shutdown
-        //verify(migrationInitializer.leaderDecider()).shutdown();
+        // verify(migrationInitializer.leaderDecider()).shutdown();
         verify(mockWorkerMetricsManager).stopManager();
     }
 
@@ -224,8 +229,9 @@ public class DynamicMigrationComponentsInitializerTest {
         migrationInitializer.initialize(ClientVersion.CLIENT_VERSION_3x);
         // test initialization from state machine
 
-        assertThrows(DependencyException.class,
-            () -> migrationInitializer.initializeClientVersionFor3x(ClientVersion.CLIENT_VERSION_INIT));
+        assertThrows(
+                DependencyException.class,
+                () -> migrationInitializer.initializeClientVersionFor3x(ClientVersion.CLIENT_VERSION_INIT));
     }
 
     @Test
@@ -234,7 +240,7 @@ public class DynamicMigrationComponentsInitializerTest {
         // test initialization from state machine
 
         assertDoesNotThrow(
-            () -> migrationInitializer.initializeClientVersionFor3xWithRollback(ClientVersion.CLIENT_VERSION_INIT));
+                () -> migrationInitializer.initializeClientVersionFor3xWithRollback(ClientVersion.CLIENT_VERSION_INIT));
     }
 
     @Test
@@ -256,8 +262,9 @@ public class DynamicMigrationComponentsInitializerTest {
     public void testComponentsInitialization_AfterRollForward() throws DependencyException {
         final ScheduledFuture<?> mockFuture = mock(ScheduledFuture.class);
 
-        doReturn(mockFuture).when(mockWorkerMetricsScheduler)
-            .scheduleAtFixedRate(any(Runnable.class), anyLong(), anyLong(), any(TimeUnit.class));
+        doReturn(mockFuture)
+                .when(mockWorkerMetricsScheduler)
+                .scheduleAtFixedRate(any(Runnable.class), anyLong(), anyLong(), any(TimeUnit.class));
 
         migrationInitializer.initialize(ClientVersion.CLIENT_VERSION_2x);
         migrationInitializer.initializeClientVersionFor2x(ClientVersion.CLIENT_VERSION_INIT);
@@ -268,8 +275,8 @@ public class DynamicMigrationComponentsInitializerTest {
         migrationInitializer.initializeClientVersionForUpgradeFrom2x(ClientVersion.CLIENT_VERSION_2x);
 
         // verify
-        verify(mockWorkerMetricsScheduler).scheduleAtFixedRate(any(Runnable.class), anyLong(), anyLong(),
-            any(TimeUnit.class));
+        verify(mockWorkerMetricsScheduler)
+                .scheduleAtFixedRate(any(Runnable.class), anyLong(), anyLong(), any(TimeUnit.class));
         verify(mockLeaseRefresher).createLeaseOwnerToLeaseKeyIndexIfNotExists();
         verify(mockLeaseRefresher, never()).waitUntilLeaseTableExists(anyLong(), anyLong());
     }
@@ -277,32 +284,34 @@ public class DynamicMigrationComponentsInitializerTest {
     @Test
     public void testComponentsInitialization_Rollback_BeforeFlip() throws DependencyException {
         final ScheduledFuture<?> mockFuture = mock(ScheduledFuture.class);
-        doReturn(mockFuture).when(mockWorkerMetricsScheduler)
-            .scheduleAtFixedRate(any(Runnable.class), anyLong(), anyLong(), any(TimeUnit.class));
+        doReturn(mockFuture)
+                .when(mockWorkerMetricsScheduler)
+                .scheduleAtFixedRate(any(Runnable.class), anyLong(), anyLong(), any(TimeUnit.class));
 
         migrationInitializer.initialize(ClientVersion.CLIENT_VERSION_UPGRADE_FROM_2x);
         migrationInitializer.initializeClientVersionForUpgradeFrom2x(ClientVersion.CLIENT_VERSION_INIT);
 
-        //test rollback before flip
+        // test rollback before flip
         migrationInitializer.initializeClientVersionFor2x(ClientVersion.CLIENT_VERSION_UPGRADE_FROM_2x);
 
-        //verify
+        // verify
         verify(mockFuture).cancel(anyBoolean());
     }
 
     @Test
     public void testComponentsInitialization_Rollback_AfterFlip() throws DependencyException {
         final ScheduledFuture<?> mockFuture = mock(ScheduledFuture.class);
-        doReturn(mockFuture).when(mockWorkerMetricsScheduler)
-            .scheduleAtFixedRate(any(Runnable.class), anyLong(), anyLong(), any(TimeUnit.class));
+        doReturn(mockFuture)
+                .when(mockWorkerMetricsScheduler)
+                .scheduleAtFixedRate(any(Runnable.class), anyLong(), anyLong(), any(TimeUnit.class));
 
         migrationInitializer.initialize(ClientVersion.CLIENT_VERSION_3x_WITH_ROLLBACK);
         migrationInitializer.initializeClientVersionFor3xWithRollback(ClientVersion.CLIENT_VERSION_INIT);
 
-        //test rollback before flip
+        // test rollback before flip
         migrationInitializer.initializeClientVersionFor2x(ClientVersion.CLIENT_VERSION_3x_WITH_ROLLBACK);
 
-        //verify
+        // verify
         verify(mockFuture).cancel(anyBoolean());
         verify(mockConsumer).updateLeaseAssignmentMode(eq(LeaseAssignmentMode.DEFAULT_LEASE_COUNT_BASED_ASSIGNMENT));
         verify(mockLam).stop();
@@ -314,15 +323,19 @@ public class DynamicMigrationComponentsInitializerTest {
     public void testWorkerMetricsReporting() throws DependencyException {
         final ArgumentCaptor<Runnable> argumentCaptor = ArgumentCaptor.forClass(Runnable.class);
         final ScheduledFuture<?> mockFuture = mock(ScheduledFuture.class);
-        doReturn(mockFuture).when(mockWorkerMetricsScheduler)
-            .scheduleAtFixedRate(argumentCaptor.capture(), anyLong(), anyLong(), any(TimeUnit.class));
-        when(mockWorkerMetricsManager.getOperatingRange()).thenReturn(
-            new HashMap<String, List<Long>>() {{ put("CPU", Collections.singletonList(80L));
-            }}
-        );
-        when(mockWorkerMetricsManager.computeMetrics()).thenReturn(new HashMap<String, List<Double>>() {{
-            put("CPU", Arrays.asList(90.0, 85.0, 77.0, 91.0, 82.0));
-        }});
+        doReturn(mockFuture)
+                .when(mockWorkerMetricsScheduler)
+                .scheduleAtFixedRate(argumentCaptor.capture(), anyLong(), anyLong(), any(TimeUnit.class));
+        when(mockWorkerMetricsManager.getOperatingRange()).thenReturn(new HashMap<String, List<Long>>() {
+            {
+                put("CPU", Collections.singletonList(80L));
+            }
+        });
+        when(mockWorkerMetricsManager.computeMetrics()).thenReturn(new HashMap<String, List<Double>>() {
+            {
+                put("CPU", Arrays.asList(90.0, 85.0, 77.0, 91.0, 82.0));
+            }
+        });
 
         migrationInitializer.initialize(ClientVersion.CLIENT_VERSION_3x_WITH_ROLLBACK);
         migrationInitializer.initializeClientVersionFor3xWithRollback(ClientVersion.CLIENT_VERSION_INIT);
@@ -334,17 +347,23 @@ public class DynamicMigrationComponentsInitializerTest {
         final ArgumentCaptor<WorkerMetricStats> statsCaptor = ArgumentCaptor.forClass(WorkerMetricStats.class);
         verify(mockWorkerMetricsDAO).updateMetrics(statsCaptor.capture());
         Assertions.assertEquals(workerIdentifier, statsCaptor.getValue().getWorkerId());
-        Assertions.assertEquals(80L, statsCaptor.getValue().getOperatingRange().get("CPU").get(0));
-        Assertions.assertEquals(90.0, statsCaptor.getValue().getMetricStats().get("CPU").get(0));
-        Assertions.assertEquals(77.0, statsCaptor.getValue().getMetricStats().get("CPU").get(2));
+        Assertions.assertEquals(
+                80L, statsCaptor.getValue().getOperatingRange().get("CPU").get(0));
+        Assertions.assertEquals(
+                90.0, statsCaptor.getValue().getMetricStats().get("CPU").get(0));
+        Assertions.assertEquals(
+                77.0, statsCaptor.getValue().getMetricStats().get("CPU").get(2));
     }
 
-    private static abstract class DynamoDBLockBasedLeaderDeciderSupplier
-            implements Supplier<DynamoDBLockBasedLeaderDecider> { }
-    private static abstract class DeterministicShuffleShardSyncLeaderDeciderSupplier
-            implements Supplier<DeterministicShuffleShardSyncLeaderDecider> { }
-    private static abstract class MigrationAdaptiveLeaderDeciderSupplier
-            implements Supplier<MigrationAdaptiveLeaderDecider> { }
-    private static abstract class LeaseAssignmentManagerSupplier
-            implements BiFunction<ScheduledExecutorService, LeaderDecider, LeaseAssignmentManager> { }
+    private abstract static class DynamoDBLockBasedLeaderDeciderSupplier
+            implements Supplier<DynamoDBLockBasedLeaderDecider> {}
+
+    private abstract static class DeterministicShuffleShardSyncLeaderDeciderSupplier
+            implements Supplier<DeterministicShuffleShardSyncLeaderDecider> {}
+
+    private abstract static class MigrationAdaptiveLeaderDeciderSupplier
+            implements Supplier<MigrationAdaptiveLeaderDecider> {}
+
+    private abstract static class LeaseAssignmentManagerSupplier
+            implements BiFunction<ScheduledExecutorService, LeaderDecider, LeaseAssignmentManager> {}
 }

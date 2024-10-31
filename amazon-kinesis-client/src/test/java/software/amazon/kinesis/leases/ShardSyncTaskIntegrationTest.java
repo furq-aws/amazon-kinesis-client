@@ -14,8 +14,6 @@
  */
 package software.amazon.kinesis.leases;
 
-//import java.net.URI;
-
 import java.time.Duration;
 import java.util.HashSet;
 import java.util.List;
@@ -27,9 +25,6 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
-
-//import software.amazon.awssdk.core.client.builder.ClientAsyncHttpConfiguration;
-//import software.amazon.awssdk.http.nio.netty.NettySdkHttpClientFactory;
 import software.amazon.awssdk.core.util.DefaultSdkAutoConstructList;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
@@ -72,46 +67,63 @@ public class ShardSyncTaskIntegrationTest {
 
     @BeforeClass
     public static void setUpBeforeClass() throws Exception {
-//        ClientAsyncHttpConfiguration configuration = ClientAsyncHttpConfiguration.builder().httpClientFactory(
-//                NettySdkHttpClientFactory.builder().trustAllCertificates(true).maxConnectionsPerEndpoint(10).build())
-//                .build();
-//        kinesisClient = KinesisAsyncClient.builder().asyncHttpConfiguration(configuration)
-//                .endpointOverride(new URI("https://aws-kinesis-alpha.corp.amazon.com")).region(Region.US_EAST_1)
-//                .build();
-//
+        //        ClientAsyncHttpConfiguration configuration = ClientAsyncHttpConfiguration.builder().httpClientFactory(
+        //
+        // NettySdkHttpClientFactory.builder().trustAllCertificates(true).maxConnectionsPerEndpoint(10).build())
+        //                .build();
+        //        kinesisClient = KinesisAsyncClient.builder().asyncHttpConfiguration(configuration)
+        //                .endpointOverride(new
+        // URI("https://aws-kinesis-alpha.corp.amazon.com")).region(Region.US_EAST_1)
+        //                .build();
+        //
         try {
-            CreateStreamRequest req = CreateStreamRequest.builder().streamName(STREAM_NAME).shardCount(1).build();
+            CreateStreamRequest req = CreateStreamRequest.builder()
+                    .streamName(STREAM_NAME)
+                    .shardCount(1)
+                    .build();
             kinesisClient.createStream(req);
         } catch (KinesisException ase) {
             ase.printStackTrace();
         }
         StreamStatus status;
-//        do {
-//            status = StreamStatus.fromValue(kinesisClient.describeStreamSummary(
-//                    DescribeStreamSummaryRequest.builder().streamName(STREAM_NAME).build()).get()
-//                    .streamDescriptionSummary().streamStatusString());
-//        } while (status != StreamStatus.ACTIVE);
-//
+        //        do {
+        //            status = StreamStatus.fromValue(kinesisClient.describeStreamSummary(
+        //                    DescribeStreamSummaryRequest.builder().streamName(STREAM_NAME).build()).get()
+        //                    .streamDescriptionSummary().streamStatusString());
+        //        } while (status != StreamStatus.ACTIVE);
+        //
     }
 
     @Before
     public void setup() {
-        DynamoDbAsyncClient client = DynamoDbAsyncClient.builder().region(Region.US_EAST_1).build();
-        leaseRefresher =
-                new DynamoDBLeaseRefresher("ShardSyncTaskIntegrationTest", client, new DynamoDBLeaseSerializer(),
-                        USE_CONSISTENT_READS, TableCreatorCallback.NOOP_TABLE_CREATOR_CALLBACK,
-                        LeaseManagementConfig.DEFAULT_REQUEST_TIMEOUT, new DdbTableConfig(),
-                        LeaseManagementConfig.DEFAULT_LEASE_TABLE_DELETION_PROTECTION_ENABLED,
-                        DefaultSdkAutoConstructList.getInstance());
+        DynamoDbAsyncClient client =
+                DynamoDbAsyncClient.builder().region(Region.US_EAST_1).build();
+        leaseRefresher = new DynamoDBLeaseRefresher(
+                "ShardSyncTaskIntegrationTest",
+                client,
+                new DynamoDBLeaseSerializer(),
+                USE_CONSISTENT_READS,
+                TableCreatorCallback.NOOP_TABLE_CREATOR_CALLBACK,
+                LeaseManagementConfig.DEFAULT_REQUEST_TIMEOUT,
+                new DdbTableConfig(),
+                LeaseManagementConfig.DEFAULT_LEASE_TABLE_DELETION_PROTECTION_ENABLED,
+                DefaultSdkAutoConstructList.getInstance());
 
-        shardDetector = new KinesisShardDetector(kinesisClient,  StreamIdentifier.singleStreamInstance(STREAM_NAME), 500L, 50,
-                LIST_SHARDS_CACHE_ALLOWED_AGE_IN_SECONDS, MAX_CACHE_MISSES_BEFORE_RELOAD, CACHE_MISS_WARNING_MODULUS, KINESIS_REQUEST_TIMEOUT);
+        shardDetector = new KinesisShardDetector(
+                kinesisClient,
+                StreamIdentifier.singleStreamInstance(STREAM_NAME),
+                500L,
+                50,
+                LIST_SHARDS_CACHE_ALLOWED_AGE_IN_SECONDS,
+                MAX_CACHE_MISSES_BEFORE_RELOAD,
+                CACHE_MISS_WARNING_MODULUS,
+                KINESIS_REQUEST_TIMEOUT);
         hierarchicalShardSyncer = new HierarchicalShardSyncer();
     }
 
     /**
      * Test method for call().
-     * 
+     *
      * @throws DependencyException
      * @throws InvalidStateException
      * @throws ProvisionedThroughputException
@@ -124,11 +136,18 @@ public class ShardSyncTaskIntegrationTest {
             leaseRefresher.createLeaseTableIfNotExists(readCapacity, writeCapacity);
         }
         leaseRefresher.deleteAll();
-        Set<String> shardIds = shardDetector.listShards().stream().map(Shard::shardId).collect(Collectors.toSet());
-        ShardSyncTask syncTask = new ShardSyncTask(shardDetector, leaseRefresher,
+        Set<String> shardIds =
+                shardDetector.listShards().stream().map(Shard::shardId).collect(Collectors.toSet());
+        ShardSyncTask syncTask = new ShardSyncTask(
+                shardDetector,
+                leaseRefresher,
                 InitialPositionInStreamExtended.newInitialPosition(InitialPositionInStream.LATEST),
-                false, true, false, 0L,
-                hierarchicalShardSyncer, NULL_METRICS_FACTORY);
+                false,
+                true,
+                false,
+                0L,
+                hierarchicalShardSyncer,
+                NULL_METRICS_FACTORY);
         syncTask.call();
         List<Lease> leases = leaseRefresher.listLeases();
         Set<String> leaseKeys = new HashSet<>();
@@ -141,5 +160,4 @@ public class ShardSyncTaskIntegrationTest {
         shardIds.removeAll(leaseKeys);
         Assert.assertTrue(shardIds.isEmpty());
     }
-
 }

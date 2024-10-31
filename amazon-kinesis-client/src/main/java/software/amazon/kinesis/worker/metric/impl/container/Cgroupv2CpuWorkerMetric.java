@@ -1,18 +1,17 @@
 package software.amazon.kinesis.worker.metric.impl.container;
 
-import static software.amazon.kinesis.utils.Cgroup.getAvailableCpusFromEffectiveCpuSet;
-import static software.amazon.kinesis.utils.Cgroup.readSingleLineFile;
-
 import java.time.Clock;
 import java.util.concurrent.TimeUnit;
 
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
 import software.amazon.kinesis.worker.metric.OperatingRange;
 import software.amazon.kinesis.worker.metric.WorkerMetric;
 import software.amazon.kinesis.worker.metric.WorkerMetricType;
+
+import static software.amazon.kinesis.utils.Cgroup.getAvailableCpusFromEffectiveCpuSet;
+import static software.amazon.kinesis.utils.Cgroup.readSingleLineFile;
 
 /**
  * Utilizes Linux Control Groups by reading cpu time and available cpu from cgroup directory. This works for Elastic
@@ -57,9 +56,7 @@ public class Cgroupv2CpuWorkerMetric implements WorkerMetric {
 
     @Override
     public WorkerMetricValue capture() {
-        return WorkerMetricValue.builder()
-                .value(calculateCpuUsage())
-                .build();
+        return WorkerMetricValue.builder().value(calculateCpuUsage()).build();
     }
 
     private double calculateCpuUsage() {
@@ -77,7 +74,6 @@ public class Cgroupv2CpuWorkerMetric implements WorkerMetric {
         boolean skip = false;
         double cpuCoreTimeUsed;
         synchronized (LOCK_OBJECT) {
-
             if (lastCpuUseTimeMicros == 0 && lastSystemTimeMicros == 0) {
                 // Case where this is a first call so no diff available
                 skip = true;
@@ -112,12 +108,12 @@ public class Cgroupv2CpuWorkerMetric implements WorkerMetric {
         final String period = cpuMaxArr[1];
 
         if (max.equals("max")) {
-            // if first value in file is "max", a limit is not set on the container. The container can use all available cores
+            // if first value in file is "max", a limit is not set on the container. The container can use all available
+            // cores
             return getAvailableCpusFromEffectiveCpuSet(readSingleLineFile(effectiveCpuSetFile));
         } else {
             return Double.parseDouble(max) / Long.parseLong(period);
         }
-
     }
 
     @Override
@@ -129,5 +125,4 @@ public class Cgroupv2CpuWorkerMetric implements WorkerMetric {
     public WorkerMetricType getWorkerMetricType() {
         return CPU_WORKER_METRICS_TYPE;
     }
-
 }

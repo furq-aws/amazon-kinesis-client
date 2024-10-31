@@ -14,26 +14,6 @@
  */
 package software.amazon.kinesis.coordinator;
 
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.experimental.Accessors;
-import lombok.extern.slf4j.Slf4j;
-import software.amazon.awssdk.annotations.ThreadSafe;
-import software.amazon.kinesis.annotations.KinesisClientInternalApi;
-import software.amazon.kinesis.coordinator.assignment.LeaseAssignmentManager;
-import software.amazon.kinesis.coordinator.migration.ClientVersion;
-import software.amazon.kinesis.coordinator.MigrationAdaptiveLeaseAssignmentModeProvider.LeaseAssignmentMode;
-import software.amazon.kinesis.leader.DynamoDBLockBasedLeaderDecider;
-import software.amazon.kinesis.leader.MigrationAdaptiveLeaderDecider;
-import software.amazon.kinesis.leases.LeaseManagementConfig.WorkerUtilizationAwareAssignmentConfig;
-import software.amazon.kinesis.leases.LeaseRefresher;
-import software.amazon.kinesis.leases.exceptions.DependencyException;
-import software.amazon.kinesis.metrics.MetricsFactory;
-import software.amazon.kinesis.worker.metricstats.WorkerMetricStatsDAO;
-import software.amazon.kinesis.worker.metricstats.WorkerMetricStatsReporter;
-import software.amazon.kinesis.worker.metricstats.WorkerMetricStatsManager;
-
 import java.time.Duration;
 import java.util.Objects;
 import java.util.concurrent.ScheduledExecutorService;
@@ -42,9 +22,29 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.BiFunction;
 import java.util.function.Supplier;
 
-import static software.amazon.kinesis.coordinator.assignment.LeaseAssignmentManager.DEFAULT_NO_OF_SKIP_STAT_FOR_DEAD_WORKER_THRESHOLD;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.experimental.Accessors;
+import lombok.extern.slf4j.Slf4j;
+import software.amazon.awssdk.annotations.ThreadSafe;
+import software.amazon.kinesis.annotations.KinesisClientInternalApi;
+import software.amazon.kinesis.coordinator.MigrationAdaptiveLeaseAssignmentModeProvider.LeaseAssignmentMode;
+import software.amazon.kinesis.coordinator.assignment.LeaseAssignmentManager;
+import software.amazon.kinesis.coordinator.migration.ClientVersion;
+import software.amazon.kinesis.leader.DynamoDBLockBasedLeaderDecider;
+import software.amazon.kinesis.leader.MigrationAdaptiveLeaderDecider;
+import software.amazon.kinesis.leases.LeaseManagementConfig.WorkerUtilizationAwareAssignmentConfig;
+import software.amazon.kinesis.leases.LeaseRefresher;
+import software.amazon.kinesis.leases.exceptions.DependencyException;
+import software.amazon.kinesis.metrics.MetricsFactory;
+import software.amazon.kinesis.worker.metricstats.WorkerMetricStatsDAO;
+import software.amazon.kinesis.worker.metricstats.WorkerMetricStatsManager;
+import software.amazon.kinesis.worker.metricstats.WorkerMetricStatsReporter;
+
 import static software.amazon.kinesis.coordinator.MigrationAdaptiveLeaseAssignmentModeProvider.LeaseAssignmentMode.DEFAULT_LEASE_COUNT_BASED_ASSIGNMENT;
 import static software.amazon.kinesis.coordinator.MigrationAdaptiveLeaseAssignmentModeProvider.LeaseAssignmentMode.WORKER_UTILIZATION_AWARE_ASSIGNMENT;
+import static software.amazon.kinesis.coordinator.assignment.LeaseAssignmentManager.DEFAULT_NO_OF_SKIP_STAT_FOR_DEAD_WORKER_THRESHOLD;
 
 /**
  * This class is responsible for initializing the KCL components that supports
@@ -79,27 +79,36 @@ public final class DynamicMigrationComponentsInitializer {
 
     @Getter
     private final MetricsFactory metricsFactory;
+
     @Getter
     private final LeaseRefresher leaseRefresher;
+
     private final CoordinatorStateDAO coordinatorStateDAO;
     private final ScheduledExecutorService workerMetricsThreadPool;
+
     @Getter
     private final WorkerMetricStatsDAO workerMetricsDAO;
+
     private final WorkerMetricStatsManager workerMetricsManager;
     private final ScheduledExecutorService lamThreadPool;
     private final BiFunction<ScheduledExecutorService, LeaderDecider, LeaseAssignmentManager> lamCreator;
     private final Supplier<MigrationAdaptiveLeaderDecider> adaptiveLeaderDeciderCreator;
     private final Supplier<DeterministicShuffleShardSyncLeaderDecider> deterministicLeaderDeciderCreator;
     private final Supplier<DynamoDBLockBasedLeaderDecider> ddbLockBasedLeaderDeciderCreator;
+
     @Getter
     private final String workerIdentifier;
+
     private final WorkerUtilizationAwareAssignmentConfig workerUtilizationAwareAssignmentConfig;
+
     @Getter
     private final long workerMetricsExpirySeconds;
+
     private final MigrationAdaptiveLeaseAssignmentModeProvider leaseModeChangeConsumer;
 
     @Getter
     private LeaderDecider leaderDecider;
+
     private LeaseAssignmentManager leaseAssignmentManager;
     private ScheduledFuture<?> workerMetricsReporterFuture;
     private LeaseAssignmentMode currentAssignmentMode;
@@ -107,24 +116,29 @@ public final class DynamicMigrationComponentsInitializer {
     private boolean initialized;
 
     @Builder(access = AccessLevel.PACKAGE)
-    DynamicMigrationComponentsInitializer(final MetricsFactory metricsFactory, final LeaseRefresher leaseRefresher,
-        final CoordinatorStateDAO coordinatorStateDAO, final ScheduledExecutorService workerMetricsThreadPool,
-        final WorkerMetricStatsDAO workerMetricsDAO, final WorkerMetricStatsManager workerMetricsManager,
-        final ScheduledExecutorService lamThreadPool,
-        final BiFunction<ScheduledExecutorService, LeaderDecider, LeaseAssignmentManager> lamCreator,
-        final Supplier<MigrationAdaptiveLeaderDecider> adaptiveLeaderDeciderCreator,
-        final Supplier<DeterministicShuffleShardSyncLeaderDecider> deterministicLeaderDeciderCreator,
-        final Supplier<DynamoDBLockBasedLeaderDecider> ddbLockBasedLeaderDeciderCreator, final String workerIdentifier,
-        final WorkerUtilizationAwareAssignmentConfig workerUtilizationAwareAssignmentConfig,
-        final MigrationAdaptiveLeaseAssignmentModeProvider leaseAssignmentModeProvider)
-    {
+    DynamicMigrationComponentsInitializer(
+            final MetricsFactory metricsFactory,
+            final LeaseRefresher leaseRefresher,
+            final CoordinatorStateDAO coordinatorStateDAO,
+            final ScheduledExecutorService workerMetricsThreadPool,
+            final WorkerMetricStatsDAO workerMetricsDAO,
+            final WorkerMetricStatsManager workerMetricsManager,
+            final ScheduledExecutorService lamThreadPool,
+            final BiFunction<ScheduledExecutorService, LeaderDecider, LeaseAssignmentManager> lamCreator,
+            final Supplier<MigrationAdaptiveLeaderDecider> adaptiveLeaderDeciderCreator,
+            final Supplier<DeterministicShuffleShardSyncLeaderDecider> deterministicLeaderDeciderCreator,
+            final Supplier<DynamoDBLockBasedLeaderDecider> ddbLockBasedLeaderDeciderCreator,
+            final String workerIdentifier,
+            final WorkerUtilizationAwareAssignmentConfig workerUtilizationAwareAssignmentConfig,
+            final MigrationAdaptiveLeaseAssignmentModeProvider leaseAssignmentModeProvider) {
         this.metricsFactory = metricsFactory;
         this.leaseRefresher = leaseRefresher;
         this.coordinatorStateDAO = coordinatorStateDAO;
         this.workerIdentifier = workerIdentifier;
         this.workerUtilizationAwareAssignmentConfig = workerUtilizationAwareAssignmentConfig;
-        this.workerMetricsExpirySeconds = Duration.ofMillis(DEFAULT_NO_OF_SKIP_STAT_FOR_DEAD_WORKER_THRESHOLD *
-            workerUtilizationAwareAssignmentConfig.workerMetricsReporterFreqInMillis()).getSeconds();
+        this.workerMetricsExpirySeconds = Duration.ofMillis(DEFAULT_NO_OF_SKIP_STAT_FOR_DEAD_WORKER_THRESHOLD
+                        * workerUtilizationAwareAssignmentConfig.workerMetricsReporterFreqInMillis())
+                .getSeconds();
         this.workerMetricsManager = workerMetricsManager;
         this.workerMetricsDAO = workerMetricsDAO;
         this.workerMetricsThreadPool = workerMetricsThreadPool;
@@ -183,10 +197,11 @@ public final class DynamicMigrationComponentsInitializer {
         log.info("Initializing dualMode {} assignmentMode {}", dualMode, currentAssignmentMode);
 
         final MigrationAdaptiveLeaderDecider adaptiveLeaderDecider = adaptiveLeaderDeciderCreator.get();
-        log.info("Initializing MigrationAdaptiveLeaderDecider with {}", initialLeaderDecider.getClass().getSimpleName());
+        log.info(
+                "Initializing MigrationAdaptiveLeaderDecider with {}",
+                initialLeaderDecider.getClass().getSimpleName());
         adaptiveLeaderDecider.updateLeaderDecider(initialLeaderDecider);
         this.leaderDecider = adaptiveLeaderDecider;
-
     }
 
     void shutdown() {
@@ -236,9 +251,10 @@ public final class DynamicMigrationComponentsInitializer {
         log.info("Starting worker metrics reporter");
         // Start with a delay for workerStatsManager to capture some values and start reporting.
         workerMetricsReporterFuture = workerMetricsThreadPool.scheduleAtFixedRate(
-            new WorkerMetricStatsReporter(metricsFactory, workerIdentifier, workerMetricsManager, workerMetricsDAO),
-            workerUtilizationAwareAssignmentConfig.inMemoryWorkerMetricsCaptureFrequencyMillis() * 2L,
-            workerUtilizationAwareAssignmentConfig.workerMetricsReporterFreqInMillis(), TimeUnit.MILLISECONDS);
+                new WorkerMetricStatsReporter(metricsFactory, workerIdentifier, workerMetricsManager, workerMetricsDAO),
+                workerUtilizationAwareAssignmentConfig.inMemoryWorkerMetricsCaptureFrequencyMillis() * 2L,
+                workerUtilizationAwareAssignmentConfig.workerMetricsReporterFreqInMillis(),
+                TimeUnit.MILLISECONDS);
     }
 
     private void stopWorkerMetricsReporter() {
@@ -265,11 +281,11 @@ public final class DynamicMigrationComponentsInitializer {
             final long secondsBetweenPolls = 10L;
             final long timeoutSeconds = 600L;
             final boolean isIndexActive =
-                leaseRefresher.waitUntilLeaseOwnerToLeaseKeyIndexExists(secondsBetweenPolls, timeoutSeconds);
+                    leaseRefresher.waitUntilLeaseOwnerToLeaseKeyIndexExists(secondsBetweenPolls, timeoutSeconds);
 
             if (!isIndexActive) {
                 throw new DependencyException(
-                    new IllegalStateException("Creating LeaseOwnerToLeaseKeyIndex on Lease table timed out"));
+                        new IllegalStateException("Creating LeaseOwnerToLeaseKeyIndex on Lease table timed out"));
             }
         }
     }
@@ -280,8 +296,7 @@ public final class DynamicMigrationComponentsInitializer {
      * Or Dynamically during roll-forward from ClientVersion.CLIENT_VERSION_2x.
      */
     public synchronized void initializeClientVersionForUpgradeFrom2x(final ClientVersion fromClientVersion)
-        throws DependencyException
-    {
+            throws DependencyException {
         log.info("Initializing KCL components for upgrade from 2x from {}", fromClientVersion);
 
         createGsi(false);
@@ -295,12 +310,11 @@ public final class DynamicMigrationComponentsInitializer {
      * during a new deployment when existing worker are in ClientVersion.CLIENT_VERSION_3x_WITH_ROLLBACK
      */
     public synchronized void initializeClientVersionFor3x(final ClientVersion fromClientVersion)
-        throws DependencyException
-    {
+            throws DependencyException {
         log.info("Initializing KCL components for 3x from {}", fromClientVersion);
 
-        log.info("Initializing LeaseAssignmentManager, DDB-lock-based leader decider, WorkerMetricStats manager" +
-            " and creating the Lease table GSI if it does not exist");
+        log.info("Initializing LeaseAssignmentManager, DDB-lock-based leader decider, WorkerMetricStats manager"
+                + " and creating the Lease table GSI if it does not exist");
         if (fromClientVersion == ClientVersion.CLIENT_VERSION_INIT) {
             // gsi may already exist and be active for migrated application.
             createGsi(true);
@@ -335,7 +349,8 @@ public final class DynamicMigrationComponentsInitializer {
             leaseAssignmentManager.stop();
             final LeaderDecider leaderDecider = deterministicLeaderDeciderCreator.get();
             if (this.leaderDecider instanceof MigrationAdaptiveLeaderDecider) {
-                log.info("Updating LeaderDecider to {}", leaderDecider.getClass().getSimpleName());
+                log.info(
+                        "Updating LeaderDecider to {}", leaderDecider.getClass().getSimpleName());
                 ((MigrationAdaptiveLeaderDecider) this.leaderDecider).updateLeaderDecider(leaderDecider);
             } else {
                 throw new IllegalStateException(String.format("Unexpected leader decider %s", this.leaderDecider));
@@ -350,7 +365,7 @@ public final class DynamicMigrationComponentsInitializer {
      * Or Dynamically during flip from CLIENT_VERSION_UPGRADE_FROM_2x.
      */
     public synchronized void initializeClientVersionFor3xWithRollback(final ClientVersion fromClientVersion)
-        throws DependencyException {
+            throws DependencyException {
         log.info("Initializing KCL components for 3x with rollback from {}", fromClientVersion);
 
         if (fromClientVersion == ClientVersion.CLIENT_VERSION_UPGRADE_FROM_2x) {

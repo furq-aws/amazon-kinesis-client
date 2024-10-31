@@ -1,10 +1,10 @@
 package software.amazon.kinesis.worker.platform;
 
-import org.jetbrains.annotations.VisibleForTesting;
-import software.amazon.kinesis.annotations.KinesisClientInternalApi;
-
 import java.util.Map;
 import java.util.Optional;
+
+import org.jetbrains.annotations.VisibleForTesting;
+import software.amazon.kinesis.annotations.KinesisClientInternalApi;
 
 import static software.amazon.kinesis.worker.platform.OperatingRangeDataProvider.LINUX_ECS_METADATA_KEY_V4;
 

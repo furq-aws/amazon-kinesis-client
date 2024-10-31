@@ -1,8 +1,8 @@
 package software.amazon.kinesis.worker.platform;
 
-import software.amazon.kinesis.annotations.KinesisClientInternalApi;
-
 import java.util.Optional;
+
+import software.amazon.kinesis.annotations.KinesisClientInternalApi;
 
 /**
  * Interface for providing resource metadata for worker.

@@ -14,6 +14,19 @@
  */
 package software.amazon.kinesis.coordinator.migration;
 
+import java.time.Duration;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import software.amazon.awssdk.annotations.ThreadSafe;
@@ -29,19 +42,6 @@ import software.amazon.kinesis.metrics.MetricsUtil;
 import software.amazon.kinesis.worker.metricstats.WorkerMetricStats;
 import software.amazon.kinesis.worker.metricstats.WorkerMetricStatsDAO;
 
-import java.time.Duration;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
-import java.util.concurrent.Callable;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionException;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
-
 import static software.amazon.kinesis.coordinator.migration.MigrationStateMachineImpl.METRICS_OPERATION;
 
 /**
@@ -50,7 +50,7 @@ import static software.amazon.kinesis.coordinator.migration.MigrationStateMachin
  * table is active and all lease owners are emitting WorkerMetricStats. The monitor performs this
  * check periodically and will invoke callback if the readiness conditions are true. Monitor
  * needs to be explicitly cancelled after the readiness trigger has successfully been handled.
- * 
+ *
  * Thread safety - Guard for safety against public method invocation and internal runnable method.
  */
 @Slf4j
@@ -79,14 +79,19 @@ public class MigrationReadyMonitor implements Runnable {
     private boolean gsiStatusReady;
     private boolean workerMetricsReady;
     private Set<String> lastKnownUniqueLeaseOwners = new HashSet<>();
-    private Set<String> lastKnownWorkersWithActiveWorkerMetrics =  new HashSet<>();
+    private Set<String> lastKnownWorkersWithActiveWorkerMetrics = new HashSet<>();
 
-    public MigrationReadyMonitor(final MetricsFactory metricsFactory, final Callable<Long> timeProvider,
-        final LeaderDecider leaderDecider, final String currentWorkerId,
-        final WorkerMetricStatsDAO workerMetricStatsDAO, final long workerMetricsExpirySeconds,
-        final LeaseRefresher leaseRefresher, final ScheduledExecutorService stateMachineThreadPool,
-        final Runnable callback, final long callbackStabilizationInSeconds)
-    {
+    public MigrationReadyMonitor(
+            final MetricsFactory metricsFactory,
+            final Callable<Long> timeProvider,
+            final LeaderDecider leaderDecider,
+            final String currentWorkerId,
+            final WorkerMetricStatsDAO workerMetricStatsDAO,
+            final long workerMetricsExpirySeconds,
+            final LeaseRefresher leaseRefresher,
+            final ScheduledExecutorService stateMachineThreadPool,
+            final Runnable callback,
+            final long callbackStabilizationInSeconds) {
         this.metricsFactory = metricsFactory;
         this.timeProvider = timeProvider;
         this.leaderDecider = leaderDecider;
@@ -95,16 +100,16 @@ public class MigrationReadyMonitor implements Runnable {
         this.workerMetricStatsExpirySeconds = workerMetricsExpirySeconds;
         this.leaseRefresher = leaseRefresher;
         this.stateMachineThreadPool = stateMachineThreadPool;
-        this.triggerStabilizer = new MonitorTriggerStabilizer(timeProvider, callbackStabilizationInSeconds, callback,
-            currentWorkerId);
+        this.triggerStabilizer =
+                new MonitorTriggerStabilizer(timeProvider, callbackStabilizationInSeconds, callback, currentWorkerId);
     }
 
     public synchronized void startMonitor() {
         if (Objects.isNull(scheduledFuture)) {
 
             log.info("Starting migration ready monitor");
-            scheduledFuture = stateMachineThreadPool.scheduleWithFixedDelay(this, MONITOR_INTERVAL_MILLIS,
-                MONITOR_INTERVAL_MILLIS, TimeUnit.MILLISECONDS);
+            scheduledFuture = stateMachineThreadPool.scheduleWithFixedDelay(
+                    this, MONITOR_INTERVAL_MILLIS, MONITOR_INTERVAL_MILLIS, TimeUnit.MILLISECONDS);
         } else {
             log.info("Ignoring monitor request, since it is already started");
         }
@@ -149,12 +154,12 @@ public class MigrationReadyMonitor implements Runnable {
     @Override
     public String toString() {
         return new StringBuilder("UpgradeReadyMonitor[")
-            .append("G=")
-            .append(gsiStatusReady)
-            .append(",W=")
-            .append(workerMetricsReady)
-            .append("]")
-            .toString();
+                .append("G=")
+                .append(gsiStatusReady)
+                .append(",W=")
+                .append(workerMetricsReady)
+                .append("]")
+                .toString();
     }
 
     private boolean isReadyForUpgradeTo3x() throws DependencyException {
@@ -171,9 +176,8 @@ public class MigrationReadyMonitor implements Runnable {
             return gsiStatusReady && areLeaseOwnersEmittingWorkerMetrics();
         } finally {
             scope.addData("GsiReadyStatus", gsiStatusReady ? 1 : 0, StandardUnit.COUNT, MetricsLevel.SUMMARY);
-            scope.addData("WorkerMetricsReadyStatus", workerMetricsReady
-                            ? 1 : 0, StandardUnit.COUNT,
-                MetricsLevel.SUMMARY);
+            scope.addData(
+                    "WorkerMetricsReadyStatus", workerMetricsReady ? 1 : 0, StandardUnit.COUNT, MetricsLevel.SUMMARY);
             MetricsUtil.endScope(scope);
         }
     }
@@ -252,7 +256,10 @@ public class MigrationReadyMonitor implements Runnable {
                 return loadFunction.call();
             } catch (final Exception e) {
                 if (retryAttempt < DDB_LOAD_RETRY_ATTEMPT) {
-                    log.warn("Failed to load : {}, retrying", loadFunction.getClass().getName(), e);
+                    log.warn(
+                            "Failed to load : {}, retrying",
+                            loadFunction.getClass().getName(),
+                            e);
                     retryAttempt++;
                 } else {
                     throw new CompletionException(e);
@@ -260,7 +267,7 @@ public class MigrationReadyMonitor implements Runnable {
             }
         }
     }
-    
+
     private static long now(final Callable<Long> timeProvider) {
         try {
             return timeProvider.call();
@@ -285,9 +292,11 @@ public class MigrationReadyMonitor implements Runnable {
         private long lastToggleTimeInMillis;
         private boolean currentTriggerStatus;
 
-        public MonitorTriggerStabilizer(final Callable<Long> timeProvider, final long stabilizationDurationInSeconds,
-            final Runnable callback, final String currentWorkerId)
-        {
+        public MonitorTriggerStabilizer(
+                final Callable<Long> timeProvider,
+                final long stabilizationDurationInSeconds,
+                final Runnable callback,
+                final String currentWorkerId) {
             this.timeProvider = timeProvider;
             this.stabilizationDurationInSeconds = stabilizationDurationInSeconds;
             this.callback = callback;
@@ -304,14 +313,16 @@ public class MigrationReadyMonitor implements Runnable {
             }
 
             if (currentTriggerStatus) {
-                final long deltaSeconds = Duration.ofMillis(now - lastToggleTimeInMillis).getSeconds();
+                final long deltaSeconds =
+                        Duration.ofMillis(now - lastToggleTimeInMillis).getSeconds();
                 if (deltaSeconds >= stabilizationDurationInSeconds) {
                     log.info("Trigger has been consistently true for {}s, invoking callback", deltaSeconds);
                     callback.run();
                 } else {
-                    rateLimitedTriggerStatusLogger.log(
-                        () -> log.info("Trigger has been true for {}s, waiting for stabilization time of {}s",
-                            deltaSeconds, stabilizationDurationInSeconds));
+                    rateLimitedTriggerStatusLogger.log(() -> log.info(
+                            "Trigger has been true for {}s, waiting for stabilization time of {}s",
+                            deltaSeconds,
+                            stabilizationDurationInSeconds));
                 }
             }
         }

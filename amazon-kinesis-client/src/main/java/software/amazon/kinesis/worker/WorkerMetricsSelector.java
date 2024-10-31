@@ -1,23 +1,23 @@
 package software.amazon.kinesis.worker;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import software.amazon.kinesis.annotations.KinesisClientInternalApi;
-import software.amazon.kinesis.worker.platform.Ec2Resource;
-import software.amazon.kinesis.worker.platform.EcsResource;
-import software.amazon.kinesis.worker.platform.EksResource;
-import software.amazon.kinesis.worker.platform.OperatingRangeDataProvider;
-import software.amazon.kinesis.worker.platform.ResourceMetadataProvider;
 import software.amazon.kinesis.worker.metric.OperatingRange;
 import software.amazon.kinesis.worker.metric.WorkerMetric;
 import software.amazon.kinesis.worker.metric.impl.container.Cgroupv1CpuWorkerMetric;
 import software.amazon.kinesis.worker.metric.impl.container.Cgroupv2CpuWorkerMetric;
 import software.amazon.kinesis.worker.metric.impl.container.EcsCpuWorkerMetric;
 import software.amazon.kinesis.worker.metric.impl.linux.LinuxCpuWorkerMetric;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import software.amazon.kinesis.worker.platform.Ec2Resource;
+import software.amazon.kinesis.worker.platform.EcsResource;
+import software.amazon.kinesis.worker.platform.EksResource;
+import software.amazon.kinesis.worker.platform.OperatingRangeDataProvider;
+import software.amazon.kinesis.worker.platform.ResourceMetadataProvider;
 
 /**
  * Class to select appropriate WorkerMetricStats based on the operating range provider that is available on the instance.
