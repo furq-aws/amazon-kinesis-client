@@ -51,6 +51,8 @@ import software.amazon.kinesis.common.KinesisClientUtil;
 import software.amazon.kinesis.coordinator.CoordinatorConfig;
 import software.amazon.kinesis.coordinator.Scheduler;
 import software.amazon.kinesis.leases.LeaseManagementConfig;
+import software.amazon.kinesis.leases.LeaseManagementConfig.GracefulLeaseHandoffConfig;
+import software.amazon.kinesis.leases.LeaseManagementConfig.WorkerUtilizationAwareAssignmentConfig;
 import software.amazon.kinesis.leases.ShardPrioritization;
 import software.amazon.kinesis.lifecycle.LifecycleConfig;
 import software.amazon.kinesis.metrics.MetricsConfig;
@@ -139,6 +141,13 @@ public class MultiLangDaemonConfiguration {
 
     @ConfigurationSettable(configurationClass = LeaseManagementConfig.class)
     private int maxListShardsRetryAttempts;
+
+    // KCLv3
+    @ConfigurationSettable(configurationClass = LeaseManagementConfig.class)
+    private WorkerUtilizationAwareAssignmentConfig workerUtilizationAwareAssignmentConfig;
+
+    @ConfigurationSettable(configurationClass = LeaseManagementConfig.class)
+    private GracefulLeaseHandoffConfig gracefulLeaseHandoffConfig;
 
     // Enables applications flush/checkpoint (if they have some data "in progress", but don't get new data for while)
     @ConfigurationSettable(configurationClass = ProcessorConfig.class)

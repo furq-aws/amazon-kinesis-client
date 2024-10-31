@@ -26,9 +26,13 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
+import software.amazon.kinesis.leases.LeaseManagementConfig.WorkerUtilizationAwareAssignmentConfig;
 import software.amazon.kinesis.processor.ShardRecordProcessorFactory;
 import software.amazon.kinesis.retrieval.fanout.FanOutConfig;
 import software.amazon.kinesis.retrieval.polling.PollingConfig;
+import software.amazon.kinesis.worker.metric.OperatingRange;
+import software.amazon.kinesis.worker.metric.WorkerMetric;
+import software.amazon.kinesis.worker.metric.impl.linux.LinuxCpuWorkerMetric;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.instanceOf;
@@ -36,6 +40,10 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
+
+import java.time.Duration;
+import java.util.Collections;
+import java.util.List;
 
 @RunWith(MockitoJUnitRunner.class)
 public class MultiLangDaemonConfigurationTest {
@@ -142,6 +150,53 @@ public class MultiLangDaemonConfigurationTest {
                 configuration.resolvedConfiguration(shardRecordProcessorFactory);
 
         assertFalse(resolvedConfiguration.leaseManagementConfig.leaseTablePitrEnabled());
+    }
+
+    @Test
+    public void testSetWorkerUtilizationAwareAssignmentConfig() {
+        MultiLangDaemonConfiguration configuration = baseConfiguration();
+
+        long inMemoryWorkerMetricsCaptureFrequencyMillis = Duration.ofSeconds(2L).toMillis();
+        long workerMetricsReporterFreqInMillis = Duration.ofSeconds(60).toMillis();
+        int noOfPersistedMetricsPerWorkerMetrics = 20;
+        boolean disableWorkerMetrics = true;
+        OperatingRange operatingRange = OperatingRange.builder()
+                .maxUtilization(50)
+                .build();
+        LinuxCpuWorkerMetric linuxCpuWorkerMetric = new LinuxCpuWorkerMetric(operatingRange);
+        List<WorkerMetric> workerMetricList = Collections.singletonList(linuxCpuWorkerMetric);
+        double maxThroughputPerHostKBps = 1000;
+        int dampeningPercentage = 50;
+        int reBalanceThresholdPercentage = 50;
+        boolean allowThroughputOvershoot = false;
+        Duration staleWorkerMetricsEntryCleanupDuration = Duration.ofDays(2);
+        int varianceBalancingFrequency = 5;
+        double workerMetricsEMAAlpha = 0.4;
+
+        WorkerUtilizationAwareAssignmentConfig config = new WorkerUtilizationAwareAssignmentConfig();
+        config.inMemoryWorkerMetricsCaptureFrequencyMillis(inMemoryWorkerMetricsCaptureFrequencyMillis);
+        config.workerMetricsReporterFreqInMillis(workerMetricsReporterFreqInMillis);
+        config.noOfPersistedMetricsPerWorkerMetrics(noOfPersistedMetricsPerWorkerMetrics);
+        config.disableWorkerMetrics(disableWorkerMetrics);
+        config.workerMetricList(workerMetricList);
+        config.maxThroughputPerHostKBps(maxThroughputPerHostKBps);
+        config.dampeningPercentage(dampeningPercentage);
+        config.reBalanceThresholdPercentage(reBalanceThresholdPercentage);
+        config.allowThroughputOvershoot(allowThroughputOvershoot);
+        config.staleWorkerMetricsEntryCleanupDuration(staleWorkerMetricsEntryCleanupDuration);
+        config.varianceBalancingFrequency(varianceBalancingFrequency);
+        config.workerMetricsEMAAlpha(workerMetricsEMAAlpha);
+
+        configuration.setWorkerUtilizationAwareAssignmentConfig(config);
+
+        MultiLangDaemonConfiguration.ResolvedConfiguration resolvedConfiguration =
+                configuration.resolvedConfiguration(shardRecordProcessorFactory);
+
+        WorkerUtilizationAwareAssignmentConfig workerUtilizationAwareAssignmentConfig =
+                resolvedConfiguration.getLeaseManagementConfig().getWorkerUtilizationAwareAssignmentConfig();
+
+        assertThat(workerUtilizationAwareAssignmentConfig.inMemoryWorkerMetricsCaptureFrequencyMillis(),
+                equalTo(inMemoryWorkerMetricsCaptureFrequencyMillis));
     }
 
     @Test
