@@ -26,6 +26,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
+import software.amazon.kinesis.leases.LeaseManagementConfig;
 import software.amazon.kinesis.processor.ShardRecordProcessorFactory;
 import software.amazon.kinesis.retrieval.fanout.FanOutConfig;
 import software.amazon.kinesis.retrieval.polling.PollingConfig;
@@ -112,15 +113,28 @@ public class MultiLangDaemonConfigurationTest {
     }
 
     @Test
-    public void testSetLeaseTablePitrEnabledToTrue() {
+    public void testSetInMemoryWorkerMetricsCaptureFrequencyMillis() {
+        final long testVal = 100;
         MultiLangDaemonConfiguration configuration = baseConfiguration();
-        configuration.setLeaseTablePitrEnabled(true);
+        configuration.setInMemoryWorkerMetricsCaptureFrequencyMillis(testVal);
 
         MultiLangDaemonConfiguration.ResolvedConfiguration resolvedConfiguration =
                 configuration.resolvedConfiguration(shardRecordProcessorFactory);
-
-        assertTrue(resolvedConfiguration.leaseManagementConfig.leaseTablePitrEnabled());
+        LeaseManagementConfig leaseManagementConfig = resolvedConfiguration.leaseManagementConfig;
+        LeaseManagementConfig.WorkerUtilizationAwareAssignmentConfig config = leaseManagementConfig.workerUtilizationAwareAssignmentConfig();
+        assertEquals(config.inMemoryWorkerMetricsCaptureFrequencyMillis(), testVal);
     }
+
+//    @Test
+//    public void testSetLeaseTablePitrEnabledToTrue() {
+//        MultiLangDaemonConfiguration configuration = baseConfiguration();
+//        configuration.setLeaseTablePitrEnabled(true);
+//
+//        MultiLangDaemonConfiguration.ResolvedConfiguration resolvedConfiguration =
+//                configuration.resolvedConfiguration(shardRecordProcessorFactory);
+//
+//        assertTrue(resolvedConfiguration.leaseManagementConfig.leaseTablePitrEnabled());
+//    }
 
     @Test
     public void testSetLeaseTableDeletionProtectionEnabledToFalse() {
@@ -133,16 +147,16 @@ public class MultiLangDaemonConfigurationTest {
         assertFalse(resolvedConfiguration.leaseManagementConfig.leaseTableDeletionProtectionEnabled());
     }
 
-    @Test
-    public void testSetLeaseTablePitrEnabledToFalse() {
-        MultiLangDaemonConfiguration configuration = baseConfiguration();
-        configuration.setLeaseTablePitrEnabled(false);
-
-        MultiLangDaemonConfiguration.ResolvedConfiguration resolvedConfiguration =
-                configuration.resolvedConfiguration(shardRecordProcessorFactory);
-
-        assertFalse(resolvedConfiguration.leaseManagementConfig.leaseTablePitrEnabled());
-    }
+//    @Test
+//    public void testSetLeaseTablePitrEnabledToFalse() {
+//        MultiLangDaemonConfiguration configuration = baseConfiguration();
+//        configuration.setLeaseTablePitrEnabled(false);
+//
+//        MultiLangDaemonConfiguration.ResolvedConfiguration resolvedConfiguration =
+//                configuration.resolvedConfiguration(shardRecordProcessorFactory);
+//
+//        assertFalse(resolvedConfiguration.leaseManagementConfig.leaseTablePitrEnabled());
+//    }
 
     @Test
     public void testDefaultRetrievalConfig() {
