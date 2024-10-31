@@ -1009,6 +1009,7 @@ public class SchedulerTest {
         prepareMultiStreamScheduler(streamConfigList);
         // Populate currentStreamConfigMap to simulate that the leader has the latest streams.
         multiStreamTracker.streamConfigList().forEach(s -> scheduler.currentStreamConfigMap().put(s.streamIdentifier(), s));
+        scheduler.initialize();
         scheduler.runProcessLoop();
         verify(scheduler).syncStreamsFromLeaseTableOnAppInit(any());
         assertTrue(scheduler.currentStreamConfigMap().size() != 0);
