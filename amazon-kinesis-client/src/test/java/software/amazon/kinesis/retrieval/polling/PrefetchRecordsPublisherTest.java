@@ -252,8 +252,6 @@ public class PrefetchRecordsPublisherTest {
     public void testGetRecordsWithInvalidResponse() {
         record = Record.builder().data(createByteBufferWithSize(SIZE_512_KB)).build();
 
-        when(records.size()).thenReturn(1000);
-
         GetRecordsResponse response = GetRecordsResponse.builder().records(records).build();
         when(getRecordsRetrievalStrategy.getRecords(eq(MAX_RECORDS_PER_CALL))).thenReturn(response);
         when(dataFetcher.isShardEndReached()).thenReturn(false);
