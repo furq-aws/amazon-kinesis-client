@@ -15,6 +15,7 @@
 package software.amazon.kinesis.multilang.messages;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -53,11 +54,10 @@ public class JsonFriendlyRecord {
             data = new byte[record.data().limit()];
             record.data().get(data);
         }
-        Long approximateArrival = record.approximateArrivalTimestamp() == null
-                ? null
+        Long approximateArrival = record.approximateArrivalTimestamp() == null ? null
                 : record.approximateArrivalTimestamp().toEpochMilli();
-        return new JsonFriendlyRecord(
-                data, record.partitionKey(), record.sequenceNumber(), approximateArrival, record.subSequenceNumber());
+        return new JsonFriendlyRecord(data, record.partitionKey(), record.sequenceNumber(),
+                approximateArrival, record.subSequenceNumber());
     }
 
     @JsonProperty

@@ -36,7 +36,6 @@ public class CheckpointMessage extends Message {
      * The checkpoint this message is about.
      */
     private String sequenceNumber;
-
     private Long subSequenceNumber;
 
     /**
@@ -46,7 +45,7 @@ public class CheckpointMessage extends Message {
 
     /**
      * Convenience constructor.
-     *
+     * 
      * @param sequenceNumber
      *            The sequence number that this message is about.
      * @param subSequenceNumber
@@ -62,4 +61,5 @@ public class CheckpointMessage extends Message {
             this.setError(throwable.getClass().getSimpleName());
         }
     }
+
 }

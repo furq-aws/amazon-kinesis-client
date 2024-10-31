@@ -50,4 +50,5 @@ public interface NestedPropertyProcessor {
      * @param externalId external id used in the service call used to retrieve session credentials
      */
     void acceptExternalId(String externalId);
+
 }

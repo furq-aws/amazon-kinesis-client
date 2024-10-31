@@ -25,7 +25,8 @@ class IntegerPropertyValueDecoder implements IPropertyValueDecoder<Integer> {
     /**
      * Constructor.
      */
-    IntegerPropertyValueDecoder() {}
+    IntegerPropertyValueDecoder() {
+    }
 
     /**
      * @param value property value as String

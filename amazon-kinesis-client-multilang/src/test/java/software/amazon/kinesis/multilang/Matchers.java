@@ -14,14 +14,15 @@
  */
 package software.amazon.kinesis.multilang;
 
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.nullValue;
+
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeDiagnosingMatcher;
-import software.amazon.kinesis.lifecycle.events.InitializationInput;
-import software.amazon.kinesis.retrieval.kpl.ExtendedSequenceNumber;
 
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.CoreMatchers.nullValue;
+import software.amazon.kinesis.retrieval.kpl.ExtendedSequenceNumber;
+import software.amazon.kinesis.lifecycle.events.InitializationInput;
 
 public class Matchers {
 
@@ -57,12 +58,8 @@ public class Matchers {
 
         @Override
         public void describeTo(Description description) {
-            description
-                    .appendText("An InitializationInput matching: { shardId: ")
-                    .appendDescriptionOf(shardIdMatcher)
-                    .appendText(", sequenceNumber: ")
-                    .appendDescriptionOf(sequenceNumberMatcher)
-                    .appendText(" }");
+            description.appendText("An InitializationInput matching: { shardId: ").appendDescriptionOf(shardIdMatcher)
+                    .appendText(", sequenceNumber: ").appendDescriptionOf(sequenceNumberMatcher).appendText(" }");
         }
     }
 
@@ -101,11 +98,10 @@ public class Matchers {
 
         @Override
         public void describeTo(Description description) {
-            description
-                    .appendText("An ExtendedSequenceNumber matching: { sequenceNumber: ")
-                    .appendDescriptionOf(sequenceNumberMatcher)
-                    .appendText(", subSequenceNumber: ")
+            description.appendText("An ExtendedSequenceNumber matching: { sequenceNumber: ")
+                    .appendDescriptionOf(sequenceNumberMatcher).appendText(", subSequenceNumber: ")
                     .appendDescriptionOf(subSequenceNumberMatcher);
         }
     }
+
 }

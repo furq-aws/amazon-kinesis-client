@@ -19,6 +19,7 @@ import java.util.Map;
 
 import com.amazonaws.regions.Regions;
 import com.google.common.base.CaseFormat;
+
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -90,6 +91,7 @@ public enum NestedPropertyKey {
             processor.acceptExternalId(externalId);
         }
     },
+
     ;
 
     /**
@@ -139,4 +141,5 @@ public enum NestedPropertyKey {
             }
         }
     }
+
 }

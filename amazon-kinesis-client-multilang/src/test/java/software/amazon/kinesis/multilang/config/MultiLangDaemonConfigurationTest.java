@@ -15,6 +15,12 @@
 
 package software.amazon.kinesis.multilang.config;
 
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
+
 import org.apache.commons.beanutils.BeanUtilsBean;
 import org.apache.commons.beanutils.ConvertUtilsBean;
 import org.junit.After;
@@ -25,17 +31,11 @@ import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
+
 import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
 import software.amazon.kinesis.processor.ShardRecordProcessorFactory;
 import software.amazon.kinesis.retrieval.fanout.FanOutConfig;
 import software.amazon.kinesis.retrieval.polling.PollingConfig;
-
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.CoreMatchers.instanceOf;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
 
 @RunWith(MockitoJUnitRunner.class)
 public class MultiLangDaemonConfigurationTest {
@@ -69,6 +69,7 @@ public class MultiLangDaemonConfigurationTest {
         }
     }
 
+
     public MultiLangDaemonConfiguration baseConfiguration() {
         MultiLangDaemonConfiguration configuration = new MultiLangDaemonConfiguration(utilsBean, convertUtilsBean);
         configuration.setApplicationName("Test");
@@ -83,8 +84,8 @@ public class MultiLangDaemonConfigurationTest {
         MultiLangDaemonConfiguration configuration = baseConfiguration();
         configuration.setMaxLeasesForWorker(10);
 
-        MultiLangDaemonConfiguration.ResolvedConfiguration resolvedConfiguration =
-                configuration.resolvedConfiguration(shardRecordProcessorFactory);
+        MultiLangDaemonConfiguration.ResolvedConfiguration resolvedConfiguration = configuration
+                .resolvedConfiguration(shardRecordProcessorFactory);
 
         assertThat(resolvedConfiguration.leaseManagementConfig.maxLeasesForWorker(), equalTo(10));
     }
@@ -94,65 +95,21 @@ public class MultiLangDaemonConfigurationTest {
         MultiLangDaemonConfiguration configuration = baseConfiguration();
         configuration.setEnablePriorityLeaseAssignment(false);
 
-        MultiLangDaemonConfiguration.ResolvedConfiguration resolvedConfiguration =
-                configuration.resolvedConfiguration(shardRecordProcessorFactory);
+        MultiLangDaemonConfiguration.ResolvedConfiguration resolvedConfiguration = configuration.resolvedConfiguration(
+                shardRecordProcessorFactory);
 
         assertThat(resolvedConfiguration.leaseManagementConfig.enablePriorityLeaseAssignment(), equalTo(false));
-    }
-
-    @Test
-    public void testSetLeaseTableDeletionProtectionEnabledToTrue() {
-        MultiLangDaemonConfiguration configuration = baseConfiguration();
-        configuration.setLeaseTableDeletionProtectionEnabled(true);
-
-        MultiLangDaemonConfiguration.ResolvedConfiguration resolvedConfiguration =
-                configuration.resolvedConfiguration(shardRecordProcessorFactory);
-
-        assertTrue(resolvedConfiguration.leaseManagementConfig.leaseTableDeletionProtectionEnabled());
-    }
-
-    @Test
-    public void testSetLeaseTablePitrEnabledToTrue() {
-        MultiLangDaemonConfiguration configuration = baseConfiguration();
-        configuration.setLeaseTablePitrEnabled(true);
-
-        MultiLangDaemonConfiguration.ResolvedConfiguration resolvedConfiguration =
-                configuration.resolvedConfiguration(shardRecordProcessorFactory);
-
-        assertTrue(resolvedConfiguration.leaseManagementConfig.leaseTablePitrEnabled());
-    }
-
-    @Test
-    public void testSetLeaseTableDeletionProtectionEnabledToFalse() {
-        MultiLangDaemonConfiguration configuration = baseConfiguration();
-        configuration.setLeaseTableDeletionProtectionEnabled(false);
-
-        MultiLangDaemonConfiguration.ResolvedConfiguration resolvedConfiguration =
-                configuration.resolvedConfiguration(shardRecordProcessorFactory);
-
-        assertFalse(resolvedConfiguration.leaseManagementConfig.leaseTableDeletionProtectionEnabled());
-    }
-
-    @Test
-    public void testSetLeaseTablePitrEnabledToFalse() {
-        MultiLangDaemonConfiguration configuration = baseConfiguration();
-        configuration.setLeaseTablePitrEnabled(false);
-
-        MultiLangDaemonConfiguration.ResolvedConfiguration resolvedConfiguration =
-                configuration.resolvedConfiguration(shardRecordProcessorFactory);
-
-        assertFalse(resolvedConfiguration.leaseManagementConfig.leaseTablePitrEnabled());
     }
 
     @Test
     public void testDefaultRetrievalConfig() {
         MultiLangDaemonConfiguration configuration = baseConfiguration();
 
-        MultiLangDaemonConfiguration.ResolvedConfiguration resolvedConfiguration =
-                configuration.resolvedConfiguration(shardRecordProcessorFactory);
+        MultiLangDaemonConfiguration.ResolvedConfiguration resolvedConfiguration = configuration
+                .resolvedConfiguration(shardRecordProcessorFactory);
 
-        assertThat(
-                resolvedConfiguration.getRetrievalConfig().retrievalSpecificConfig(), instanceOf(FanOutConfig.class));
+        assertThat(resolvedConfiguration.getRetrievalConfig().retrievalSpecificConfig(),
+                instanceOf(FanOutConfig.class));
     }
 
     @Test
@@ -161,20 +118,18 @@ public class MultiLangDaemonConfigurationTest {
         configuration.setMaxRecords(10);
         configuration.setIdleTimeBetweenReadsInMillis(60000);
 
-        MultiLangDaemonConfiguration.ResolvedConfiguration resolvedConfiguration =
-                configuration.resolvedConfiguration(shardRecordProcessorFactory);
+        MultiLangDaemonConfiguration.ResolvedConfiguration resolvedConfiguration = configuration
+                .resolvedConfiguration(shardRecordProcessorFactory);
 
-        assertThat(
-                resolvedConfiguration.getRetrievalConfig().retrievalSpecificConfig(), instanceOf(PollingConfig.class));
-        assertEquals(
-                10,
-                ((PollingConfig) resolvedConfiguration.getRetrievalConfig().retrievalSpecificConfig()).maxRecords());
-        assertEquals(
-                60000,
-                ((PollingConfig) resolvedConfiguration.getRetrievalConfig().retrievalSpecificConfig())
-                        .idleTimeBetweenReadsInMillis());
+        assertThat(resolvedConfiguration.getRetrievalConfig().retrievalSpecificConfig(),
+                instanceOf(PollingConfig.class));
+        assertEquals(10,
+            ((PollingConfig) resolvedConfiguration.getRetrievalConfig().retrievalSpecificConfig()).maxRecords());
+        assertEquals(60000,
+            ((PollingConfig) resolvedConfiguration.getRetrievalConfig().retrievalSpecificConfig())
+                .idleTimeBetweenReadsInMillis());
         assertTrue(((PollingConfig) resolvedConfiguration.getRetrievalConfig().retrievalSpecificConfig())
-                .usePollingConfigIdleTimeValue());
+            .usePollingConfigIdleTimeValue());
     }
 
     @Test
@@ -182,11 +137,11 @@ public class MultiLangDaemonConfigurationTest {
         MultiLangDaemonConfiguration configuration = baseConfiguration();
         configuration.setRetrievalMode(RetrievalMode.FANOUT);
 
-        MultiLangDaemonConfiguration.ResolvedConfiguration resolvedConfiguration =
-                configuration.resolvedConfiguration(shardRecordProcessorFactory);
+        MultiLangDaemonConfiguration.ResolvedConfiguration resolvedConfiguration = configuration
+                .resolvedConfiguration(shardRecordProcessorFactory);
 
-        assertThat(
-                resolvedConfiguration.getRetrievalConfig().retrievalSpecificConfig(), instanceOf(FanOutConfig.class));
+        assertThat(resolvedConfiguration.getRetrievalConfig().retrievalSpecificConfig(),
+                instanceOf(FanOutConfig.class));
     }
 
     @Test
@@ -194,39 +149,37 @@ public class MultiLangDaemonConfigurationTest {
         MultiLangDaemonConfiguration configuration = baseConfiguration();
         configuration.setRetrievalMode(RetrievalMode.POLLING);
 
-        MultiLangDaemonConfiguration.ResolvedConfiguration resolvedConfiguration =
-                configuration.resolvedConfiguration(shardRecordProcessorFactory);
+        MultiLangDaemonConfiguration.ResolvedConfiguration resolvedConfiguration = configuration
+                .resolvedConfiguration(shardRecordProcessorFactory);
 
-        assertThat(
-                resolvedConfiguration.getRetrievalConfig().retrievalSpecificConfig(), instanceOf(PollingConfig.class));
+        assertThat(resolvedConfiguration.getRetrievalConfig().retrievalSpecificConfig(),
+                instanceOf(PollingConfig.class));
     }
 
     @Test
     public void testRetrievalModeSetForPollingString() throws Exception {
         MultiLangDaemonConfiguration configuration = baseConfiguration();
 
-        utilsBean.setProperty(
-                configuration, "retrievalMode", RetrievalMode.POLLING.name().toLowerCase());
+        utilsBean.setProperty(configuration, "retrievalMode", RetrievalMode.POLLING.name().toLowerCase());
 
-        MultiLangDaemonConfiguration.ResolvedConfiguration resolvedConfiguration =
-                configuration.resolvedConfiguration(shardRecordProcessorFactory);
+        MultiLangDaemonConfiguration.ResolvedConfiguration resolvedConfiguration = configuration
+                .resolvedConfiguration(shardRecordProcessorFactory);
 
-        assertThat(
-                resolvedConfiguration.getRetrievalConfig().retrievalSpecificConfig(), instanceOf(PollingConfig.class));
+        assertThat(resolvedConfiguration.getRetrievalConfig().retrievalSpecificConfig(),
+                instanceOf(PollingConfig.class));
     }
 
     @Test
     public void testRetrievalModeSetForFanoutString() throws Exception {
         MultiLangDaemonConfiguration configuration = baseConfiguration();
 
-        utilsBean.setProperty(
-                configuration, "retrievalMode", RetrievalMode.FANOUT.name().toLowerCase());
+        utilsBean.setProperty(configuration, "retrievalMode", RetrievalMode.FANOUT.name().toLowerCase());
 
-        MultiLangDaemonConfiguration.ResolvedConfiguration resolvedConfiguration =
-                configuration.resolvedConfiguration(shardRecordProcessorFactory);
+        MultiLangDaemonConfiguration.ResolvedConfiguration resolvedConfiguration = configuration
+                .resolvedConfiguration(shardRecordProcessorFactory);
 
-        assertThat(
-                resolvedConfiguration.getRetrievalConfig().retrievalSpecificConfig(), instanceOf(FanOutConfig.class));
+        assertThat(resolvedConfiguration.getRetrievalConfig().retrievalSpecificConfig(),
+                instanceOf(FanOutConfig.class));
     }
 
     @Test
@@ -243,7 +196,7 @@ public class MultiLangDaemonConfigurationTest {
     // TODO : Enable this test once https://github.com/awslabs/amazon-kinesis-client/issues/692 is resolved
     public void testmetricsEnabledDimensions() {
         MultiLangDaemonConfiguration configuration = baseConfiguration();
-        configuration.setMetricsEnabledDimensions(new String[] {"Operation"});
+        configuration.setMetricsEnabledDimensions(new String[]{"Operation"});
         configuration.resolvedConfiguration(shardRecordProcessorFactory);
     }
 
@@ -256,14 +209,14 @@ public class MultiLangDaemonConfigurationTest {
         configuration.setRetrievalMode(RetrievalMode.FANOUT);
         configuration.getFanoutConfig().setConsumerArn(consumerArn);
 
-        MultiLangDaemonConfiguration.ResolvedConfiguration resolvedConfiguration =
-                configuration.resolvedConfiguration(shardRecordProcessorFactory);
+        MultiLangDaemonConfiguration.ResolvedConfiguration resolvedConfiguration = configuration
+                .resolvedConfiguration(shardRecordProcessorFactory);
 
-        assertThat(
-                resolvedConfiguration.getRetrievalConfig().retrievalSpecificConfig(), instanceOf(FanOutConfig.class));
-        FanOutConfig fanOutConfig =
-                (FanOutConfig) resolvedConfiguration.getRetrievalConfig().retrievalSpecificConfig();
+        assertThat(resolvedConfiguration.getRetrievalConfig().retrievalSpecificConfig(),
+                instanceOf(FanOutConfig.class));
+        FanOutConfig fanOutConfig = (FanOutConfig) resolvedConfiguration.getRetrievalConfig().retrievalSpecificConfig();
 
         assertThat(fanOutConfig.consumerArn(), equalTo(consumerArn));
     }
+
 }

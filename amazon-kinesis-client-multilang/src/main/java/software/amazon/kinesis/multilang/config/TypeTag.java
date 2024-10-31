@@ -15,13 +15,14 @@
 
 package software.amazon.kinesis.multilang.config;
 
-import java.lang.reflect.Method;
-
 import lombok.Data;
+
+import java.lang.reflect.Method;
 
 @Data
 class TypeTag {
     final Class<?> type;
     final boolean hasConverter;
     final Method builderMethod;
+
 }

@@ -23,6 +23,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import lombok.extern.slf4j.Slf4j;
 import software.amazon.kinesis.lifecycle.events.InitializationInput;
 import software.amazon.kinesis.lifecycle.events.LeaseLostInput;
@@ -54,12 +55,13 @@ class MessageWriter {
     /**
      * Use initialize method after construction.
      */
-    MessageWriter() {}
+    MessageWriter() {
+    }
 
     /**
      * Writes the message then writes the line separator provided by the system. Flushes each message to guarantee it
      * is delivered as soon as possible to the subprocess.
-     *
+     * 
      * @param message A message to be written to the subprocess.
      * @return
      * @throws IOException
@@ -74,10 +76,7 @@ class MessageWriter {
                      */
                     synchronized (writer) {
                         writer.write(message, 0, message.length());
-                        writer.write(
-                                System.lineSeparator(),
-                                0,
-                                System.lineSeparator().length());
+                        writer.write(System.lineSeparator(), 0, System.lineSeparator().length());
                         writer.flush();
                     }
                     log.info("Message size == {} bytes for shard {}", message.getBytes().length, shardId);
@@ -99,7 +98,7 @@ class MessageWriter {
 
     /**
      * Converts the message to a JSON string and writes it to the subprocess.
-     *
+     * 
      * @param message A message to be written to the subprocess.
      * @return
      */
@@ -109,9 +108,9 @@ class MessageWriter {
             String jsonText = objectMapper.writeValueAsString(message);
             return writeMessageToOutput(jsonText);
         } catch (IOException e) {
-            String errorMessage = String.format(
-                    "Encountered I/O error while writing %s action to subprocess",
-                    message.getClass().getSimpleName());
+            String errorMessage =
+                    String.format("Encountered I/O error while writing %s action to subprocess", message.getClass()
+                            .getSimpleName());
             log.error(errorMessage, e);
             throw new RuntimeException(errorMessage, e);
         }
@@ -119,7 +118,7 @@ class MessageWriter {
 
     /**
      * Writes an {@link InitializeMessage} to the subprocess.
-     *
+     * 
      * @param initializationInput
      *            contains information about the shard being initialized
      */
@@ -129,7 +128,7 @@ class MessageWriter {
 
     /**
      * Writes a {@link ProcessRecordsMessage} message to the subprocess.
-     *
+     * 
      * @param processRecordsInput
      *            the records, and associated metadata to be processed.
      */
@@ -139,7 +138,7 @@ class MessageWriter {
 
     /**
      * Writes the lease lost message to the sub process.
-     *
+     * 
      * @param leaseLostInput
      *            the lease lost input. This is currently unused as lease loss doesn't actually have anything in it
      * @return A future that is set when the message has been written.
@@ -150,7 +149,7 @@ class MessageWriter {
 
     /**
      * Writes a message to the sub process indicating that the shard has ended
-     *
+     * 
      * @param shardEndedInput
      *            the shard end input. This is currently unused as the checkpoint is extracted, and used by the caller.
      * @return A future that is set when the message has been written.
@@ -168,7 +167,7 @@ class MessageWriter {
 
     /**
      * Writes a {@link CheckpointMessage} to the subprocess.
-     *
+     * 
      * @param sequenceNumber
      *            The sequence number that was checkpointed.
      * @param subSequenceNumber
@@ -176,14 +175,14 @@ class MessageWriter {
      * @param throwable
      *            The exception that was thrown by a checkpoint attempt. Null if one didn't occur.
      */
-    Future<Boolean> writeCheckpointMessageWithError(
-            String sequenceNumber, Long subSequenceNumber, Throwable throwable) {
+    Future<Boolean> writeCheckpointMessageWithError(String sequenceNumber, Long subSequenceNumber,
+            Throwable throwable) {
         return writeMessage(new CheckpointMessage(sequenceNumber, subSequenceNumber, throwable));
     }
 
     /**
      * Closes the output stream and prevents further attempts to write.
-     *
+     * 
      * @throws IOException Thrown when closing the writer fails
      */
     void close() throws IOException {
@@ -202,16 +201,18 @@ class MessageWriter {
      * {@link MultiLangShardRecordProcessor (String)} is called. So we follow a pattern where the attributes are
      * set inside this method instead of the constructor so that this object will be initialized when all its attributes
      * are known to the record processor.
-     *
+     * 
      * @param stream Used to write messages to the subprocess.
      * @param shardId The shard we're working on.
      * @param objectMapper The object mapper to encode messages.
      * @param executorService An executor service to run tasks in.
      */
-    MessageWriter initialize(
-            OutputStream stream, String shardId, ObjectMapper objectMapper, ExecutorService executorService) {
-        return this.initialize(
-                new BufferedWriter(new OutputStreamWriter(stream)), shardId, objectMapper, executorService);
+    MessageWriter initialize(OutputStream stream,
+            String shardId,
+            ObjectMapper objectMapper,
+            ExecutorService executorService) {
+        return this.initialize(new BufferedWriter(new OutputStreamWriter(stream)), shardId, objectMapper,
+                executorService);
     }
 
     /**
@@ -220,12 +221,15 @@ class MessageWriter {
      * @param objectMapper The object mapper to encode messages.
      * @param executorService An executor service to run tasks in.
      */
-    MessageWriter initialize(
-            BufferedWriter writer, String shardId, ObjectMapper objectMapper, ExecutorService executorService) {
+    MessageWriter initialize(BufferedWriter writer,
+            String shardId,
+            ObjectMapper objectMapper,
+            ExecutorService executorService) {
         this.writer = writer;
         this.shardId = shardId;
         this.objectMapper = objectMapper;
         this.executorService = executorService;
         return this;
     }
+
 }

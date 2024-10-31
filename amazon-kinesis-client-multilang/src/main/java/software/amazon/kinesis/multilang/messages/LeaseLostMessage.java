@@ -21,4 +21,5 @@ package software.amazon.kinesis.multilang.messages;
 public class LeaseLostMessage extends Message {
 
     public static final String ACTION = "leaseLost";
+    
 }

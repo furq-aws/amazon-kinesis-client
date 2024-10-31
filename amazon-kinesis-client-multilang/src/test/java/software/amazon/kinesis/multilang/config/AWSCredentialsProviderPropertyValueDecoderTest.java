@@ -14,11 +14,14 @@
  */
 package software.amazon.kinesis.multilang.config;
 
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThat;
+
 import java.util.Arrays;
 
-import com.amazonaws.auth.AWSCredentials;
-import com.amazonaws.auth.AWSCredentialsProvider;
-import com.amazonaws.auth.AWSCredentialsProviderChain;
 import com.amazonaws.auth.BasicAWSCredentials;
 import lombok.ToString;
 import org.hamcrest.Description;
@@ -27,11 +30,9 @@ import org.hamcrest.TypeSafeDiagnosingMatcher;
 import org.junit.Test;
 import software.amazon.kinesis.multilang.auth.KclSTSAssumeRoleSessionCredentialsProvider;
 
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.CoreMatchers.instanceOf;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
+import com.amazonaws.auth.AWSCredentials;
+import com.amazonaws.auth.AWSCredentialsProvider;
+import com.amazonaws.auth.AWSCredentialsProviderChain;
 
 public class AWSCredentialsProviderPropertyValueDecoderTest {
 
@@ -78,10 +79,10 @@ public class AWSCredentialsProviderPropertyValueDecoderTest {
 
         @Override
         public void describeTo(Description description) {
-            description
-                    .appendText("An AWSCredentialsProvider that provides an AWSCredential matching: ")
+            description.appendText("An AWSCredentialsProvider that provides an AWSCredential matching: ")
                     .appendList("(", ", ", ")", Arrays.asList(classMatcher, akidMatcher, secretMatcher));
         }
+
     }
 
     private static AWSCredentialsMatcher hasCredentials(String akid, String secret) {
@@ -120,7 +121,7 @@ public class AWSCredentialsProviderPropertyValueDecoderTest {
         for (final String className : Arrays.asList(
                 KclSTSAssumeRoleSessionCredentialsProvider.class.getName(), // fully-qualified name
                 KclSTSAssumeRoleSessionCredentialsProvider.class.getSimpleName() // name-only; needs prefix
-                )) {
+        )) {
             final AWSCredentialsProvider provider = decoder.decodeValue(className + "|arn|sessionName");
             assertNotNull(className, provider);
         }
@@ -131,7 +132,7 @@ public class AWSCredentialsProviderPropertyValueDecoderTest {
      */
     @Test
     public void testVarArgAuthProvider() {
-        final String[] args = new String[] {"arg1", "arg2", "arg3"};
+        final String[] args = new String[] { "arg1", "arg2", "arg3" };
         final String className = VarArgCredentialsProvider.class.getName();
         final String encodedValue = className + "|" + String.join("|", args);
 
@@ -150,7 +151,9 @@ public class AWSCredentialsProviderPropertyValueDecoderTest {
         }
 
         @Override
-        public void refresh() {}
+        public void refresh() {
+
+        }
     }
 
     /**
@@ -177,7 +180,9 @@ public class AWSCredentialsProviderPropertyValueDecoderTest {
         }
 
         @Override
-        public void refresh() {}
+        public void refresh() {
+
+        }
     }
 
     private static class VarArgCredentialsProvider implements AWSCredentialsProvider {
@@ -196,6 +201,8 @@ public class AWSCredentialsProviderPropertyValueDecoderTest {
         }
 
         @Override
-        public void refresh() {}
+        public void refresh() {
+
+        }
     }
 }
