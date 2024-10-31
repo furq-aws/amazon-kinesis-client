@@ -1,18 +1,17 @@
 package software.amazon.kinesis.worker.metric.impl.container;
 
-import static software.amazon.kinesis.utils.Cgroup.getAvailableCpusFromEffectiveCpuSet;
-import static software.amazon.kinesis.utils.Cgroup.readSingleLineFile;
-
-import java.util.concurrent.TimeUnit;
 import java.time.Clock;
+import java.util.concurrent.TimeUnit;
 
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
-import software.amazon.kinesis.worker.metric.WorkerMetric;
 import software.amazon.kinesis.worker.metric.OperatingRange;
+import software.amazon.kinesis.worker.metric.WorkerMetric;
 import software.amazon.kinesis.worker.metric.WorkerMetricType;
+
+import static software.amazon.kinesis.utils.Cgroup.getAvailableCpusFromEffectiveCpuSet;
+import static software.amazon.kinesis.utils.Cgroup.readSingleLineFile;
 
 /**
  * Utilizes Linux Control Groups by reading cpu time and available cpu from cgroup directory.This works for Elastic
@@ -50,7 +49,13 @@ public class Cgroupv1CpuWorkerMetric implements WorkerMetric {
     private long lastSystemTimeNanos = 0;
 
     public Cgroupv1CpuWorkerMetric(final OperatingRange operatingRange) {
-        this(operatingRange, CPU_TIME_FILE, CPU_CFS_QUOTA_FILE, CPU_CFS_PERIOD_FILE, EFFECTIVE_CPU_SET_FILE, Clock.systemUTC());
+        this(
+                operatingRange,
+                CPU_TIME_FILE,
+                CPU_CFS_QUOTA_FILE,
+                CPU_CFS_PERIOD_FILE,
+                EFFECTIVE_CPU_SET_FILE,
+                Clock.systemUTC());
     }
 
     @Override
@@ -60,23 +65,20 @@ public class Cgroupv1CpuWorkerMetric implements WorkerMetric {
 
     @Override
     public WorkerMetricValue capture() {
-        return WorkerMetricValue.builder()
-                .value(calculateCpuUsage())
-                .build();
+        return WorkerMetricValue.builder().value(calculateCpuUsage()).build();
     }
 
     private double calculateCpuUsage() {
         if (cpuLimit == -1) {
             cpuLimit = calculateCpuLimit();
         }
-        
+
         final long cpuTimeNanos = Long.parseLong(readSingleLineFile(cpuTimeFile));
         final long currentTimeNanos = TimeUnit.MILLISECONDS.toNanos(clock.millis());
 
         boolean skip = false;
         double cpuCoreTimeUsed;
         synchronized (LOCK_OBJECT) {
-
             if (lastCpuUseTimeNanos == 0 && lastSystemTimeNanos == 0) {
                 // Case where this is a first call so no diff available
                 skip = true;
@@ -102,7 +104,8 @@ public class Cgroupv1CpuWorkerMetric implements WorkerMetric {
     }
 
     private double calculateCpuLimit() {
-        // Documentation on these values: https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/6/html/resource_management_guide/sec-cpu#sect-cfs
+        // Documentation on these values:
+        // https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/6/html/resource_management_guide/sec-cpu#sect-cfs
         final long cfsQuota = Long.parseLong(readSingleLineFile(cfsQuotaFile));
         final long cfsPeriod = Long.parseLong(readSingleLineFile(cfsPeriodFile));
         if (cfsQuota == -1) {
@@ -122,5 +125,4 @@ public class Cgroupv1CpuWorkerMetric implements WorkerMetric {
     public WorkerMetricType getWorkerMetricType() {
         return CPU_WORKER_METRICS_TYPE;
     }
-
 }

@@ -27,6 +27,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NonNull;
@@ -82,8 +83,11 @@ public class KinesisShardDetector implements ShardDetector {
 
     @NonNull
     private final KinesisAsyncClient kinesisClient;
-    @NonNull @Getter
+
+    @NonNull
+    @Getter
     private final StreamIdentifier streamIdentifier;
+
     private final long listShardsBackoffTimeInMillis;
     private final int maxListShardsRetryAttempts;
     private final long listShardsCacheAllowedAgeInSeconds;
@@ -93,14 +97,21 @@ public class KinesisShardDetector implements ShardDetector {
 
     private volatile Map<String, Shard> cachedShardMap = null;
     private volatile Instant lastCacheUpdateTime;
+
     @Getter(AccessLevel.PACKAGE)
     private final AtomicInteger cacheMisses = new AtomicInteger(0);
 
     private static final Boolean THROW_RESOURCE_NOT_FOUND_EXCEPTION = true;
 
-    public KinesisShardDetector(KinesisAsyncClient kinesisClient, StreamIdentifier streamIdentifier, long listShardsBackoffTimeInMillis,
-            int maxListShardsRetryAttempts, long listShardsCacheAllowedAgeInSeconds, int maxCacheMissesBeforeReload,
-            int cacheMissWarningModulus, Duration kinesisRequestTimeout) {
+    public KinesisShardDetector(
+            KinesisAsyncClient kinesisClient,
+            StreamIdentifier streamIdentifier,
+            long listShardsBackoffTimeInMillis,
+            int maxListShardsRetryAttempts,
+            long listShardsCacheAllowedAgeInSeconds,
+            int maxCacheMissesBeforeReload,
+            int cacheMissWarningModulus,
+            Duration kinesisRequestTimeout) {
         this.kinesisClient = kinesisClient;
         this.streamIdentifier = streamIdentifier;
         this.listShardsBackoffTimeInMillis = listShardsBackoffTimeInMillis;
@@ -134,8 +145,10 @@ public class KinesisShardDetector implements ShardDetector {
                         shard = cachedShardMap.get(shardId);
 
                         if (shard == null) {
-                            log.warn("Even after cache refresh shard '{}' wasn't found. This could indicate a bigger"
-                                    + " problem.", shardId);
+                            log.warn(
+                                    "Even after cache refresh shard '{}' wasn't found. This could indicate a bigger"
+                                            + " problem.",
+                                    shardId);
                         }
 
                         cacheMisses.set(0);
@@ -150,8 +163,8 @@ public class KinesisShardDetector implements ShardDetector {
         }
 
         if (shard == null) {
-            final String message = String.format("Cannot find the shard given the shardId %s. Cache misses: %s",
-                    shardId, cacheMisses);
+            final String message =
+                    String.format("Cannot find the shard given the shardId %s. Cache misses: %s", shardId, cacheMisses);
             if (cacheMisses.get() % cacheMissWarningModulus == 0) {
                 log.warn(message);
             } else {
@@ -180,8 +193,8 @@ public class KinesisShardDetector implements ShardDetector {
         return listShardsWithFilterInternal(shardFilter, !THROW_RESOURCE_NOT_FOUND_EXCEPTION);
     }
 
-    private List<Shard> listShardsWithFilterInternal(ShardFilter shardFilter,
-            boolean shouldPropagateResourceNotFoundException) {
+    private List<Shard> listShardsWithFilterInternal(
+            ShardFilter shardFilter, boolean shouldPropagateResourceNotFoundException) {
         final List<Shard> shards = new ArrayList<>();
         ListShardsResponse result;
         String nextToken = null;
@@ -209,8 +222,8 @@ public class KinesisShardDetector implements ShardDetector {
      * @param shouldPropagateResourceNotFoundException : used to determine if ResourceNotFoundException should be
      *      handled by method and return Empty list or propagate the exception.
      */
-    private ListShardsResponse listShards(ShardFilter shardFilter, final String nextToken,
-            final boolean shouldPropagateResourceNotFoundException) {
+    private ListShardsResponse listShards(
+            ShardFilter shardFilter, final String nextToken, final boolean shouldPropagateResourceNotFoundException) {
         ListShardsRequest.Builder builder = KinesisRequestsBuilder.listShardsRequestBuilder();
         if (StringUtils.isEmpty(nextToken)) {
             builder.streamName(streamIdentifier.streamName()).shardFilter(shardFilter);
@@ -241,7 +254,9 @@ public class KinesisShardDetector implements ShardDetector {
                         + " Active or Updating)");
                 return null;
             } catch (LimitExceededException e) {
-                log.info("Got LimitExceededException when listing shards {}. Backing off for {} millis.", streamIdentifier,
+                log.info(
+                        "Got LimitExceededException when listing shards {}. Backing off for {} millis.",
+                        streamIdentifier,
                         listShardsBackoffTimeInMillis);
                 try {
                     Thread.sleep(listShardsBackoffTimeInMillis);
@@ -250,15 +265,16 @@ public class KinesisShardDetector implements ShardDetector {
                 }
                 lastException = e;
             } catch (ResourceNotFoundException e) {
-                log.warn("Got ResourceNotFoundException when fetching shard list for {}. Stream no longer exists.",
+                log.warn(
+                        "Got ResourceNotFoundException when fetching shard list for {}. Stream no longer exists.",
                         streamIdentifier.streamName());
                 if (shouldPropagateResourceNotFoundException) {
                     throw e;
                 }
                 return ListShardsResponse.builder()
-                                         .shards(Collections.emptyList())
-                                         .nextToken(null)
-                                         .build();
+                        .shards(Collections.emptyList())
+                        .nextToken(null)
+                        .build();
 
             } catch (TimeoutException te) {
                 throw new RuntimeException(te);
@@ -292,8 +308,8 @@ public class KinesisShardDetector implements ShardDetector {
     }
 
     @Override
-    public ListShardsResponse getListShardsResponse(ListShardsRequest request) throws
-            ExecutionException, TimeoutException, InterruptedException {
+    public ListShardsResponse getListShardsResponse(ListShardsRequest request)
+            throws ExecutionException, TimeoutException, InterruptedException {
         return FutureUtils.resolveOrCancelFuture(kinesisClient.listShards(request), kinesisRequestTimeout);
     }
 
@@ -308,16 +324,14 @@ public class KinesisShardDetector implements ShardDetector {
         streamIdentifier.streamArnOptional().ifPresent(arn -> getShardIteratorRequestBuilder.streamARN(arn.toString()));
 
         final GetShardIteratorResponse getShardIteratorResponse = FutureUtils.resolveOrCancelFuture(
-                kinesisClient.getShardIterator(getShardIteratorRequestBuilder.build()),
-                kinesisRequestTimeout);
+                kinesisClient.getShardIterator(getShardIteratorRequestBuilder.build()), kinesisRequestTimeout);
 
         final GetRecordsRequest.Builder getRecordsRequestBuilder = KinesisRequestsBuilder.getRecordsRequestBuilder()
                 .shardIterator(getShardIteratorResponse.shardIterator());
         streamIdentifier.streamArnOptional().ifPresent(arn -> getRecordsRequestBuilder.streamARN(arn.toString()));
 
         final GetRecordsResponse getRecordsResponse = FutureUtils.resolveOrCancelFuture(
-                kinesisClient.getRecords(getRecordsRequestBuilder.build()),
-                kinesisRequestTimeout);
+                kinesisClient.getRecords(getRecordsRequestBuilder.build()), kinesisRequestTimeout);
 
         return getRecordsResponse.childShards();
     }

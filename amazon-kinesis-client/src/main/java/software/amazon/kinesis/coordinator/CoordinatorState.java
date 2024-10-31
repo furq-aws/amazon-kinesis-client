@@ -14,6 +14,8 @@
  */
 package software.amazon.kinesis.coordinator;
 
+import java.util.Map;
+
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -23,8 +25,6 @@ import lombok.extern.slf4j.Slf4j;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import software.amazon.kinesis.annotations.KinesisClientInternalApi;
 
-import java.util.Map;
-
 /**
  * DataModel for CoordinatorState, this data model is used to store various state information required
  * for coordination across the KCL worker fleet. Therefore, the model follows a flexible schema.
@@ -32,7 +32,7 @@ import java.util.Map;
 @Data
 @Builder
 @NoArgsConstructor
-@AllArgsConstructor (access = AccessLevel.PRIVATE)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Slf4j
 @KinesisClientInternalApi
 public class CoordinatorState {

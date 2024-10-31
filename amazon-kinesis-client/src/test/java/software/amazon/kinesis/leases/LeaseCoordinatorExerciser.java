@@ -26,7 +26,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-
 import javax.swing.BoxLayout;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -67,25 +66,32 @@ public class LeaseCoordinatorExerciser {
     private static final long INITIAL_LEASE_TABLE_READ_CAPACITY = 10L;
     private static final long INITIAL_LEASE_TABLE_WRITE_CAPACITY = 50L;
 
-    public static void main(String[] args) throws DependencyException, InvalidStateException,
-            ProvisionedThroughputException {
+    public static void main(String[] args)
+            throws DependencyException, InvalidStateException, ProvisionedThroughputException {
         int numCoordinators = 9;
         int numLeases = 73;
         int leaseDurationMillis = 10000;
         int epsilonMillis = 100;
 
         DynamoDbAsyncClient dynamoDBClient = DynamoDbAsyncClient.builder()
-                .credentialsProvider(DefaultCredentialsProvider.create()).build();
+                .credentialsProvider(DefaultCredentialsProvider.create())
+                .build();
 
-        LeaseRefresher leaseRefresher = new DynamoDBLeaseRefresher("nagl_ShardProgress", dynamoDBClient,
-                new DynamoDBLeaseSerializer(), true, TableCreatorCallback.NOOP_TABLE_CREATOR_CALLBACK,
-                LeaseManagementConfig.DEFAULT_REQUEST_TIMEOUT, new DdbTableConfig(),
+        LeaseRefresher leaseRefresher = new DynamoDBLeaseRefresher(
+                "nagl_ShardProgress",
+                dynamoDBClient,
+                new DynamoDBLeaseSerializer(),
+                true,
+                TableCreatorCallback.NOOP_TABLE_CREATOR_CALLBACK,
+                LeaseManagementConfig.DEFAULT_REQUEST_TIMEOUT,
+                new DdbTableConfig(),
                 LeaseManagementConfig.DEFAULT_LEASE_TABLE_DELETION_PROTECTION_ENABLED,
                 DefaultSdkAutoConstructList.getInstance());
 
-        MigrationAdaptiveLeaseAssignmentModeProvider mockModeProvider
-            = mock(MigrationAdaptiveLeaseAssignmentModeProvider.class, Mockito.RETURNS_MOCKS);
-        when(mockModeProvider.getLeaseAssignmentMode()).thenReturn(LeaseAssignmentMode.WORKER_UTILIZATION_AWARE_ASSIGNMENT);
+        MigrationAdaptiveLeaseAssignmentModeProvider mockModeProvider =
+                mock(MigrationAdaptiveLeaseAssignmentModeProvider.class, Mockito.RETURNS_MOCKS);
+        when(mockModeProvider.getLeaseAssignmentMode())
+                .thenReturn(LeaseAssignmentMode.WORKER_UTILIZATION_AWARE_ASSIGNMENT);
         when(mockModeProvider.dynamicModeChangeSupportNeeded()).thenReturn(false);
 
         if (leaseRefresher.createLeaseTableIfNotExists()) {
@@ -97,19 +103,35 @@ public class LeaseCoordinatorExerciser {
         }
 
         CloudWatchAsyncClient client = CloudWatchAsyncClient.builder()
-                .credentialsProvider(DefaultCredentialsProvider.create()).build();
-        CloudWatchMetricsFactory metricsFactory = new CloudWatchMetricsFactory(client, "testNamespace", 30 * 1000, 1000,
-                METRICS_LEVEL, MetricsConfig.METRICS_DIMENSIONS_ALL, FLUSH_SIZE);
+                .credentialsProvider(DefaultCredentialsProvider.create())
+                .build();
+        CloudWatchMetricsFactory metricsFactory = new CloudWatchMetricsFactory(
+                client,
+                "testNamespace",
+                30 * 1000,
+                1000,
+                METRICS_LEVEL,
+                MetricsConfig.METRICS_DIMENSIONS_ALL,
+                FLUSH_SIZE);
         final List<LeaseCoordinator> coordinators = new ArrayList<>();
         for (int i = 0; i < numCoordinators; i++) {
             String workerIdentifier = "worker-" + Integer.toString(i);
 
-            LeaseCoordinator coord = new DynamoDBLeaseCoordinator(leaseRefresher, workerIdentifier, leaseDurationMillis,
-                    LeaseManagementConfig.DEFAULT_ENABLE_PRIORITY_LEASE_ASSIGNMENT, epsilonMillis,
-                    MAX_LEASES_FOR_WORKER, MAX_LEASES_TO_STEAL_AT_ONE_TIME, MAX_LEASE_RENEWER_THREAD_COUNT,
-                    INITIAL_LEASE_TABLE_READ_CAPACITY, INITIAL_LEASE_TABLE_WRITE_CAPACITY, metricsFactory,
+            LeaseCoordinator coord = new DynamoDBLeaseCoordinator(
+                    leaseRefresher,
+                    workerIdentifier,
+                    leaseDurationMillis,
+                    LeaseManagementConfig.DEFAULT_ENABLE_PRIORITY_LEASE_ASSIGNMENT,
+                    epsilonMillis,
+                    MAX_LEASES_FOR_WORKER,
+                    MAX_LEASES_TO_STEAL_AT_ONE_TIME,
+                    MAX_LEASE_RENEWER_THREAD_COUNT,
+                    INITIAL_LEASE_TABLE_READ_CAPACITY,
+                    INITIAL_LEASE_TABLE_WRITE_CAPACITY,
+                    metricsFactory,
                     new LeaseManagementConfig.WorkerUtilizationAwareAssignmentConfig(),
-                    LeaseManagementConfig.GracefulLeaseHandoffConfig.builder().build(), new ConcurrentHashMap<>());
+                    LeaseManagementConfig.GracefulLeaseHandoffConfig.builder().build(),
+                    new ConcurrentHashMap<>());
 
             coordinators.add(coord);
         }
@@ -152,7 +174,6 @@ public class LeaseCoordinatorExerciser {
                         button.setLabel("Stop " + coord.workerIdentifier());
                     }
                 }
-
             });
             coordPanel.add(button);
 
@@ -187,12 +208,14 @@ public class LeaseCoordinatorExerciser {
                             public int compare(final Lease arg0, final Lease arg1) {
                                 return arg0.leaseKey().compareTo(arg1.leaseKey());
                             }
-
                         });
 
                         StringBuilder builder = new StringBuilder();
                         builder.append("<html>");
-                        builder.append(workerIdentifier).append(":").append(asgn.size()).append("          ");
+                        builder.append(workerIdentifier)
+                                .append(":")
+                                .append(asgn.size())
+                                .append("          ");
 
                         for (Lease lease : asgn) {
                             String leaseKey = lease.leaseKey();
@@ -208,8 +231,10 @@ public class LeaseCoordinatorExerciser {
                             greenNesses.put(leaseKey, greenNess);
                             lastOwners.put(leaseKey, lease.leaseOwner());
 
-                            builder.append(String.format("<font color=\"%s\">%03d</font>",
-                                    String.format("#00%02x00", greenNess), Integer.parseInt(leaseKey))).append(" ");
+                            builder.append(String.format(
+                                            "<font color=\"%s\">%03d</font>",
+                                            String.format("#00%02x00", greenNess), Integer.parseInt(leaseKey)))
+                                    .append(" ");
                         }
                         builder.append("</html>");
 
@@ -230,7 +255,6 @@ public class LeaseCoordinatorExerciser {
                     }
                 }
             }
-
         }.start();
 
         frame.pack();

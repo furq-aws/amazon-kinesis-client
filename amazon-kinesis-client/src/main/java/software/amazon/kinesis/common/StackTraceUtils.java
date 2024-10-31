@@ -19,10 +19,7 @@ public class StackTraceUtils {
         final StringBuilder stackTraceString = new StringBuilder();
 
         for (final StackTraceElement traceElement : stackTrace) {
-            stackTraceString
-                .append("\tat ")
-                .append(traceElement)
-                .append("\n");
+            stackTraceString.append("\tat ").append(traceElement).append("\n");
         }
 
         return stackTraceString.toString();

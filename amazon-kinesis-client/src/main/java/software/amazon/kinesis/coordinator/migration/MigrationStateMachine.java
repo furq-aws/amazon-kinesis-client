@@ -55,8 +55,8 @@ public interface MigrationStateMachine {
      * @throws DependencyException      when transition fails due to dependency on DDB failing in
      *                                  unexpected ways.
      */
-    void transitionTo(final ClientVersion nextClientVersion, final MigrationState state) throws InvalidStateException,
-        DependencyException;
+    void transitionTo(final ClientVersion nextClientVersion, final MigrationState state)
+            throws InvalidStateException, DependencyException;
 
     /**
      * Get the ClientVersion of current state machine state.

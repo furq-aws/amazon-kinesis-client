@@ -1,10 +1,10 @@
 package software.amazon.kinesis.worker.metricstats;
 
+import java.time.Instant;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import org.junit.jupiter.api.Test;
-
-import java.time.Instant;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -18,10 +18,11 @@ class WorkerMetricsTest {
                 .lastUpdateTime(Instant.now().getEpochSecond())
                 .metricStats(ImmutableMap.of(
                         "C", ImmutableList.of(50D, -1D),
-                        "M", ImmutableList.of(20D, 11D))
-                ).build();
+                        "M", ImmutableList.of(20D, 11D)))
+                .build();
 
-        assertTrue(workerMetrics.isAnyWorkerMetricFailing(),
+        assertTrue(
+                workerMetrics.isAnyWorkerMetricFailing(),
                 "isAnyWorkerMetricFailing does not return true even with failing workerMetric");
     }
 
@@ -32,10 +33,11 @@ class WorkerMetricsTest {
                 .lastUpdateTime(Instant.now().getEpochSecond())
                 .metricStats(ImmutableMap.of(
                         "C", ImmutableList.of(50D, 1D),
-                        "M", ImmutableList.of(-1D, 11D))
-                ).build();
+                        "M", ImmutableList.of(-1D, 11D)))
+                .build();
 
-        assertFalse(workerMetrics.isAnyWorkerMetricFailing(),
+        assertFalse(
+                workerMetrics.isAnyWorkerMetricFailing(),
                 "isAnyWorkerMetricFailing does not return false even without failing workerMetric");
     }
 
@@ -47,7 +49,8 @@ class WorkerMetricsTest {
                 .metricStats(ImmutableMap.of("C", ImmutableList.of()))
                 .build();
 
-        assertFalse(workerMetrics.isAnyWorkerMetricFailing(),
+        assertFalse(
+                workerMetrics.isAnyWorkerMetricFailing(),
                 "isAnyWorkerMetricFailing does not return false even without failing workerMetric");
     }
 
@@ -61,12 +64,13 @@ class WorkerMetricsTest {
         assertTrue(workerMetricsEntryForDefaultWorkerMetric.isValidWorkerMetric());
         assertTrue(workerMetricsEntryForDefaultWorkerMetric.isUsingDefaultWorkerMetric());
 
-        final WorkerMetricStats workerMetricsEntryWithEmptyResourceMapsForDefaultWorkerMetric = WorkerMetricStats.builder()
-                .workerId("WorkerId1")
-                .metricStats(ImmutableMap.of())
-                .operatingRange(ImmutableMap.of())
-                .lastUpdateTime(Instant.now().getEpochSecond())
-                .build();
+        final WorkerMetricStats workerMetricsEntryWithEmptyResourceMapsForDefaultWorkerMetric =
+                WorkerMetricStats.builder()
+                        .workerId("WorkerId1")
+                        .metricStats(ImmutableMap.of())
+                        .operatingRange(ImmutableMap.of())
+                        .lastUpdateTime(Instant.now().getEpochSecond())
+                        .build();
 
         assertTrue(workerMetricsEntryWithEmptyResourceMapsForDefaultWorkerMetric.isValidWorkerMetric());
         assertTrue(workerMetricsEntryWithEmptyResourceMapsForDefaultWorkerMetric.isUsingDefaultWorkerMetric());
@@ -96,12 +100,13 @@ class WorkerMetricsTest {
         assertFalse(workerMetricsEntryMissingResourceMetrics.isValidWorkerMetric());
 
         // C workerMetric has resourceStats but not operatingRange
-        final WorkerMetricStats workerMetricsEntryWithMismatchWorkerStatsAndOperatingRangeKey = WorkerMetricStats.builder()
-                .workerId("WorkerId1")
-                .lastUpdateTime(Instant.now().getEpochSecond())
-                .metricStats(ImmutableMap.of("C", ImmutableList.of(5D, 5D)))
-                .operatingRange(ImmutableMap.of("M", ImmutableList.of(80L, 10L)))
-                .build();
+        final WorkerMetricStats workerMetricsEntryWithMismatchWorkerStatsAndOperatingRangeKey =
+                WorkerMetricStats.builder()
+                        .workerId("WorkerId1")
+                        .lastUpdateTime(Instant.now().getEpochSecond())
+                        .metricStats(ImmutableMap.of("C", ImmutableList.of(5D, 5D)))
+                        .operatingRange(ImmutableMap.of("M", ImmutableList.of(80L, 10L)))
+                        .build();
 
         assertFalse(workerMetricsEntryWithMismatchWorkerStatsAndOperatingRangeKey.isValidWorkerMetric());
 
@@ -149,5 +154,4 @@ class WorkerMetricsTest {
 
         assertTrue(validWorkerMetricsEntry.isValidWorkerMetric());
     }
-
 }

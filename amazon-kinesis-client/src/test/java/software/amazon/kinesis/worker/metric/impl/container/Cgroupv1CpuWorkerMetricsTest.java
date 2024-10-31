@@ -1,11 +1,5 @@
 package software.amazon.kinesis.worker.metric.impl.container;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.when;
-
-import static software.amazon.kinesis.worker.metric.WorkerMetricsTestUtils.writeLineToFile;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -17,9 +11,13 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-
 import software.amazon.kinesis.worker.metric.OperatingRange;
 import software.amazon.kinesis.worker.metric.WorkerMetric;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.when;
+import static software.amazon.kinesis.worker.metric.WorkerMetricsTestUtils.writeLineToFile;
 
 class Cgroupv1CpuWorkerMetricsTest {
 
@@ -37,16 +35,19 @@ class Cgroupv1CpuWorkerMetricsTest {
         final File cfsQuotaFile = new File(tempDir.toAbsolutePath() + "/cfsQuota");
         final File cfsPeriodFile = new File(tempDir.toAbsolutePath() + "/cfsPeriod");
         final File effectiveCpusFile = new File(tempDir.toAbsolutePath() + "/cpuset.effective_cpus");
-        final OperatingRange operatingRange = OperatingRange.builder()
-                                                            .maxUtilization(80)
-                                                            .build();
+        final OperatingRange operatingRange =
+                OperatingRange.builder().maxUtilization(80).build();
 
         writeLineToFile(cfsQuotaFile, "20000");
         writeLineToFile(cfsPeriodFile, "10000");
 
-        final Cgroupv1CpuWorkerMetric cgroupv1CpuWorkerMetrics = new Cgroupv1CpuWorkerMetric(operatingRange,
-                cpuTimeFile.getAbsolutePath(), cfsQuotaFile.getAbsolutePath(), cfsPeriodFile.getAbsolutePath(),
-                effectiveCpusFile.getAbsolutePath(), clock);
+        final Cgroupv1CpuWorkerMetric cgroupv1CpuWorkerMetrics = new Cgroupv1CpuWorkerMetric(
+                operatingRange,
+                cpuTimeFile.getAbsolutePath(),
+                cfsQuotaFile.getAbsolutePath(),
+                cfsPeriodFile.getAbsolutePath(),
+                effectiveCpusFile.getAbsolutePath(),
+                clock);
 
         when(clock.millis()).thenReturn(1000L, 2000L);
 
@@ -76,16 +77,19 @@ class Cgroupv1CpuWorkerMetricsTest {
         final File cfsQuotaFile = new File(tempDir.toAbsolutePath() + "/cfsQuota");
         final File cfsPeriodFile = new File(tempDir.toAbsolutePath() + "/cfsPeriod");
         final File effectiveCpusFile = new File(tempDir.toAbsolutePath() + "/cpuset.effective_cpus");
-        final OperatingRange operatingRange = OperatingRange.builder()
-                                                            .maxUtilization(80)
-                                                            .build();
+        final OperatingRange operatingRange =
+                OperatingRange.builder().maxUtilization(80).build();
 
         writeLineToFile(cfsQuotaFile, "-1");
         writeLineToFile(cfsPeriodFile, "10000");
 
-        final Cgroupv1CpuWorkerMetric cgroupv1CpuWorkerMetrics = new Cgroupv1CpuWorkerMetric(operatingRange,
-                cpuTimeFile.getAbsolutePath(), cfsQuotaFile.getAbsolutePath(), cfsPeriodFile.getAbsolutePath(),
-                effectiveCpusFile.getAbsolutePath(), clock);
+        final Cgroupv1CpuWorkerMetric cgroupv1CpuWorkerMetrics = new Cgroupv1CpuWorkerMetric(
+                operatingRange,
+                cpuTimeFile.getAbsolutePath(),
+                cfsQuotaFile.getAbsolutePath(),
+                cfsPeriodFile.getAbsolutePath(),
+                effectiveCpusFile.getAbsolutePath(),
+                clock);
 
         when(clock.millis()).thenReturn(1000L, 2000L);
 
@@ -113,12 +117,10 @@ class Cgroupv1CpuWorkerMetricsTest {
 
     @Test
     void sanity_capture_file_not_found() {
-        final OperatingRange operatingRange = OperatingRange.builder()
-                                                            .maxUtilization(80)
-                                                            .build();
-        final Cgroupv1CpuWorkerMetric cgroupv1CpuWorkerMetrics = new Cgroupv1CpuWorkerMetric(operatingRange,
-                "/someBadPath", "/someBadPath", "/someBadPath", "/someBadPath", clock);
+        final OperatingRange operatingRange =
+                OperatingRange.builder().maxUtilization(80).build();
+        final Cgroupv1CpuWorkerMetric cgroupv1CpuWorkerMetrics = new Cgroupv1CpuWorkerMetric(
+                operatingRange, "/someBadPath", "/someBadPath", "/someBadPath", "/someBadPath", clock);
         assertThrows(IllegalArgumentException.class, () -> cgroupv1CpuWorkerMetrics.capture());
     }
-
 }

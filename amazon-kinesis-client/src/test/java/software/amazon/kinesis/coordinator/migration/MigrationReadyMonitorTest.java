@@ -14,6 +14,18 @@
  */
 package software.amazon.kinesis.coordinator.migration;
 
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Random;
+import java.util.UUID;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,18 +46,6 @@ import software.amazon.kinesis.metrics.NullMetricsFactory;
 import software.amazon.kinesis.retrieval.kpl.ExtendedSequenceNumber;
 import software.amazon.kinesis.worker.metricstats.WorkerMetricStats;
 import software.amazon.kinesis.worker.metricstats.WorkerMetricStatsDAO;
-
-import java.time.Duration;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Random;
-import java.util.UUID;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -81,15 +81,16 @@ public class MigrationReadyMonitorTest {
     @BeforeEach
     public void setup() {
         monitorUnderTest = new MigrationReadyMonitor(
-            nullMetricsFactory,
-            mockTimeProvider,
-            mockLeaderDecider,
-                WORKER_ID, mockWorkerMetricsDao, WORKER_METRICS_EXPIRY_SECONDS,
-            mockLeaseRefresher,
-            mockScheduler,
-            mockRunnableCallback,
-            0 /* stabilization duration - 0, to let the callback happen right away */
-        );
+                nullMetricsFactory,
+                mockTimeProvider,
+                mockLeaderDecider,
+                WORKER_ID,
+                mockWorkerMetricsDao,
+                WORKER_METRICS_EXPIRY_SECONDS,
+                mockLeaseRefresher,
+                mockScheduler,
+                mockRunnableCallback,
+                0 /* stabilization duration - 0, to let the callback happen right away */);
     }
 
     @ParameterizedTest
@@ -104,8 +105,8 @@ public class MigrationReadyMonitorTest {
 
         monitorUnderTest.startMonitor();
         final ArgumentCaptor<Runnable> runnableArgumentCaptor = ArgumentCaptor.forClass(Runnable.class);
-        verify(mockScheduler).scheduleWithFixedDelay(runnableArgumentCaptor.capture(), anyLong(), anyLong(),
-            any(TimeUnit.class));
+        verify(mockScheduler)
+                .scheduleWithFixedDelay(runnableArgumentCaptor.capture(), anyLong(), anyLong(), any(TimeUnit.class));
 
         runnableArgumentCaptor.getValue().run();
 
@@ -124,8 +125,8 @@ public class MigrationReadyMonitorTest {
 
         monitorUnderTest.startMonitor();
         final ArgumentCaptor<Runnable> runnableArgumentCaptor = ArgumentCaptor.forClass(Runnable.class);
-        verify(mockScheduler).scheduleWithFixedDelay(runnableArgumentCaptor.capture(), anyLong(), anyLong(),
-            any(TimeUnit.class));
+        verify(mockScheduler)
+                .scheduleWithFixedDelay(runnableArgumentCaptor.capture(), anyLong(), anyLong(), any(TimeUnit.class));
 
         runnableArgumentCaptor.getValue().run();
 
@@ -145,8 +146,7 @@ public class MigrationReadyMonitorTest {
         "true, WORKER_READY_CONDITION_NOT_MET_MULTISTREAM_MODE_SANITY"
     })
     public void testReadyConditionNotMetDoesNotInvokeCallback(final boolean gsiReady, final TestDataType testDataType)
-        throws Exception
-    {
+            throws Exception {
         final TestData data = TEST_DATA_MAP.get(testDataType);
         when(mockTimeProvider.call()).thenReturn(80 * 1000L);
         when(mockLeaseRefresher.isLeaseOwnerToLeaseKeyIndexActive()).thenReturn(gsiReady);
@@ -156,8 +156,8 @@ public class MigrationReadyMonitorTest {
 
         monitorUnderTest.startMonitor();
         final ArgumentCaptor<Runnable> runnableArgumentCaptor = ArgumentCaptor.forClass(Runnable.class);
-        verify(mockScheduler).scheduleWithFixedDelay(runnableArgumentCaptor.capture(), anyLong(), anyLong(),
-            any(TimeUnit.class));
+        verify(mockScheduler)
+                .scheduleWithFixedDelay(runnableArgumentCaptor.capture(), anyLong(), anyLong(), any(TimeUnit.class));
 
         runnableArgumentCaptor.getValue().run();
 
@@ -167,24 +167,22 @@ public class MigrationReadyMonitorTest {
     @Test
     public void testExpiredLeaseOwner() throws Exception {
         final TestData data1 = TEST_DATA_MAP.get(
-            TestDataType.WORKER_READY_CONDITION_NOT_MET_WITH_EXPIRED_LEASES_AND_INACTIVE_WORKER_STATS);
-        final TestData data2 = TEST_DATA_MAP.get(
-            TestDataType.WORKER_READY_CONDITION_MET_AFTER_EXPIRED_LEASES_ARE_REASSIGNED);
+                TestDataType.WORKER_READY_CONDITION_NOT_MET_WITH_EXPIRED_LEASES_AND_INACTIVE_WORKER_STATS);
+        final TestData data2 =
+                TEST_DATA_MAP.get(TestDataType.WORKER_READY_CONDITION_MET_AFTER_EXPIRED_LEASES_ARE_REASSIGNED);
 
         when(mockTimeProvider.call()).thenReturn(80 * 1000L);
         when(mockLeaseRefresher.isLeaseOwnerToLeaseKeyIndexActive()).thenReturn(true);
         when(mockLeaderDecider.isLeader(eq(WORKER_ID))).thenReturn(true);
         when(mockWorkerMetricsDao.getAllWorkerMetricStats())
-            .thenReturn(data1.workerMetrics)
-            .thenReturn(data2.workerMetrics);
-        when(mockLeaseRefresher.listLeases())
-            .thenReturn(data1.leaseList)
-            .thenReturn(data2.leaseList);
+                .thenReturn(data1.workerMetrics)
+                .thenReturn(data2.workerMetrics);
+        when(mockLeaseRefresher.listLeases()).thenReturn(data1.leaseList).thenReturn(data2.leaseList);
 
         monitorUnderTest.startMonitor();
         final ArgumentCaptor<Runnable> runnableArgumentCaptor = ArgumentCaptor.forClass(Runnable.class);
-        verify(mockScheduler).scheduleWithFixedDelay(runnableArgumentCaptor.capture(), anyLong(), anyLong(),
-            any(TimeUnit.class));
+        verify(mockScheduler)
+                .scheduleWithFixedDelay(runnableArgumentCaptor.capture(), anyLong(), anyLong(), any(TimeUnit.class));
 
         runnableArgumentCaptor.getValue().run();
 
@@ -196,25 +194,22 @@ public class MigrationReadyMonitorTest {
 
     @Test
     public void testInactiveToActiveWorkerMetricsCausesMonitorToSucceed() throws Exception {
-        final TestData data1 = TEST_DATA_MAP.get(
-            TestDataType.WORKER_READY_CONDITION_NOT_MET_WITH_ALL_INACTIVE_WORKER_STATS);
-        final TestData data2 = TEST_DATA_MAP.get(
-            TestDataType.WORKER_READY_CONDITION_MET);
+        final TestData data1 =
+                TEST_DATA_MAP.get(TestDataType.WORKER_READY_CONDITION_NOT_MET_WITH_ALL_INACTIVE_WORKER_STATS);
+        final TestData data2 = TEST_DATA_MAP.get(TestDataType.WORKER_READY_CONDITION_MET);
 
         when(mockTimeProvider.call()).thenReturn(80 * 1000L);
         when(mockLeaseRefresher.isLeaseOwnerToLeaseKeyIndexActive()).thenReturn(true);
         when(mockLeaderDecider.isLeader(eq(WORKER_ID))).thenReturn(true);
         when(mockWorkerMetricsDao.getAllWorkerMetricStats())
-            .thenReturn(data1.workerMetrics)
-            .thenReturn(data2.workerMetrics);
-        when(mockLeaseRefresher.listLeases())
-            .thenReturn(data1.leaseList)
-            .thenReturn(data2.leaseList);
+                .thenReturn(data1.workerMetrics)
+                .thenReturn(data2.workerMetrics);
+        when(mockLeaseRefresher.listLeases()).thenReturn(data1.leaseList).thenReturn(data2.leaseList);
 
         monitorUnderTest.startMonitor();
         final ArgumentCaptor<Runnable> runnableArgumentCaptor = ArgumentCaptor.forClass(Runnable.class);
-        verify(mockScheduler).scheduleWithFixedDelay(runnableArgumentCaptor.capture(), anyLong(), anyLong(),
-            any(TimeUnit.class));
+        verify(mockScheduler)
+                .scheduleWithFixedDelay(runnableArgumentCaptor.capture(), anyLong(), anyLong(), any(TimeUnit.class));
 
         runnableArgumentCaptor.getValue().run();
 
@@ -228,15 +223,16 @@ public class MigrationReadyMonitorTest {
     @ValueSource(longs = {12, 30, 60, 180})
     public void testTriggerStability(final long stabilityDurationInSeconds) throws Exception {
         monitorUnderTest = new MigrationReadyMonitor(
-            nullMetricsFactory,
-            mockTimeProvider,
-            mockLeaderDecider,
-                WORKER_ID, mockWorkerMetricsDao, WORKER_METRICS_EXPIRY_SECONDS,
-            mockLeaseRefresher,
-            mockScheduler,
-            mockRunnableCallback,
-            stabilityDurationInSeconds
-        );
+                nullMetricsFactory,
+                mockTimeProvider,
+                mockLeaderDecider,
+                WORKER_ID,
+                mockWorkerMetricsDao,
+                WORKER_METRICS_EXPIRY_SECONDS,
+                mockLeaseRefresher,
+                mockScheduler,
+                mockRunnableCallback,
+                stabilityDurationInSeconds);
 
         final TestData data = TEST_DATA_MAP.get(TestDataType.WORKER_READY_CONDITION_MET);
 
@@ -247,12 +243,13 @@ public class MigrationReadyMonitorTest {
 
         monitorUnderTest.startMonitor();
         final ArgumentCaptor<Runnable> runnableArgumentCaptor = ArgumentCaptor.forClass(Runnable.class);
-        verify(mockScheduler).scheduleWithFixedDelay(runnableArgumentCaptor.capture(), anyLong(), anyLong(),
-            any(TimeUnit.class));
+        verify(mockScheduler)
+                .scheduleWithFixedDelay(runnableArgumentCaptor.capture(), anyLong(), anyLong(), any(TimeUnit.class));
 
         // Test 2: callback is only invoked after trigger being true consecutively for the configured
         // time
-        long testTime = Duration.ofSeconds(ACTIVE_WORKER_STATS_LAST_UPDATE_TIME - 200).toMillis();
+        long testTime =
+                Duration.ofSeconds(ACTIVE_WORKER_STATS_LAST_UPDATE_TIME - 200).toMillis();
         for (int i = 0; i <= stabilityDurationInSeconds; i++) {
             verify(mockRunnableCallback, times(0)).run();
             when(mockTimeProvider.call()).thenReturn(testTime + i * 1000L);
@@ -262,7 +259,8 @@ public class MigrationReadyMonitorTest {
         reset(mockRunnableCallback);
 
         // Test 2: If leader changes the timer starts over
-        testTime = Duration.ofSeconds(ACTIVE_WORKER_STATS_LAST_UPDATE_TIME - 600).toMillis();
+        testTime =
+                Duration.ofSeconds(ACTIVE_WORKER_STATS_LAST_UPDATE_TIME - 600).toMillis();
         for (int i = 0; i < stabilityDurationInSeconds / 2; i++) {
             verify(mockRunnableCallback, times(0)).run();
             testTime = testTime + 1000L;
@@ -287,10 +285,14 @@ public class MigrationReadyMonitorTest {
         reset(mockRunnableCallback);
 
         // reset flag by making worker stats expire
-        when(mockWorkerMetricsDao.getAllWorkerMetricStats()).thenReturn(
-            TEST_DATA_MAP.get(TestDataType.WORKER_READY_CONDITION_NOT_MET_WITH_PARTIAL_INACTIVE_WORKER_STATS).workerMetrics);
-        when(mockLeaseRefresher.listLeases()).thenReturn(
-            TEST_DATA_MAP.get(TestDataType.WORKER_READY_CONDITION_NOT_MET_WITH_PARTIAL_INACTIVE_WORKER_STATS).leaseList);
+        when(mockWorkerMetricsDao.getAllWorkerMetricStats())
+                .thenReturn(TEST_DATA_MAP.get(
+                                TestDataType.WORKER_READY_CONDITION_NOT_MET_WITH_PARTIAL_INACTIVE_WORKER_STATS)
+                        .workerMetrics);
+        when(mockLeaseRefresher.listLeases())
+                .thenReturn(TEST_DATA_MAP.get(
+                                TestDataType.WORKER_READY_CONDITION_NOT_MET_WITH_PARTIAL_INACTIVE_WORKER_STATS)
+                        .leaseList);
         testTime = testTime + 1000L;
         when(mockTimeProvider.call()).thenReturn(testTime);
         runnableArgumentCaptor.getValue().run();
@@ -338,13 +340,20 @@ public class MigrationReadyMonitorTest {
         final TestData data = TEST_DATA_MAP.get(TestDataType.WORKER_READY_CONDITION_MET);
         // Each run of monitor calls timeProvider twice
         when(mockTimeProvider.call())
-            .thenReturn(Duration.ofSeconds(ACTIVE_WORKER_STATS_LAST_UPDATE_TIME).toMillis())
-            .thenReturn(Duration.ofSeconds(ACTIVE_WORKER_STATS_LAST_UPDATE_TIME).toMillis())
-            .thenReturn(Duration.ofSeconds(ACTIVE_WORKER_STATS_LAST_UPDATE_TIME + 59).toMillis())
-            .thenReturn(Duration.ofSeconds(ACTIVE_WORKER_STATS_LAST_UPDATE_TIME + 59).toMillis())
-            .thenReturn(Duration.ofSeconds(ACTIVE_WORKER_STATS_LAST_UPDATE_TIME + 60).toMillis())
-            .thenReturn(Duration.ofSeconds(ACTIVE_WORKER_STATS_LAST_UPDATE_TIME + 60).toMillis())
-            .thenReturn(Duration.ofSeconds(ACTIVE_WORKER_STATS_LAST_UPDATE_TIME + 61).toMillis());
+                .thenReturn(
+                        Duration.ofSeconds(ACTIVE_WORKER_STATS_LAST_UPDATE_TIME).toMillis())
+                .thenReturn(
+                        Duration.ofSeconds(ACTIVE_WORKER_STATS_LAST_UPDATE_TIME).toMillis())
+                .thenReturn(Duration.ofSeconds(ACTIVE_WORKER_STATS_LAST_UPDATE_TIME + 59)
+                        .toMillis())
+                .thenReturn(Duration.ofSeconds(ACTIVE_WORKER_STATS_LAST_UPDATE_TIME + 59)
+                        .toMillis())
+                .thenReturn(Duration.ofSeconds(ACTIVE_WORKER_STATS_LAST_UPDATE_TIME + 60)
+                        .toMillis())
+                .thenReturn(Duration.ofSeconds(ACTIVE_WORKER_STATS_LAST_UPDATE_TIME + 60)
+                        .toMillis())
+                .thenReturn(Duration.ofSeconds(ACTIVE_WORKER_STATS_LAST_UPDATE_TIME + 61)
+                        .toMillis());
         when(mockLeaseRefresher.isLeaseOwnerToLeaseKeyIndexActive()).thenReturn(true);
         when(mockLeaderDecider.isLeader(eq(WORKER_ID))).thenReturn(true);
         when(mockWorkerMetricsDao.getAllWorkerMetricStats()).thenReturn(data.workerMetrics);
@@ -352,8 +361,8 @@ public class MigrationReadyMonitorTest {
 
         monitorUnderTest.startMonitor();
         final ArgumentCaptor<Runnable> runnableArgumentCaptor = ArgumentCaptor.forClass(Runnable.class);
-        verify(mockScheduler).scheduleWithFixedDelay(runnableArgumentCaptor.capture(), anyLong(), anyLong(),
-            any(TimeUnit.class));
+        verify(mockScheduler)
+                .scheduleWithFixedDelay(runnableArgumentCaptor.capture(), anyLong(), anyLong(), any(TimeUnit.class));
 
         // At 0 seconds, WorkerMetricStats are valid
         reset(mockRunnableCallback);
@@ -375,7 +384,6 @@ public class MigrationReadyMonitorTest {
         runnableArgumentCaptor.getValue().run();
         verify(mockRunnableCallback, times(0)).run();
     }
-
 
     @RequiredArgsConstructor
     @Getter
@@ -408,163 +416,187 @@ public class MigrationReadyMonitorTest {
         final Random random = new Random();
 
         TEST_DATA_MAP.put(
-            TestDataType.WORKER_READY_CONDITION_MET,
-            new TestData(
-                IntStream.range(0, 100)
-                    .mapToObj(i -> new Lease(
-                        "shardId-000000000" + i,
-                        "MigrationReadyMonitorTestWorker" + random.nextInt(numWorkers),
-                        random.nextLong(),
+                TestDataType.WORKER_READY_CONDITION_MET,
+                new TestData(
+                        IntStream.range(0, 100)
+                                .mapToObj(i -> new Lease(
+                                        "shardId-000000000" + i,
+                                        "MigrationReadyMonitorTestWorker" + random.nextInt(numWorkers),
+                                        random.nextLong(),
+                                        UUID.randomUUID(),
+                                        System.nanoTime(),
+                                        ExtendedSequenceNumber.TRIM_HORIZON,
+                                        null,
+                                        random.nextLong(),
+                                        null,
+                                        null,
+                                        null,
+                                        null))
+                                .collect(Collectors.toList()),
+                        IntStream.range(0, 10)
+                                .mapToObj(i -> WorkerMetricStats.builder()
+                                        .workerId("MigrationReadyMonitorTestWorker" + i)
+                                        .lastUpdateTime(ACTIVE_WORKER_STATS_LAST_UPDATE_TIME)
+                                        .build())
+                                .collect(Collectors.toList())));
+
+        TEST_DATA_MAP.put(
+                TestDataType.WORKER_READY_CONDITION_NOT_MET_WITH_ZERO_WORKER_STATS,
+                new TestData(TEST_DATA_MAP.get(TestDataType.WORKER_READY_CONDITION_MET).leaseList, new ArrayList<>()));
+
+        TEST_DATA_MAP.put(
+                TestDataType.WORKER_READY_CONDITION_NOT_MET_WITH_PARTIAL_WORKER_STATS,
+                new TestData(
+                        TEST_DATA_MAP.get(TestDataType.WORKER_READY_CONDITION_MET).leaseList,
+                        IntStream.range(0, 5)
+                                .mapToObj(i -> TEST_DATA_MAP
+                                        .get(TestDataType.WORKER_READY_CONDITION_MET)
+                                        .workerMetrics
+                                        .get(random.nextInt(10)))
+                                .collect(Collectors.toList())));
+
+        TEST_DATA_MAP.put(
+                TestDataType.WORKER_READY_CONDITION_NOT_MET_WITH_ALL_INACTIVE_WORKER_STATS,
+                new TestData(
+                        TEST_DATA_MAP.get(TestDataType.WORKER_READY_CONDITION_MET).leaseList,
+                        IntStream.range(0, 10)
+                                .mapToObj(i -> WorkerMetricStats.builder()
+                                        .workerId("MigrationReadyMonitorTestWorker" + i)
+                                        .lastUpdateTime(EXPIRED_WORKER_STATS_LAST_UPDATE_TIME)
+                                        .build())
+                                .collect(Collectors.toList())));
+
+        TEST_DATA_MAP.put(
+                TestDataType.WORKER_READY_CONDITION_NOT_MET_WITH_PARTIAL_INACTIVE_WORKER_STATS,
+                new TestData(
+                        TEST_DATA_MAP.get(TestDataType.WORKER_READY_CONDITION_MET).leaseList,
+                        IntStream.range(0, 10)
+                                .mapToObj(i -> WorkerMetricStats.builder()
+                                        .workerId("MigrationReadyMonitorTestWorker" + i)
+                                        .lastUpdateTime(
+                                                random.nextDouble() > 0.5
+                                                        ? EXPIRED_WORKER_STATS_LAST_UPDATE_TIME
+                                                        : ACTIVE_WORKER_STATS_LAST_UPDATE_TIME) // Some are active, some
+                                        // inactive
+                                        .build())
+                                .collect(Collectors.toList())));
+
+        final ArrayList<Lease> newLeaseList =
+                new ArrayList<>(TEST_DATA_MAP.get(TestDataType.WORKER_READY_CONDITION_MET).leaseList);
+        // add some leases for another worker
+        IntStream.range(0, 5)
+                .mapToObj(i -> new Lease(
+                        "shardId-100000000" + i,
+                        "ExpiredLeaseWorker",
+                        100L,
                         UUID.randomUUID(),
-                        System.nanoTime(),
+                        100L,
                         ExtendedSequenceNumber.TRIM_HORIZON,
                         null,
-                        random.nextLong(),
+                        5L,
                         null,
                         null,
                         null,
                         null))
-                    .collect(Collectors.toList()),
-                IntStream.range(0, 10)
-                    .mapToObj(i -> WorkerMetricStats.builder()
-                                               .workerId("MigrationReadyMonitorTestWorker" + i)
-                                               .lastUpdateTime(ACTIVE_WORKER_STATS_LAST_UPDATE_TIME)
-                                               .build())
-                    .collect(Collectors.toList())));
-
-        TEST_DATA_MAP.put(
-            TestDataType.WORKER_READY_CONDITION_NOT_MET_WITH_ZERO_WORKER_STATS,
-            new TestData(
-                TEST_DATA_MAP.get(TestDataType.WORKER_READY_CONDITION_MET).leaseList,
-                new ArrayList<>()));
-
-        TEST_DATA_MAP.put(
-            TestDataType.WORKER_READY_CONDITION_NOT_MET_WITH_PARTIAL_WORKER_STATS,
-            new TestData(
-                TEST_DATA_MAP.get(TestDataType.WORKER_READY_CONDITION_MET).leaseList,
-                IntStream.range(0, 5)
-                    .mapToObj(i -> TEST_DATA_MAP.get(TestDataType.WORKER_READY_CONDITION_MET)
-                        .workerMetrics.get(random.nextInt(10)))
-                    .collect(Collectors.toList())));
-
-        TEST_DATA_MAP.put(
-            TestDataType.WORKER_READY_CONDITION_NOT_MET_WITH_ALL_INACTIVE_WORKER_STATS,
-            new TestData(
-                TEST_DATA_MAP.get(TestDataType.WORKER_READY_CONDITION_MET).leaseList,
-                IntStream.range(0, 10)
-                    .mapToObj(i -> WorkerMetricStats.builder()
-                            .workerId("MigrationReadyMonitorTestWorker" + i)
-                            .lastUpdateTime(EXPIRED_WORKER_STATS_LAST_UPDATE_TIME)
-                            .build())
-                    .collect(Collectors.toList())));
-
-        TEST_DATA_MAP.put(
-            TestDataType.WORKER_READY_CONDITION_NOT_MET_WITH_PARTIAL_INACTIVE_WORKER_STATS,
-            new TestData(
-                TEST_DATA_MAP.get(TestDataType.WORKER_READY_CONDITION_MET).leaseList,
-                IntStream.range(0, 10)
-                    .mapToObj(i -> WorkerMetricStats.builder()
-                            .workerId("MigrationReadyMonitorTestWorker" + i)
-                            .lastUpdateTime(random.nextDouble() > 0.5 ? EXPIRED_WORKER_STATS_LAST_UPDATE_TIME
-                                    : ACTIVE_WORKER_STATS_LAST_UPDATE_TIME) // Some are active, some inactive
-                            .build())
-                    .collect(Collectors.toList())));
-
-        final ArrayList<Lease> newLeaseList = new ArrayList<>(
-            TEST_DATA_MAP.get(TestDataType.WORKER_READY_CONDITION_MET).leaseList);
-        // add some leases for another worker
-        IntStream.range(0, 5)
-            .mapToObj(i -> new Lease(
-                "shardId-100000000" + i,
-                "ExpiredLeaseWorker",
-                100L,
-                UUID.randomUUID(),
-                100L,
-                ExtendedSequenceNumber.TRIM_HORIZON,
-                null,
-                5L,
-                null,
-                null,
-                null,
-                null))
                 .forEach(newLeaseList::add);
 
         TEST_DATA_MAP.put(
-            TestDataType.WORKER_READY_CONDITION_NOT_MET_WITH_EXPIRED_LEASES_AND_NO_WORKER_STATS,
-            new TestData(newLeaseList,
-                TEST_DATA_MAP.get(TestDataType.WORKER_READY_CONDITION_MET).workerMetrics));
+                TestDataType.WORKER_READY_CONDITION_NOT_MET_WITH_EXPIRED_LEASES_AND_NO_WORKER_STATS,
+                new TestData(newLeaseList, TEST_DATA_MAP.get(TestDataType.WORKER_READY_CONDITION_MET).workerMetrics));
 
-        final ArrayList<WorkerMetricStats> newWorkerMetrics = new ArrayList<>(
-            TEST_DATA_MAP.get(TestDataType.WORKER_READY_CONDITION_MET).workerMetrics);
-        newWorkerMetrics.add(
-            WorkerMetricStats.builder()
-                    .workerId("ExpiredLeaseWorker")
-                    .lastUpdateTime(EXPIRED_WORKER_STATS_LAST_UPDATE_TIME)
-                    .build());
+        final ArrayList<WorkerMetricStats> newWorkerMetrics =
+                new ArrayList<>(TEST_DATA_MAP.get(TestDataType.WORKER_READY_CONDITION_MET).workerMetrics);
+        newWorkerMetrics.add(WorkerMetricStats.builder()
+                .workerId("ExpiredLeaseWorker")
+                .lastUpdateTime(EXPIRED_WORKER_STATS_LAST_UPDATE_TIME)
+                .build());
         TEST_DATA_MAP.put(
-            TestDataType.WORKER_READY_CONDITION_NOT_MET_WITH_EXPIRED_LEASES_AND_INACTIVE_WORKER_STATS,
-            new TestData(
-                TEST_DATA_MAP.get(TestDataType.WORKER_READY_CONDITION_NOT_MET_WITH_EXPIRED_LEASES_AND_NO_WORKER_STATS).leaseList,
-                newWorkerMetrics
-            ));
+                TestDataType.WORKER_READY_CONDITION_NOT_MET_WITH_EXPIRED_LEASES_AND_INACTIVE_WORKER_STATS,
+                new TestData(
+                        TEST_DATA_MAP.get(
+                                        TestDataType
+                                                .WORKER_READY_CONDITION_NOT_MET_WITH_EXPIRED_LEASES_AND_NO_WORKER_STATS)
+                                .leaseList,
+                        newWorkerMetrics));
 
         TEST_DATA_MAP.put(
-            TestDataType.WORKER_READY_CONDITION_MET_AFTER_EXPIRED_LEASES_ARE_REASSIGNED,
-            new TestData(
-                TEST_DATA_MAP.get(TestDataType.WORKER_READY_CONDITION_NOT_MET_WITH_EXPIRED_LEASES_AND_NO_WORKER_STATS)
-                    .leaseList.stream()
-                    .map(lease -> {
-                        final Lease newLease;
-                        if (lease.leaseOwner().equals("ExpiredLeaseWorker")) {
-                            newLease = new Lease(lease.leaseKey(),
-                                "MigrationReadyMonitorTestWorker" + random.nextInt(numWorkers),
-                                lease.leaseCounter(), lease.concurrencyToken(), lease.lastCounterIncrementNanos(),
-                                lease.checkpoint(), lease.pendingCheckpoint(), lease.ownerSwitchesSinceCheckpoint(),
-                                lease.parentShardIds(), lease.childShardIds(), lease.pendingCheckpointState(),
-                                lease.hashKeyRangeForLease());
-                        } else {
-                            newLease = new Lease(lease.leaseKey(), lease.leaseOwner(), lease.leaseCounter(),
-                                lease.concurrencyToken(), lease.lastCounterIncrementNanos(), lease.checkpoint(),
-                                lease.pendingCheckpoint(), lease.ownerSwitchesSinceCheckpoint(), lease.parentShardIds(),
-                                lease.childShardIds(), lease.pendingCheckpointState(), lease.hashKeyRangeForLease());
-                        }
-                        return newLease;
-                    })
-                    .collect(Collectors.toList()),
-                TEST_DATA_MAP.get(TestDataType.WORKER_READY_CONDITION_MET).workerMetrics));
-
+                TestDataType.WORKER_READY_CONDITION_MET_AFTER_EXPIRED_LEASES_ARE_REASSIGNED,
+                new TestData(
+                        TEST_DATA_MAP
+                                .get(
+                                        TestDataType
+                                                .WORKER_READY_CONDITION_NOT_MET_WITH_EXPIRED_LEASES_AND_NO_WORKER_STATS)
+                                .leaseList
+                                .stream()
+                                .map(lease -> {
+                                    final Lease newLease;
+                                    if (lease.leaseOwner().equals("ExpiredLeaseWorker")) {
+                                        newLease = new Lease(
+                                                lease.leaseKey(),
+                                                "MigrationReadyMonitorTestWorker" + random.nextInt(numWorkers),
+                                                lease.leaseCounter(),
+                                                lease.concurrencyToken(),
+                                                lease.lastCounterIncrementNanos(),
+                                                lease.checkpoint(),
+                                                lease.pendingCheckpoint(),
+                                                lease.ownerSwitchesSinceCheckpoint(),
+                                                lease.parentShardIds(),
+                                                lease.childShardIds(),
+                                                lease.pendingCheckpointState(),
+                                                lease.hashKeyRangeForLease());
+                                    } else {
+                                        newLease = new Lease(
+                                                lease.leaseKey(),
+                                                lease.leaseOwner(),
+                                                lease.leaseCounter(),
+                                                lease.concurrencyToken(),
+                                                lease.lastCounterIncrementNanos(),
+                                                lease.checkpoint(),
+                                                lease.pendingCheckpoint(),
+                                                lease.ownerSwitchesSinceCheckpoint(),
+                                                lease.parentShardIds(),
+                                                lease.childShardIds(),
+                                                lease.pendingCheckpointState(),
+                                                lease.hashKeyRangeForLease());
+                                    }
+                                    return newLease;
+                                })
+                                .collect(Collectors.toList()),
+                        TEST_DATA_MAP.get(TestDataType.WORKER_READY_CONDITION_MET).workerMetrics));
 
         final int numStreams = 3;
 
         TEST_DATA_MAP.put(
-            TestDataType.WORKER_READY_CONDITION_MET_MULTISTREAM_MODE_SANITY,
-            new TestData(
-                IntStream.range(0, 100)
-                    .mapToObj(i -> {
-                        final int streamId = random.nextInt(numStreams);
-                        final int workerId = random.nextInt(numWorkers);
-                        final MultiStreamLease m = new MultiStreamLease();
-                        m.leaseKey(DUMMY_STREAM_NAME + streamId + ":shardId-00000000" + i);
-                        m.streamIdentifier(DUMMY_STREAM_NAME + streamId);
-                        m.shardId("shardId-00000000" + i);
-                        m.leaseOwner("MigrationReadyMonitorTestWorker" + workerId);
-                        m.leaseCounter(random.nextLong());
-                        m.concurrencyToken(UUID.randomUUID());
-                        m.lastCounterIncrementNanos(System.nanoTime());
-                        m.checkpoint(ExtendedSequenceNumber.TRIM_HORIZON);
-                        m.ownerSwitchesSinceCheckpoint(random.nextLong());
-                        return m;
-                    })
-                    .collect(Collectors.toList()),
-                TEST_DATA_MAP.get(TestDataType.WORKER_READY_CONDITION_MET).workerMetrics));
+                TestDataType.WORKER_READY_CONDITION_MET_MULTISTREAM_MODE_SANITY,
+                new TestData(
+                        IntStream.range(0, 100)
+                                .mapToObj(i -> {
+                                    final int streamId = random.nextInt(numStreams);
+                                    final int workerId = random.nextInt(numWorkers);
+                                    final MultiStreamLease m = new MultiStreamLease();
+                                    m.leaseKey(DUMMY_STREAM_NAME + streamId + ":shardId-00000000" + i);
+                                    m.streamIdentifier(DUMMY_STREAM_NAME + streamId);
+                                    m.shardId("shardId-00000000" + i);
+                                    m.leaseOwner("MigrationReadyMonitorTestWorker" + workerId);
+                                    m.leaseCounter(random.nextLong());
+                                    m.concurrencyToken(UUID.randomUUID());
+                                    m.lastCounterIncrementNanos(System.nanoTime());
+                                    m.checkpoint(ExtendedSequenceNumber.TRIM_HORIZON);
+                                    m.ownerSwitchesSinceCheckpoint(random.nextLong());
+                                    return m;
+                                })
+                                .collect(Collectors.toList()),
+                        TEST_DATA_MAP.get(TestDataType.WORKER_READY_CONDITION_MET).workerMetrics));
 
         TEST_DATA_MAP.put(
-            TestDataType.WORKER_READY_CONDITION_NOT_MET_MULTISTREAM_MODE_SANITY,
-            new TestData(
-                TEST_DATA_MAP.get(TestDataType.WORKER_READY_CONDITION_MET_MULTISTREAM_MODE_SANITY).leaseList,
-                IntStream.range(0, 5)
-                    .mapToObj(i -> TEST_DATA_MAP.get(TestDataType.WORKER_READY_CONDITION_MET_MULTISTREAM_MODE_SANITY)
-                        .workerMetrics.get(random.nextInt(10)))
-                    .collect(Collectors.toList())));
+                TestDataType.WORKER_READY_CONDITION_NOT_MET_MULTISTREAM_MODE_SANITY,
+                new TestData(
+                        TEST_DATA_MAP.get(TestDataType.WORKER_READY_CONDITION_MET_MULTISTREAM_MODE_SANITY).leaseList,
+                        IntStream.range(0, 5)
+                                .mapToObj(i -> TEST_DATA_MAP
+                                        .get(TestDataType.WORKER_READY_CONDITION_MET_MULTISTREAM_MODE_SANITY)
+                                        .workerMetrics
+                                        .get(random.nextInt(10)))
+                                .collect(Collectors.toList())));
     }
 }

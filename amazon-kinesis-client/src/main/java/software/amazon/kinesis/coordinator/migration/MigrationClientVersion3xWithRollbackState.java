@@ -14,6 +14,10 @@
  */
 package software.amazon.kinesis.coordinator.migration;
 
+import java.util.Random;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ScheduledExecutorService;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import software.amazon.awssdk.annotations.ThreadSafe;
@@ -26,10 +30,6 @@ import software.amazon.kinesis.leases.exceptions.InvalidStateException;
 import software.amazon.kinesis.metrics.MetricsLevel;
 import software.amazon.kinesis.metrics.MetricsScope;
 import software.amazon.kinesis.metrics.MetricsUtil;
-
-import java.util.Random;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ScheduledExecutorService;
 
 import static software.amazon.kinesis.coordinator.migration.ClientVersion.CLIENT_VERSION_2x;
 import static software.amazon.kinesis.coordinator.migration.ClientVersion.CLIENT_VERSION_3x;
@@ -73,12 +73,12 @@ public class MigrationClientVersion3xWithRollbackState implements MigrationClien
             // we need to run the rollback monitor
             log.info("Starting rollback monitor");
             rollbackMonitor = new ClientVersionChangeMonitor(
-                initializer.metricsFactory(),
-                coordinatorStateDAO,
-                stateMachineThreadPool,
-                this::onClientVersionChange,
-                clientVersion(),
-                random);
+                    initializer.metricsFactory(),
+                    coordinatorStateDAO,
+                    stateMachineThreadPool,
+                    this::onClientVersionChange,
+                    clientVersion(),
+                    random);
             rollbackMonitor.startMonitor();
             entered = true;
         } else {
@@ -93,31 +93,28 @@ public class MigrationClientVersion3xWithRollbackState implements MigrationClien
             cancelRollbackMonitor();
             entered = false;
             left = true;
-        }
-        else {
+        } else {
             log.info("Cannot leave {}", entered ? "already exited state" : "because state is not active");
         }
     }
 
     private synchronized void onClientVersionChange(final MigrationState newState)
-        throws InvalidStateException, DependencyException
-    {
+            throws InvalidStateException, DependencyException {
         if (!entered || left) {
             log.warn("Received client version change notification on inactive state {}", this);
             return;
         }
-        final MetricsScope scope = MetricsUtil.createMetricsWithOperation(initializer.metricsFactory(),
-            METRICS_OPERATION);
+        final MetricsScope scope =
+                MetricsUtil.createMetricsWithOperation(initializer.metricsFactory(), METRICS_OPERATION);
         try {
             switch (newState.getClientVersion()) {
                 case CLIENT_VERSION_2x:
-                    log.info("A rollback has been initiated for the application. Transition to {}",
-                        CLIENT_VERSION_2x);
+                    log.info("A rollback has been initiated for the application. Transition to {}", CLIENT_VERSION_2x);
                     stateMachine.transitionTo(ClientVersion.CLIENT_VERSION_2x, newState);
                     break;
                 case CLIENT_VERSION_3x:
-                    log.info("Customer has switched to 3.x after successful upgrade, state machine will move to a" +
-                        "terminal state and stop monitoring. Rollbacks will no longer be supported anymore");
+                    log.info("Customer has switched to 3.x after successful upgrade, state machine will move to a"
+                            + "terminal state and stop monitoring. Rollbacks will no longer be supported anymore");
                     stateMachine.transitionTo(CLIENT_VERSION_3x, newState);
                     // This worker will still be running the migrationAdaptive components in 3.x mode which will
                     // no longer dynamically switch back to 2.x mode, however to directly run 3.x component without

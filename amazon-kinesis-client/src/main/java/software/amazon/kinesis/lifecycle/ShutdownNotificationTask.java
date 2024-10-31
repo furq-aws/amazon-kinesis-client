@@ -47,7 +47,9 @@ public class ShutdownNotificationTask implements ConsumerTask {
         final Lease currentShardLease = leaseCoordinator.getCurrentlyHeldLease(leaseKey);
         try {
             try {
-                shardRecordProcessor.shutdownRequested(ShutdownRequestedInput.builder().checkpointer(recordProcessorCheckpointer).build());
+                shardRecordProcessor.shutdownRequested(ShutdownRequestedInput.builder()
+                        .checkpointer(recordProcessorCheckpointer)
+                        .build());
                 attemptLeaseTransfer(currentShardLease);
             } catch (Exception ex) {
                 return new TaskResult(ex);
@@ -78,5 +80,4 @@ public class ShutdownNotificationTask implements ConsumerTask {
     public TaskType taskType() {
         return TaskType.SHUTDOWN_NOTIFICATION;
     }
-
 }

@@ -15,6 +15,13 @@
 
 package software.amazon.kinesis.leases;
 
+import java.time.Duration;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.stream.Collectors;
+
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -29,13 +36,6 @@ import software.amazon.kinesis.metrics.MetricsFactory;
 import software.amazon.kinesis.metrics.NullMetricsFactory;
 import software.amazon.kinesis.retrieval.kpl.ExtendedSequenceNumber;
 
-import java.time.Duration;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.stream.Collectors;
-
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -44,13 +44,14 @@ import static org.mockito.Mockito.when;
 @RunWith(MockitoJUnitRunner.class)
 public class LeaseCleanupManagerTest {
 
-    private static final ShardInfo SHARD_INFO = new ShardInfo("shardId", "concurrencyToken",
-            Collections.emptySet(), ExtendedSequenceNumber.LATEST);
+    private static final ShardInfo SHARD_INFO =
+            new ShardInfo("shardId", "concurrencyToken", Collections.emptySet(), ExtendedSequenceNumber.LATEST);
 
     private static final StreamIdentifier STREAM_IDENTIFIER = StreamIdentifier.singleStreamInstance("streamName");
 
     private final long leaseCleanupIntervalMillis = Duration.ofSeconds(1).toMillis();
-    private final long completedLeaseCleanupIntervalMillis = Duration.ofSeconds(0).toMillis();
+    private final long completedLeaseCleanupIntervalMillis =
+            Duration.ofSeconds(0).toMillis();
     private final long garbageLeaseCleanupIntervalMillis = Duration.ofSeconds(0).toMillis();
     private boolean cleanupLeasesOfCompletedShards = true;
     private LeaseCleanupManager leaseCleanupManager;
@@ -58,17 +59,25 @@ public class LeaseCleanupManagerTest {
 
     @Mock
     private LeaseRefresher leaseRefresher;
+
     @Mock
     private LeaseCoordinator leaseCoordinator;
+
     @Mock
     private ShardDetector shardDetector;
+
     @Mock
     private ScheduledExecutorService deletionThreadPool;
 
     @Before
     public void setUp() throws Exception {
-        leaseCleanupManager = new LeaseCleanupManager(leaseCoordinator, NULL_METRICS_FACTORY, deletionThreadPool,
-                cleanupLeasesOfCompletedShards, leaseCleanupIntervalMillis, completedLeaseCleanupIntervalMillis,
+        leaseCleanupManager = new LeaseCleanupManager(
+                leaseCoordinator,
+                NULL_METRICS_FACTORY,
+                deletionThreadPool,
+                cleanupLeasesOfCompletedShards,
+                leaseCleanupIntervalMillis,
+                completedLeaseCleanupIntervalMillis,
                 garbageLeaseCleanupIntervalMillis);
 
         when(leaseCoordinator.leaseRefresher()).thenReturn(leaseRefresher);
@@ -102,8 +111,8 @@ public class LeaseCleanupManagerTest {
      */
     @Test
     public final void testParentShardLeaseDeletedSplitCase() throws Exception {
-        verifyExpectedDeletedLeasesCompletedShardCase(SHARD_INFO, childShardsForSplit(),
-                ExtendedSequenceNumber.LATEST, 1);
+        verifyExpectedDeletedLeasesCompletedShardCase(
+                SHARD_INFO, childShardsForSplit(), ExtendedSequenceNumber.LATEST, 1);
     }
 
     /**
@@ -112,8 +121,8 @@ public class LeaseCleanupManagerTest {
      */
     @Test
     public final void testParentShardLeaseDeletedMergeCase() throws Exception {
-        verifyExpectedDeletedLeasesCompletedShardCase(SHARD_INFO, childShardsForMerge(),
-                ExtendedSequenceNumber.LATEST, 1);
+        verifyExpectedDeletedLeasesCompletedShardCase(
+                SHARD_INFO, childShardsForMerge(), ExtendedSequenceNumber.LATEST, 1);
     }
 
     /**
@@ -124,12 +133,17 @@ public class LeaseCleanupManagerTest {
     public final void testNoLeasesDeletedWhenNotEnabled() throws Exception {
         cleanupLeasesOfCompletedShards = false;
 
-        leaseCleanupManager = new LeaseCleanupManager(leaseCoordinator, NULL_METRICS_FACTORY, deletionThreadPool,
-                cleanupLeasesOfCompletedShards, leaseCleanupIntervalMillis, completedLeaseCleanupIntervalMillis,
+        leaseCleanupManager = new LeaseCleanupManager(
+                leaseCoordinator,
+                NULL_METRICS_FACTORY,
+                deletionThreadPool,
+                cleanupLeasesOfCompletedShards,
+                leaseCleanupIntervalMillis,
+                completedLeaseCleanupIntervalMillis,
                 garbageLeaseCleanupIntervalMillis);
 
-        verifyExpectedDeletedLeasesCompletedShardCase(SHARD_INFO, childShardsForSplit(),
-                ExtendedSequenceNumber.LATEST, 0);
+        verifyExpectedDeletedLeasesCompletedShardCase(
+                SHARD_INFO, childShardsForSplit(), ExtendedSequenceNumber.LATEST, 0);
     }
 
     /**
@@ -140,8 +154,7 @@ public class LeaseCleanupManagerTest {
     public final void testNoCleanupWhenSomeChildShardLeasesAreNotPresent() throws Exception {
         List<ChildShard> childShards = childShardsForSplit();
 
-        verifyExpectedDeletedLeasesCompletedShardCase(SHARD_INFO, childShards,
-                ExtendedSequenceNumber.LATEST, false, 0);
+        verifyExpectedDeletedLeasesCompletedShardCase(SHARD_INFO, childShards, ExtendedSequenceNumber.LATEST, false, 0);
     }
 
     /**
@@ -172,10 +185,11 @@ public class LeaseCleanupManagerTest {
      */
     @Test
     public final void testLeaseNotDeletedWhenParentsStillPresent() throws Exception {
-        final ShardInfo shardInfo = new ShardInfo("shardId-0", "concurrencyToken", Collections.singleton("parent"),
-                ExtendedSequenceNumber.LATEST);
+        final ShardInfo shardInfo = new ShardInfo(
+                "shardId-0", "concurrencyToken", Collections.singleton("parent"), ExtendedSequenceNumber.LATEST);
 
-        verifyExpectedDeletedLeasesCompletedShardCase(shardInfo, childShardsForMerge(), ExtendedSequenceNumber.LATEST, 0);
+        verifyExpectedDeletedLeasesCompletedShardCase(
+                shardInfo, childShardsForMerge(), ExtendedSequenceNumber.LATEST, 0);
     }
 
     /**
@@ -191,8 +205,8 @@ public class LeaseCleanupManagerTest {
      */
     @Test
     public final void testLeaseDeletedWhenShardDoesNotExist() throws Exception {
-        final Lease heldLease = LeaseHelper.createLease(SHARD_INFO.shardId(), "leaseOwner",
-                Collections.singleton("parentShardId"));
+        final Lease heldLease =
+                LeaseHelper.createLease(SHARD_INFO.shardId(), "leaseOwner", Collections.singleton("parentShardId"));
 
         testLeaseDeletedWhenShardDoesNotExist(heldLease);
     }
@@ -202,13 +216,18 @@ public class LeaseCleanupManagerTest {
      */
     @Test
     public final void testLeaseDeletedWhenShardDoesNotExistAndCleanupCompletedLeaseDisabled() throws Exception {
-        final Lease heldLease = LeaseHelper.createLease(SHARD_INFO.shardId(), "leaseOwner",
-                Collections.singleton("parentShardId"));
+        final Lease heldLease =
+                LeaseHelper.createLease(SHARD_INFO.shardId(), "leaseOwner", Collections.singleton("parentShardId"));
 
         cleanupLeasesOfCompletedShards = false;
 
-        leaseCleanupManager = new LeaseCleanupManager(leaseCoordinator, NULL_METRICS_FACTORY, deletionThreadPool,
-                cleanupLeasesOfCompletedShards, leaseCleanupIntervalMillis, completedLeaseCleanupIntervalMillis,
+        leaseCleanupManager = new LeaseCleanupManager(
+                leaseCoordinator,
+                NULL_METRICS_FACTORY,
+                deletionThreadPool,
+                cleanupLeasesOfCompletedShards,
+                leaseCleanupIntervalMillis,
+                completedLeaseCleanupIntervalMillis,
                 garbageLeaseCleanupIntervalMillis);
 
         testLeaseDeletedWhenShardDoesNotExist(heldLease);
@@ -226,25 +245,45 @@ public class LeaseCleanupManagerTest {
         verify(leaseRefresher).deleteLease(heldLease);
     }
 
-    private void verifyExpectedDeletedLeasesCompletedShardCase(ShardInfo shardInfo, List<ChildShard> childShards,
-                                                                     ExtendedSequenceNumber extendedSequenceNumber,
-                                                                     int expectedDeletedLeases) throws Exception {
-        verifyExpectedDeletedLeasesCompletedShardCase(shardInfo, childShards, extendedSequenceNumber, true, expectedDeletedLeases);
+    private void verifyExpectedDeletedLeasesCompletedShardCase(
+            ShardInfo shardInfo,
+            List<ChildShard> childShards,
+            ExtendedSequenceNumber extendedSequenceNumber,
+            int expectedDeletedLeases)
+            throws Exception {
+        verifyExpectedDeletedLeasesCompletedShardCase(
+                shardInfo, childShards, extendedSequenceNumber, true, expectedDeletedLeases);
     }
 
-    private void verifyExpectedDeletedLeasesCompletedShardCase(ShardInfo shardInfo, List<ChildShard> childShards,
-                                                                     ExtendedSequenceNumber extendedSequenceNumber,
-                                                                     boolean childShardLeasesPresent,
-                                                                     int expectedDeletedLeases) throws Exception {
-        final Lease lease = LeaseHelper.createLease(shardInfo.shardId(), "leaseOwner", shardInfo.parentShardIds(),
+    private void verifyExpectedDeletedLeasesCompletedShardCase(
+            ShardInfo shardInfo,
+            List<ChildShard> childShards,
+            ExtendedSequenceNumber extendedSequenceNumber,
+            boolean childShardLeasesPresent,
+            int expectedDeletedLeases)
+            throws Exception {
+        final Lease lease = LeaseHelper.createLease(
+                shardInfo.shardId(),
+                "leaseOwner",
+                shardInfo.parentShardIds(),
                 childShards.stream().map(ChildShard::shardId).collect(Collectors.toSet()));
-        final List<Lease> childShardLeases = childShards.stream().map(c -> LeaseHelper.createLease(
-                ShardInfo.getLeaseKey(shardInfo, c.shardId()), "leaseOwner",  Collections.singleton(shardInfo.shardId()),
-                Collections.emptyList(), extendedSequenceNumber)).collect(Collectors.toList());
+        final List<Lease> childShardLeases = childShards.stream()
+                .map(c -> LeaseHelper.createLease(
+                        ShardInfo.getLeaseKey(shardInfo, c.shardId()),
+                        "leaseOwner",
+                        Collections.singleton(shardInfo.shardId()),
+                        Collections.emptyList(),
+                        extendedSequenceNumber))
+                .collect(Collectors.toList());
 
-        final List<Lease> parentShardLeases = lease.parentShardIds().stream().map(p ->
-                LeaseHelper.createLease(ShardInfo.getLeaseKey(shardInfo, p), "leaseOwner",  Collections.emptyList(),
-                        Collections.singleton(shardInfo.shardId()), extendedSequenceNumber)).collect(Collectors.toList());
+        final List<Lease> parentShardLeases = lease.parentShardIds().stream()
+                .map(p -> LeaseHelper.createLease(
+                        ShardInfo.getLeaseKey(shardInfo, p),
+                        "leaseOwner",
+                        Collections.emptyList(),
+                        Collections.singleton(shardInfo.shardId()),
+                        extendedSequenceNumber))
+                .collect(Collectors.toList());
 
         when(leaseRefresher.getLease(lease.leaseKey())).thenReturn(lease);
         for (Lease parentShardLease : parentShardLeases) {

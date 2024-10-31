@@ -1,10 +1,5 @@
 package software.amazon.kinesis.worker.metric.impl.container;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.when;
-import static software.amazon.kinesis.worker.metric.WorkerMetricsTestUtils.writeLineToFile;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -16,9 +11,13 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-
 import software.amazon.kinesis.worker.metric.OperatingRange;
 import software.amazon.kinesis.worker.metric.WorkerMetric;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.when;
+import static software.amazon.kinesis.worker.metric.WorkerMetricsTestUtils.writeLineToFile;
 
 class Cgroupv2CpuWorkerMetricsTest {
 
@@ -35,13 +34,15 @@ class Cgroupv2CpuWorkerMetricsTest {
         final File cpuMaxFile = new File(tempDir.toAbsolutePath() + "/cpu.max");
         final File effectiveCpusFile = new File(tempDir.toAbsolutePath() + "/cpuset.cpus.effective");
         final File cpuStatFile = new File(tempDir.toAbsolutePath() + "/cpu.stat");
-        final OperatingRange operatingRange = OperatingRange.builder()
-                                                            .maxUtilization(80)
-                                                            .build();
+        final OperatingRange operatingRange =
+                OperatingRange.builder().maxUtilization(80).build();
 
-
-        final Cgroupv2CpuWorkerMetric cgroupv2CpuWorkerMetric = new Cgroupv2CpuWorkerMetric(operatingRange,
-                cpuMaxFile.getAbsolutePath(), effectiveCpusFile.getAbsolutePath(), cpuStatFile.getAbsolutePath(), clock);
+        final Cgroupv2CpuWorkerMetric cgroupv2CpuWorkerMetric = new Cgroupv2CpuWorkerMetric(
+                operatingRange,
+                cpuMaxFile.getAbsolutePath(),
+                effectiveCpusFile.getAbsolutePath(),
+                cpuStatFile.getAbsolutePath(),
+                clock);
 
         when(clock.millis()).thenReturn(1000L, 2000L);
 
@@ -70,13 +71,15 @@ class Cgroupv2CpuWorkerMetricsTest {
         final File cpuMaxFile = new File(tempDir.toAbsolutePath() + "/cpu.max");
         final File effectiveCpusFile = new File(tempDir.toAbsolutePath() + "/cpuset.cpus.effective");
         final File cpuStatFile = new File(tempDir.toAbsolutePath() + "/cpu.stat");
-        final OperatingRange operatingRange = OperatingRange.builder()
-                                                            .maxUtilization(80)
-                                                            .build();
+        final OperatingRange operatingRange =
+                OperatingRange.builder().maxUtilization(80).build();
 
-
-        final Cgroupv2CpuWorkerMetric cgroupv2CpuWorkerMetric = new Cgroupv2CpuWorkerMetric(operatingRange,
-                cpuMaxFile.getAbsolutePath(), effectiveCpusFile.getAbsolutePath(), cpuStatFile.getAbsolutePath(), clock);
+        final Cgroupv2CpuWorkerMetric cgroupv2CpuWorkerMetric = new Cgroupv2CpuWorkerMetric(
+                operatingRange,
+                cpuMaxFile.getAbsolutePath(),
+                effectiveCpusFile.getAbsolutePath(),
+                cpuStatFile.getAbsolutePath(),
+                clock);
 
         when(clock.millis()).thenReturn(1000L, 2000L);
 
@@ -103,12 +106,10 @@ class Cgroupv2CpuWorkerMetricsTest {
 
     @Test
     void sanity_capture_file_not_found() {
-        final OperatingRange operatingRange = OperatingRange.builder()
-                                                            .maxUtilization(80)
-                                                            .build();
-        final Cgroupv2CpuWorkerMetric cgroupv2CpuWorkerMetric = new Cgroupv2CpuWorkerMetric(operatingRange,
-                "/someBadPath", "/someBadPath", "/someBadPath", clock);
+        final OperatingRange operatingRange =
+                OperatingRange.builder().maxUtilization(80).build();
+        final Cgroupv2CpuWorkerMetric cgroupv2CpuWorkerMetric =
+                new Cgroupv2CpuWorkerMetric(operatingRange, "/someBadPath", "/someBadPath", "/someBadPath", clock);
         assertThrows(IllegalArgumentException.class, () -> cgroupv2CpuWorkerMetric.capture());
     }
-
 }

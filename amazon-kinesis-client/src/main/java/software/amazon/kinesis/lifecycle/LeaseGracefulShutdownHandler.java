@@ -1,5 +1,12 @@
 package software.amazon.kinesis.lifecycle;
 
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
+
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -12,13 +19,6 @@ import software.amazon.kinesis.leases.dynamodb.DynamoDBLeaseCoordinator;
 import software.amazon.kinesis.leases.exceptions.DependencyException;
 import software.amazon.kinesis.leases.exceptions.InvalidStateException;
 import software.amazon.kinesis.leases.exceptions.ProvisionedThroughputException;
-
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-import java.util.function.Supplier;
 
 /**
  * This class handles the graceful shutdown of shard consumers. When a lease is requested for shutdown, it will be
@@ -75,8 +75,8 @@ public class LeaseGracefulShutdownHandler {
     public void start() {
         if (!isRunning) {
             log.info("Starting graceful lease handoff thread.");
-            executorService.scheduleAtFixedRate(this::monitorGracefulShutdownLeases,
-                    0, SHUTDOWN_CHECK_INTERVAL_MILLIS, TimeUnit.MILLISECONDS);
+            executorService.scheduleAtFixedRate(
+                    this::monitorGracefulShutdownLeases, 0, SHUTDOWN_CHECK_INTERVAL_MILLIS, TimeUnit.MILLISECONDS);
             isRunning = true;
         } else {
             log.info("Graceful lease handoff thread already running, no need to start.");
@@ -143,14 +143,16 @@ public class LeaseGracefulShutdownHandler {
                 } else if (getCurrentTimeMillis() >= leasePendingShutdown.timeoutTimestampMillis
                         && !leasePendingShutdown.leaseTransferCalled) {
                     try {
-                        log.info("Timeout {} millisecond reached waiting for lease {} to graceful handoff."
+                        log.info(
+                                "Timeout {} millisecond reached waiting for lease {} to graceful handoff."
                                         + " Attempting to transfer the lease to {}",
-                                shutdownTimeoutMillis, leaseKey, leasePendingShutdown.lease.leaseOwner());
+                                shutdownTimeoutMillis,
+                                leaseKey,
+                                leasePendingShutdown.lease.leaseOwner());
                         transferLeaseIfOwner(leasePendingShutdown);
                     } catch (DependencyException | InvalidStateException | ProvisionedThroughputException e) {
                         log.warn("Failed to transfer lease for key {}. Will retry", leaseKey, e);
                     }
-
                 }
             }
         } catch (Exception e) {
@@ -166,11 +168,14 @@ public class LeaseGracefulShutdownHandler {
 
     private void logTimeoutMessage(LeasePendingShutdown leasePendingShutdown) {
         if (leasePendingShutdown.leaseTransferCalled) {
-            final long timeElapsedSinceShutdownInitiated = getCurrentTimeMillis()
-                    - leasePendingShutdown.timeoutTimestampMillis + shutdownTimeoutMillis;
-            log.info("Lease {} took {} milliseconds to complete the shutdown. "
-                    + "Consider tuning the GracefulLeaseHandoffTimeoutMillis to prevent timeouts, "
-                    + "if necessary.", leasePendingShutdown.lease.leaseKey(), timeElapsedSinceShutdownInitiated);
+            final long timeElapsedSinceShutdownInitiated =
+                    getCurrentTimeMillis() - leasePendingShutdown.timeoutTimestampMillis + shutdownTimeoutMillis;
+            log.info(
+                    "Lease {} took {} milliseconds to complete the shutdown. "
+                            + "Consider tuning the GracefulLeaseHandoffTimeoutMillis to prevent timeouts, "
+                            + "if necessary.",
+                    leasePendingShutdown.lease.leaseKey(),
+                    timeElapsedSinceShutdownInitiated);
         }
     }
 
@@ -183,8 +188,11 @@ public class LeaseGracefulShutdownHandler {
             leaseCoordinator.leaseRefresher().assignLease(lease, lease.leaseOwner());
         } else {
             // the worker ID check is just for sanity. We don't expect it to be different from the current worker.
-            log.error("Lease {} checkpoint owner mismatch found {} but it should be {}",
-                    lease.leaseKey(), lease.checkpointOwner(), leaseCoordinator.workerIdentifier());
+            log.error(
+                    "Lease {} checkpoint owner mismatch found {} but it should be {}",
+                    lease.leaseKey(),
+                    lease.checkpointOwner(),
+                    leaseCoordinator.workerIdentifier());
         }
         // mark it true because we don't want to enter the method again because update is not possible anymore.
         leasePendingShutdown.leaseTransferCalled = true;

@@ -7,10 +7,9 @@ import java.io.FileReader;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
 import software.amazon.kinesis.worker.metric.OperatingRange;
-import software.amazon.kinesis.worker.metric.WorkerMetricType;
 import software.amazon.kinesis.worker.metric.WorkerMetric;
+import software.amazon.kinesis.worker.metric.WorkerMetricType;
 
 /**
  * Reads CPU usage statistics out of /proc/stat file that is present on the EC2 instances. The value is % utilization
@@ -41,9 +40,7 @@ public class LinuxCpuWorkerMetric implements WorkerMetric {
 
     @Override
     public WorkerMetricValue capture() {
-        return WorkerMetricValue.builder()
-                .value(calculateCpuUsage())
-                .build();
+        return WorkerMetricValue.builder().value(calculateCpuUsage()).build();
     }
 
     private double calculateCpuUsage() {
@@ -67,7 +64,6 @@ public class LinuxCpuWorkerMetric implements WorkerMetric {
 
                 boolean skip = false;
                 synchronized (LOCK_OBJECT) {
-
                     if (lastUsr == 0 || line.equals(lastLine)) {
                         // Case where this is a first call so no diff available or
                         // /proc/stat file is not updated since last time.
@@ -77,7 +73,8 @@ public class LinuxCpuWorkerMetric implements WorkerMetric {
                     diffIdl = Math.abs(idl - lastIdl);
                     diffTot = Math.abs(tot - lastTot);
                     if (diffTot < diffIdl) {
-                        log.warn("diffTot is less than diff_idle. \nPrev cpu line : {} and current cpu line : {} ",
+                        log.warn(
+                                "diffTot is less than diff_idle. \nPrev cpu line : {} and current cpu line : {} ",
                                 lastLine,
                                 line);
                         if (iow < lastIow) {
@@ -104,15 +101,15 @@ public class LinuxCpuWorkerMetric implements WorkerMetric {
                 return ((double) (diffTot - diffIdl) / (double) diffTot) * 100.0;
 
             } else {
-                throw new IllegalArgumentException(
-                        String.format("LinuxCpuWorkerMetric is not configured properly, file : %s does not exists",
-                                this.statFile));
+                throw new IllegalArgumentException(String.format(
+                        "LinuxCpuWorkerMetric is not configured properly, file : %s does not exists", this.statFile));
             }
         } catch (final Throwable t) {
             if (t instanceof IllegalArgumentException) {
                 throw (IllegalArgumentException) t;
             }
-            throw new IllegalArgumentException("LinuxCpuWorkerMetric failed to read metric stats or not configured properly.", t);
+            throw new IllegalArgumentException(
+                    "LinuxCpuWorkerMetric failed to read metric stats or not configured properly.", t);
         } finally {
             try {
                 if (bufferedReader != null) {
@@ -133,5 +130,4 @@ public class LinuxCpuWorkerMetric implements WorkerMetric {
     public WorkerMetricType getWorkerMetricType() {
         return CPU_WORKER_METRICS_TYPE;
     }
-
 }

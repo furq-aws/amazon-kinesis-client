@@ -6,14 +6,13 @@ import java.io.FileReader;
 import java.time.Duration;
 import java.util.Map;
 
-import lombok.extern.slf4j.Slf4j;
-
 import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableMap;
+import lombok.extern.slf4j.Slf4j;
 import software.amazon.kinesis.worker.metric.OperatingRange;
-import software.amazon.kinesis.worker.metric.WorkerMetricType;
 import software.amazon.kinesis.worker.metric.WorkerMetric;
+import software.amazon.kinesis.worker.metric.WorkerMetricType;
 
 /**
  * Base class for EC2NetworkWorkerMetrics, this reads and parses /proc/net/dev file and look for the specific
@@ -28,8 +27,8 @@ import software.amazon.kinesis.worker.metric.WorkerMetric;
 @Slf4j
 public abstract class LinuxNetworkWorkerMetricBase implements WorkerMetric {
 
-    protected final static String DEFAULT_NETWORK_STAT_FILE = "/proc/net/dev";
-    protected final static String DEFAULT_INTERFACE_NAME = "eth0";
+    protected static final String DEFAULT_NETWORK_STAT_FILE = "/proc/net/dev";
+    protected static final String DEFAULT_INTERFACE_NAME = "eth0";
     private final Object lockObject = new Object();
 
     private final OperatingRange operatingRange;
@@ -39,8 +38,12 @@ public abstract class LinuxNetworkWorkerMetricBase implements WorkerMetric {
     // Stopwatch to keep track of elapsed time between invocation.
     private final Stopwatch stopwatch;
 
-    public LinuxNetworkWorkerMetricBase(final OperatingRange operatingRange, final String interfaceName, final String statFile,
-            final double maxBandwidthInMBps, final Stopwatch stopwatch) {
+    public LinuxNetworkWorkerMetricBase(
+            final OperatingRange operatingRange,
+            final String interfaceName,
+            final String statFile,
+            final double maxBandwidthInMBps,
+            final Stopwatch stopwatch) {
         Preconditions.checkArgument(maxBandwidthInMBps > 0, "maxBandwidthInMBps should be greater than 0.");
         this.operatingRange = operatingRange;
         this.interfaceName = interfaceName;
@@ -75,8 +78,8 @@ public abstract class LinuxNetworkWorkerMetricBase implements WorkerMetric {
      */
     @Override
     public WorkerMetricValue capture() {
-        final double percentageOfMaxBandwidth = convertToMBps(calculateNetworkUsage().get(getWorkerMetricsType()))
-                / maxBandwidthInMBps * 100;
+        final double percentageOfMaxBandwidth =
+                convertToMBps(calculateNetworkUsage().get(getWorkerMetricsType())) / maxBandwidthInMBps * 100;
         return WorkerMetricValue.builder()
                 // If maxBandwidthInMBps is less than utilized (could be wrong configuration),
                 // default to 100 % bandwidth utilization.
@@ -92,7 +95,8 @@ public abstract class LinuxNetworkWorkerMetricBase implements WorkerMetric {
             elapsedTimeInSecond = 1.0;
         } else {
             // Specifically, getting nanos and converting to seconds to get the decimal precision.
-            elapsedTimeInSecond = (double) stopwatch.elapsed().toNanos() / Duration.ofSeconds(1).toNanos();
+            elapsedTimeInSecond = (double) stopwatch.elapsed().toNanos()
+                    / Duration.ofSeconds(1).toNanos();
         }
         stopwatch.reset().start();
         // Convert bytes to MB
@@ -128,7 +132,8 @@ public abstract class LinuxNetworkWorkerMetricBase implements WorkerMetric {
                     line = bufferedReader.readLine();
                 }
                 if (line == null) {
-                    throw new IllegalArgumentException("Failed to parse the file and find interface : " + interfaceName);
+                    throw new IllegalArgumentException(
+                            "Failed to parse the file and find interface : " + interfaceName);
                 }
 
                 int n = line.indexOf(':') + 1;
@@ -156,9 +161,8 @@ public abstract class LinuxNetworkWorkerMetricBase implements WorkerMetric {
 
                 return createResponse(diffRx, diffTx);
             } else {
-                throw new IllegalArgumentException(
-                        String.format("NetworkWorkerMetrics is not configured properly, file : %s does not exists",
-                                this.statFile));
+                throw new IllegalArgumentException(String.format(
+                        "NetworkWorkerMetrics is not configured properly, file : %s does not exists", this.statFile));
             }
         } catch (final Throwable t) {
             if (t instanceof IllegalArgumentException) {

@@ -1,7 +1,5 @@
 package software.amazon.kinesis.leases;
 
-import static java.util.Objects.isNull;
-
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Queue;
@@ -14,10 +12,11 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.ToString;
-
 import software.amazon.awssdk.annotations.ThreadSafe;
 import software.amazon.kinesis.annotations.KinesisClientInternalApi;
 import software.amazon.kinesis.utils.ExponentialMovingAverage;
+
+import static java.util.Objects.isNull;
 
 /**
  * This class records the stats for the leases.
@@ -35,7 +34,8 @@ public class LeaseStatsRecorder {
      * In the future, if one value does not fit all use cases, inject this via config.
      */
     private static final double DEFAULT_ALPHA = 0.5;
-    public final static int BYTES_PER_KB = 1024;
+
+    public static final int BYTES_PER_KB = 1024;
 
     private final Long renewerFrequencyInMillis;
     private final Map<String, Queue<LeaseStats>> leaseStatsMap = new ConcurrentHashMap<>();
@@ -48,8 +48,8 @@ public class LeaseStatsRecorder {
      * before the action from subsequent thread) for the stats recording in multithreaded environment.
      */
     public void recordStats(@NonNull final LeaseStats leaseStats) {
-        final Queue<LeaseStats> leaseStatsQueue = leaseStatsMap.computeIfAbsent(leaseStats.getLeaseKey(),
-                lease -> new ConcurrentLinkedQueue<>());
+        final Queue<LeaseStats> leaseStatsQueue =
+                leaseStatsMap.computeIfAbsent(leaseStats.getLeaseKey(), lease -> new ConcurrentLinkedQueue<>());
         leaseStatsQueue.add(leaseStats);
     }
 
@@ -80,10 +80,11 @@ public class LeaseStatsRecorder {
         // Specifically dividing by 1000.0 rather than using Duration class to get seconds, because Duration class
         // implementation rounds off to seconds and precision is lost.
         final double frequency = renewerFrequencyInMillis / 1000.0;
-        final double throughput = readQueue(leaseStatsQueue)
-                .stream()
-                .mapToDouble(LeaseStats::getBytes)
-                .sum() / BYTES_PER_KB / frequency;
+        final double throughput = readQueue(leaseStatsQueue).stream()
+                        .mapToDouble(LeaseStats::getBytes)
+                        .sum()
+                / BYTES_PER_KB
+                / frequency;
         exponentialMovingAverage.add(throughput);
         return exponentialMovingAverage.getValue();
     }
@@ -138,7 +139,7 @@ public class LeaseStatsRecorder {
     @Getter
     @ToString
     @KinesisClientInternalApi
-    public final static class LeaseStats {
+    public static final class LeaseStats {
         /**
          * Lease key for which this leaseStats object is created.
          */

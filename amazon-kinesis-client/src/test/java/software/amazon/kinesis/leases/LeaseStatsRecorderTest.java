@@ -1,9 +1,5 @@
 package software.amazon.kinesis.leases;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.mockito.Mockito.when;
-
 import java.time.Duration;
 import java.util.UUID;
 import java.util.concurrent.Callable;
@@ -12,11 +8,15 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.mockito.Mockito.when;
+
 class LeaseStatsRecorderTest {
 
     private LeaseStatsRecorder leaseStatsRecorder;
     private Callable<Long> mockedTimeProviderInMillis;
-    private final static long TEST_RENEWER_FREQ = Duration.ofMinutes(1).toMillis();
+    private static final long TEST_RENEWER_FREQ = Duration.ofMinutes(1).toMillis();
 
     @BeforeEach
     void setup() {
@@ -33,10 +33,14 @@ class LeaseStatsRecorderTest {
         this.leaseStatsRecorder.recordStats(generateRandomLeaseStat("lease-key1"));
         when(mockedTimeProviderInMillis.call()).thenReturn(System.currentTimeMillis() + 1);
 
-        assertEquals(Math.floor(this.leaseStatsRecorder.getThroughputKBps("lease-key1")), 85.0,
+        assertEquals(
+                Math.floor(this.leaseStatsRecorder.getThroughputKBps("lease-key1")),
+                85.0,
                 "Incorrect throughputKbps calculated");
         // Test idempotent behavior
-        assertEquals(Math.floor(this.leaseStatsRecorder.getThroughputKBps("lease-key1")), 85.0,
+        assertEquals(
+                Math.floor(this.leaseStatsRecorder.getThroughputKBps("lease-key1")),
+                85.0,
                 "Incorrect throughputKbps calculated");
     }
 
@@ -44,7 +48,8 @@ class LeaseStatsRecorderTest {
     void leaseStatsRecorder_validateDecayToZero() throws Exception {
         final long currentTime = System.currentTimeMillis();
         this.leaseStatsRecorder.recordStats(generateRandomLeaseStat("lease-key1", currentTime, 1));
-        when(mockedTimeProviderInMillis.call()).thenReturn(currentTime + 1)
+        when(mockedTimeProviderInMillis.call())
+                .thenReturn(currentTime + 1)
                 .thenReturn(currentTime + 1)
                 .thenReturn(currentTime - Duration.ofMillis(TEST_RENEWER_FREQ).toMillis() - 5);
         for (int i = 0; i < 2000; ++i) {
@@ -75,14 +80,17 @@ class LeaseStatsRecorderTest {
                 generateRandomLeaseStat("lease-key1", System.currentTimeMillis() - TEST_RENEWER_FREQ - 10));
         when(mockedTimeProviderInMillis.call()).thenReturn(System.currentTimeMillis() + 1);
 
-        assertEquals(this.leaseStatsRecorder.getThroughputKBps("lease-key1"), 0.0,
+        assertEquals(
+                this.leaseStatsRecorder.getThroughputKBps("lease-key1"),
+                0.0,
                 "throughputKbps is not 0 when in case where all items are expired.");
     }
 
     @Test
     void getThroughputKbps_noEntryPresent_assertNull() throws Exception {
         when(mockedTimeProviderInMillis.call()).thenReturn(System.currentTimeMillis());
-        assertNull(this.leaseStatsRecorder.getThroughputKBps(UUID.randomUUID().toString()),
+        assertNull(
+                this.leaseStatsRecorder.getThroughputKBps(UUID.randomUUID().toString()),
                 "Did not return null for non existing leaseKey stats.");
     }
 
@@ -91,11 +99,15 @@ class LeaseStatsRecorderTest {
         this.leaseStatsRecorder.recordStats(generateRandomLeaseStat("lease-key1"));
         when(mockedTimeProviderInMillis.call()).thenReturn(System.currentTimeMillis() + 1);
 
-        assertEquals(Math.floor(this.leaseStatsRecorder.getThroughputKBps("lease-key1")), 17.0, "Incorrect throughputKbps calculated");
+        assertEquals(
+                Math.floor(this.leaseStatsRecorder.getThroughputKBps("lease-key1")),
+                17.0,
+                "Incorrect throughputKbps calculated");
 
         this.leaseStatsRecorder.dropLeaseStats("lease-key1");
         // after drop, no entry is present and thus validate method returns null.
-        assertNull(this.leaseStatsRecorder.getThroughputKBps("lease-key1"),
+        assertNull(
+                this.leaseStatsRecorder.getThroughputKBps("lease-key1"),
                 "LeaseStats exists even after dropping lease stats");
     }
 
@@ -103,19 +115,19 @@ class LeaseStatsRecorderTest {
         return generateRandomLeaseStat(leaseKey, System.currentTimeMillis());
     }
 
-    private static LeaseStatsRecorder.LeaseStats generateRandomLeaseStat(final String leaseKey,
-            final long creationTimeMillis) {
+    private static LeaseStatsRecorder.LeaseStats generateRandomLeaseStat(
+            final String leaseKey, final long creationTimeMillis) {
         // 1 MB data
         return generateRandomLeaseStat(leaseKey, creationTimeMillis, 1024 * 1024);
     }
 
-    private static LeaseStatsRecorder.LeaseStats generateRandomLeaseStat(final String leaseKey,
-            final long creationTimeMillis, final long bytes) {
+    private static LeaseStatsRecorder.LeaseStats generateRandomLeaseStat(
+            final String leaseKey, final long creationTimeMillis, final long bytes) {
         LeaseStatsRecorder.LeaseStats leaseStats = LeaseStatsRecorder.LeaseStats.builder()
-                                                                        .leaseKey(leaseKey)
-                                                                        .bytes(bytes)
-                                                                        .creationTimeMillis(creationTimeMillis)
-                                                                        .build();
+                .leaseKey(leaseKey)
+                .bytes(bytes)
+                .creationTimeMillis(creationTimeMillis)
+                .build();
         return leaseStats;
     }
 }

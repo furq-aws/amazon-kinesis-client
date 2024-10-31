@@ -1,8 +1,5 @@
 package software.amazon.kinesis.leases.dynamodb;
 
-import static java.util.Objects.isNull;
-import static java.util.Objects.nonNull;
-
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -12,7 +9,6 @@ import java.util.stream.Collectors;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
 import software.amazon.kinesis.leases.Lease;
 import software.amazon.kinesis.leases.LeaseDiscoverer;
 import software.amazon.kinesis.leases.LeaseRefresher;
@@ -24,6 +20,8 @@ import software.amazon.kinesis.metrics.MetricsFactory;
 import software.amazon.kinesis.metrics.MetricsLevel;
 import software.amazon.kinesis.metrics.MetricsScope;
 import software.amazon.kinesis.metrics.MetricsUtil;
+
+import static java.util.Objects.isNull;
 
 /**
  * An implementation of {@link LeaseDiscoverer}, it uses {@link LeaseRefresher} to query
@@ -48,31 +46,34 @@ public class DynamoDBLeaseDiscoverer implements LeaseDiscoverer {
         long startTime = System.currentTimeMillis();
         boolean success = false;
         try {
-            final Set<String> currentHeldLeaseKeys = leaseRenewer.getCurrentlyHeldLeases().keySet();
+            final Set<String> currentHeldLeaseKeys =
+                    leaseRenewer.getCurrentlyHeldLeases().keySet();
 
             final long listLeaseKeysForWorkerStartTime = System.currentTimeMillis();
             final List<String> leaseKeys = leaseRefresher.listLeaseKeysForWorker(workerIdentifier);
-            MetricsUtil.addLatency(metricsScope, "ListLeaseKeysForWorker", listLeaseKeysForWorkerStartTime,
-                    MetricsLevel.DETAILED);
+            MetricsUtil.addLatency(
+                    metricsScope, "ListLeaseKeysForWorker", listLeaseKeysForWorkerStartTime, MetricsLevel.DETAILED);
 
             final List<String> newLeaseKeys = leaseKeys.stream()
-                                                       .filter(leaseKey -> !currentHeldLeaseKeys.contains(leaseKey))
-                                                       .collect(Collectors.toList());
+                    .filter(leaseKey -> !currentHeldLeaseKeys.contains(leaseKey))
+                    .collect(Collectors.toList());
 
             final long fetchNewLeasesStartTime = System.currentTimeMillis();
             final List<CompletableFuture<Lease>> completableFutures = newLeaseKeys.stream()
-                                                                                  .map(leaseKey -> CompletableFuture.supplyAsync(
-                                                                                          () -> fetchLease(leaseKey,
-                                                                                                  metricsScope), executorService))
-                                                                                  .collect(Collectors.toList());
+                    .map(leaseKey ->
+                            CompletableFuture.supplyAsync(() -> fetchLease(leaseKey, metricsScope), executorService))
+                    .collect(Collectors.toList());
 
             final List<Lease> newLeases = completableFutures.stream()
-                                                            .map(CompletableFuture::join)
-                                                            .filter(Objects::nonNull)
-                                                            .collect(Collectors.toList());
+                    .map(CompletableFuture::join)
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toList());
 
-            log.info("New leases assigned to worker : {}, count : {}, leases : {}", workerIdentifier,
-                    newLeases.size(), newLeases.stream().map(Lease::leaseKey).collect(Collectors.toList()));
+            log.info(
+                    "New leases assigned to worker : {}, count : {}, leases : {}",
+                    workerIdentifier,
+                    newLeases.size(),
+                    newLeases.stream().map(Lease::leaseKey).collect(Collectors.toList()));
 
             MetricsUtil.addLatency(metricsScope, "FetchNewLeases", fetchNewLeasesStartTime, MetricsLevel.DETAILED);
 

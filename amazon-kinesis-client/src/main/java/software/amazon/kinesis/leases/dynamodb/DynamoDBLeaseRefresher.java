@@ -14,14 +14,6 @@
  */
 package software.amazon.kinesis.leases.dynamodb;
 
-import static java.util.Objects.isNull;
-import static java.util.Objects.nonNull;
-import static software.amazon.kinesis.leases.dynamodb.DynamoDBLeaseSerializer.CHECKPOINT_OWNER;
-import static software.amazon.kinesis.leases.dynamodb.DynamoDBLeaseSerializer.LEASE_KEY_KEY;
-import static software.amazon.kinesis.leases.dynamodb.DynamoDBLeaseSerializer.LEASE_OWNER_KEY;
-
-import com.google.common.collect.ImmutableMap;
-
 import java.time.Duration;
 import java.util.AbstractMap;
 import java.util.ArrayList;
@@ -35,9 +27,9 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import com.google.common.collect.ImmutableMap;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
-
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeAction;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
@@ -93,13 +85,19 @@ import software.amazon.kinesis.leases.exceptions.ProvisionedThroughputException;
 import software.amazon.kinesis.retrieval.AWSExceptionManager;
 import software.amazon.kinesis.retrieval.kpl.ExtendedSequenceNumber;
 
+import static java.util.Objects.isNull;
+import static java.util.Objects.nonNull;
+import static software.amazon.kinesis.leases.dynamodb.DynamoDBLeaseSerializer.CHECKPOINT_OWNER;
+import static software.amazon.kinesis.leases.dynamodb.DynamoDBLeaseSerializer.LEASE_KEY_KEY;
+import static software.amazon.kinesis.leases.dynamodb.DynamoDBLeaseSerializer.LEASE_OWNER_KEY;
+
 /**
  * An implementation of {@link LeaseRefresher} that uses DynamoDB.
  */
 @Slf4j
 @KinesisClientInternalApi
 public class DynamoDBLeaseRefresher implements LeaseRefresher {
-    final static String LEASE_OWNER_TO_LEASE_KEY_INDEX_NAME = "LeaseOwnerToLeaseKeyIndex";
+    static final String LEASE_OWNER_TO_LEASE_KEY_INDEX_NAME = "LeaseOwnerToLeaseKeyIndex";
 
     protected final String table;
     protected final DynamoDbAsyncClient dynamoDBClient;
@@ -119,8 +117,8 @@ public class DynamoDBLeaseRefresher implements LeaseRefresher {
 
     private static final String DDB_LEASE_OWNER = ":" + LEASE_OWNER_KEY;
 
-    private static final String LEASE_OWNER_INDEX_QUERY_CONDITIONAL_EXPRESSION = String.format("%s = %s",
-            LEASE_OWNER_KEY, DDB_LEASE_OWNER);
+    private static final String LEASE_OWNER_INDEX_QUERY_CONDITIONAL_EXPRESSION =
+            String.format("%s = %s", LEASE_OWNER_KEY, DDB_LEASE_OWNER);
 
     private static DdbTableConfig createDdbTableConfigFromBillingMode(final BillingMode billingMode) {
         final DdbTableConfig tableConfig = new DdbTableConfig();
@@ -140,11 +138,16 @@ public class DynamoDBLeaseRefresher implements LeaseRefresher {
      * @param leaseTableDeletionProtectionEnabled
      * @param tags
      */
-    public DynamoDBLeaseRefresher(final String table, final DynamoDbAsyncClient dynamoDBClient,
-                                  final LeaseSerializer serializer, final boolean consistentReads,
-                                  @NonNull final TableCreatorCallback tableCreatorCallback, Duration dynamoDbRequestTimeout,
-                                  final DdbTableConfig ddbTableConfig, final boolean leaseTableDeletionProtectionEnabled,
-                                  final Collection<Tag> tags) {
+    public DynamoDBLeaseRefresher(
+            final String table,
+            final DynamoDbAsyncClient dynamoDBClient,
+            final LeaseSerializer serializer,
+            final boolean consistentReads,
+            @NonNull final TableCreatorCallback tableCreatorCallback,
+            Duration dynamoDbRequestTimeout,
+            final DdbTableConfig ddbTableConfig,
+            final boolean leaseTableDeletionProtectionEnabled,
+            final Collection<Tag> tags) {
         this.table = table;
         this.dynamoDBClient = dynamoDBClient;
         this.serializer = serializer;
@@ -175,9 +178,9 @@ public class DynamoDBLeaseRefresher implements LeaseRefresher {
      * {@inheritDoc}
      */
     @Override
-    public boolean createLeaseTableIfNotExists()
-            throws ProvisionedThroughputException, DependencyException {
-        final CreateTableRequest request = createTableRequestBuilder(ddbTableConfig).build();
+    public boolean createLeaseTableIfNotExists() throws ProvisionedThroughputException, DependencyException {
+        final CreateTableRequest request =
+                createTableRequestBuilder(ddbTableConfig).build();
 
         return createTableIfNotExists(request);
     }
@@ -230,11 +233,12 @@ public class DynamoDBLeaseRefresher implements LeaseRefresher {
 
     private TableStatus tableStatus() throws DependencyException {
         final DescribeTableResponse response = describeLeaseTable();
-        return nonNull(response) ? response.table().tableStatus(): null;
+        return nonNull(response) ? response.table().tableStatus() : null;
     }
 
     private DescribeTableResponse describeLeaseTable() throws DependencyException {
-        final DescribeTableRequest request = DescribeTableRequest.builder().tableName(table).build();
+        final DescribeTableRequest request =
+                DescribeTableRequest.builder().tableName(table).build();
 
         final AWSExceptionManager exceptionManager = createExceptionManager();
         exceptionManager.add(ResourceNotFoundException.class, t -> t);
@@ -242,7 +246,8 @@ public class DynamoDBLeaseRefresher implements LeaseRefresher {
         DescribeTableResponse result;
         try {
             try {
-                result = FutureUtils.resolveOrCancelFuture(dynamoDBClient.describeTable(request), dynamoDbRequestTimeout);
+                result = FutureUtils.resolveOrCancelFuture(
+                        dynamoDBClient.describeTable(request), dynamoDbRequestTimeout);
             } catch (ExecutionException e) {
                 throw exceptionManager.apply(e.getCause());
             } catch (InterruptedException e) {
@@ -286,11 +291,13 @@ public class DynamoDBLeaseRefresher implements LeaseRefresher {
     }
 
     private static boolean isTableInPayPerRequestMode(final DescribeTableResponse describeTableResponse) {
-        if (nonNull(describeTableResponse) && nonNull(describeTableResponse.table()
-                .billingModeSummary()) && describeTableResponse.table()
-                .billingModeSummary()
-                .billingMode()
-                .equals(BillingMode.PAY_PER_REQUEST)) {
+        if (nonNull(describeTableResponse)
+                && nonNull(describeTableResponse.table().billingModeSummary())
+                && describeTableResponse
+                        .table()
+                        .billingModeSummary()
+                        .billingMode()
+                        .equals(BillingMode.PAY_PER_REQUEST)) {
             return true;
         }
         return false;
@@ -313,36 +320,41 @@ public class DynamoDBLeaseRefresher implements LeaseRefresher {
                  * themselves after creation as they deem fit.
                  */
                 provisionedThroughput = ProvisionedThroughput.builder()
-                        .readCapacityUnits(describeTableResponse.table().provisionedThroughput().readCapacityUnits())
-                        .writeCapacityUnits(describeTableResponse.table().provisionedThroughput().writeCapacityUnits())
+                        .readCapacityUnits(describeTableResponse
+                                .table()
+                                .provisionedThroughput()
+                                .readCapacityUnits())
+                        .writeCapacityUnits(describeTableResponse
+                                .table()
+                                .provisionedThroughput()
+                                .writeCapacityUnits())
                         .build();
             }
 
-            final IndexStatus indexStatus = getIndexStatusFromDescribeTableResponse(describeTableResponse.table(),
-                    LEASE_OWNER_TO_LEASE_KEY_INDEX_NAME);
+            final IndexStatus indexStatus = getIndexStatusFromDescribeTableResponse(
+                    describeTableResponse.table(), LEASE_OWNER_TO_LEASE_KEY_INDEX_NAME);
             if (nonNull(indexStatus)) {
-                log.info("Lease table GSI {} already exists with status {}", LEASE_OWNER_TO_LEASE_KEY_INDEX_NAME,
-                    indexStatus);
+                log.info(
+                        "Lease table GSI {} already exists with status {}",
+                        LEASE_OWNER_TO_LEASE_KEY_INDEX_NAME,
+                        indexStatus);
 
                 // indexStatus is nonNull that means index already exists, return the status of index.
                 return indexStatus.toString();
             }
         }
-        final UpdateTableRequest updateTableRequest = UpdateTableRequest
-                .builder()
+        final UpdateTableRequest updateTableRequest = UpdateTableRequest.builder()
                 .tableName(table)
                 .attributeDefinitions(serializer.getWorkerIdToLeaseKeyIndexAttributeDefinitions())
-                .globalSecondaryIndexUpdates(GlobalSecondaryIndexUpdate
-                        .builder()
+                .globalSecondaryIndexUpdates(GlobalSecondaryIndexUpdate.builder()
                         .create(CreateGlobalSecondaryIndexAction.builder()
-                                                                .indexName(LEASE_OWNER_TO_LEASE_KEY_INDEX_NAME)
-                                                                .keySchema(serializer.getWorkerIdToLeaseKeyIndexKeySchema())
-                                                                .projection(Projection
-                                                                        .builder()
-                                                                        .projectionType(ProjectionType.KEYS_ONLY)
-                                                                        .build())
-                                                                .provisionedThroughput(provisionedThroughput)
-                                                                .build())
+                                .indexName(LEASE_OWNER_TO_LEASE_KEY_INDEX_NAME)
+                                .keySchema(serializer.getWorkerIdToLeaseKeyIndexKeySchema())
+                                .projection(Projection.builder()
+                                        .projectionType(ProjectionType.KEYS_ONLY)
+                                        .build())
+                                .provisionedThroughput(provisionedThroughput)
+                                .build())
                         .build())
                 .build();
 
@@ -350,8 +362,9 @@ public class DynamoDBLeaseRefresher implements LeaseRefresher {
             log.info("Creating Lease table GSI {}", LEASE_OWNER_TO_LEASE_KEY_INDEX_NAME);
             final UpdateTableResponse response = FutureUtils.resolveOrCancelFuture(
                     dynamoDBClient.updateTable(updateTableRequest), dynamoDbRequestTimeout);
-            return getIndexStatusFromDescribeTableResponse(response.tableDescription(),
-                    LEASE_OWNER_TO_LEASE_KEY_INDEX_NAME).toString();
+            return getIndexStatusFromDescribeTableResponse(
+                            response.tableDescription(), LEASE_OWNER_TO_LEASE_KEY_INDEX_NAME)
+                    .toString();
         } catch (ExecutionException e) {
             throw new DependencyException(nonNull(e.getCause()) ? e.getCause() : e);
         } catch (InterruptedException | TimeoutException e) {
@@ -359,24 +372,23 @@ public class DynamoDBLeaseRefresher implements LeaseRefresher {
         }
     }
 
-    private IndexStatus getIndexStatusFromDescribeTableResponse(final TableDescription tableDescription,
-            final String indexName) {
+    private IndexStatus getIndexStatusFromDescribeTableResponse(
+            final TableDescription tableDescription, final String indexName) {
         if (isNull(tableDescription)) {
             return null;
         }
-        return tableDescription
-                       .globalSecondaryIndexes()
-                       .stream()
-                       .filter(index -> index.indexName().equals(indexName))
-                       .findFirst()
-                       .map(GlobalSecondaryIndexDescription::indexStatus)
-                       .orElse(null);
+        return tableDescription.globalSecondaryIndexes().stream()
+                .filter(index -> index.indexName().equals(indexName))
+                .findFirst()
+                .map(GlobalSecondaryIndexDescription::indexStatus)
+                .orElse(null);
     }
 
     @Override
     public boolean waitUntilLeaseOwnerToLeaseKeyIndexExists(final long secondsBetweenPolls, final long timeoutSeconds) {
         final long startTime = System.currentTimeMillis();
-        while (System.currentTimeMillis() - startTime < Duration.ofSeconds(timeoutSeconds).toMillis()) {
+        while (System.currentTimeMillis() - startTime
+                < Duration.ofSeconds(timeoutSeconds).toMillis()) {
             try {
                 if (isLeaseOwnerToLeaseKeyIndexActive()) {
                     return true;
@@ -401,10 +413,12 @@ public class DynamoDBLeaseRefresher implements LeaseRefresher {
         if (isNull(describeTableResponse)) {
             return false;
         }
-        final IndexStatus indexStatus = getIndexStatusFromDescribeTableResponse(describeTableResponse.table(),
-            LEASE_OWNER_TO_LEASE_KEY_INDEX_NAME);
-        log.debug("Lease table GSI {} status {}", LEASE_OWNER_TO_LEASE_KEY_INDEX_NAME,
-            indexStatus == null ? "does not exist" : indexStatus);
+        final IndexStatus indexStatus = getIndexStatusFromDescribeTableResponse(
+                describeTableResponse.table(), LEASE_OWNER_TO_LEASE_KEY_INDEX_NAME);
+        log.debug(
+                "Lease table GSI {} status {}",
+                LEASE_OWNER_TO_LEASE_KEY_INDEX_NAME,
+                indexStatus == null ? "does not exist" : indexStatus);
 
         return indexStatus == IndexStatus.ACTIVE;
     }
@@ -432,40 +446,40 @@ public class DynamoDBLeaseRefresher implements LeaseRefresher {
      * {@inheritDoc}
      */
     @Override
-    public List<Lease> listLeasesForStream(StreamIdentifier streamIdentifier) throws DependencyException,
-            InvalidStateException, ProvisionedThroughputException {
-        return list( null, streamIdentifier);
+    public List<Lease> listLeasesForStream(StreamIdentifier streamIdentifier)
+            throws DependencyException, InvalidStateException, ProvisionedThroughputException {
+        return list(null, streamIdentifier);
     }
 
     /**
      * {@inheritDoc}
-     * 
+     *
      * This method throws InvalidStateException in case of
      * {@link DynamoDBLeaseRefresher#LEASE_OWNER_TO_LEASE_KEY_INDEX_NAME} does not exists.
-     * If index creation is not done and want to listLeases for a worker, 
-     * use {@link DynamoDBLeaseRefresher#listLeases()} and filter on that to list leases. 
+     * If index creation is not done and want to listLeases for a worker,
+     * use {@link DynamoDBLeaseRefresher#listLeases()} and filter on that to list leases.
      */
     @Override
     public List<String> listLeaseKeysForWorker(final String workerIdentifier)
             throws DependencyException, InvalidStateException {
-        QueryRequest queryRequest = QueryRequest
-                .builder()
+        QueryRequest queryRequest = QueryRequest.builder()
                 .indexName(LEASE_OWNER_TO_LEASE_KEY_INDEX_NAME)
                 .keyConditionExpression(LEASE_OWNER_INDEX_QUERY_CONDITIONAL_EXPRESSION)
-                .expressionAttributeValues(
-                        ImmutableMap.of(DDB_LEASE_OWNER, AttributeValue.builder().s(workerIdentifier).build()))
+                .expressionAttributeValues(ImmutableMap.of(
+                        DDB_LEASE_OWNER,
+                        AttributeValue.builder().s(workerIdentifier).build()))
                 .tableName(table)
                 .build();
 
         final AWSExceptionManager exceptionManager = createExceptionManager();
-        exceptionManager.add(ResourceNotFoundException.class, t ->  t);
+        exceptionManager.add(ResourceNotFoundException.class, t -> t);
 
         try {
             try {
                 final List<String> result = new ArrayList<>();
 
-                QueryResponse queryResponse = FutureUtils.resolveOrCancelFuture(dynamoDBClient.query(queryRequest),
-                        dynamoDbRequestTimeout);
+                QueryResponse queryResponse =
+                        FutureUtils.resolveOrCancelFuture(dynamoDBClient.query(queryRequest), dynamoDbRequestTimeout);
 
                 while (queryResponse != null) {
                     for (Map<String, AttributeValue> item : queryResponse.items()) {
@@ -477,9 +491,11 @@ public class DynamoDBLeaseRefresher implements LeaseRefresher {
                         queryResponse = null;
                     } else {
                         // Make another request, picking up where we left off.
-                        queryRequest = queryRequest.toBuilder().exclusiveStartKey(lastEvaluatedKey).build();
-                        queryResponse = FutureUtils.resolveOrCancelFuture(dynamoDBClient.query(queryRequest),
-                                dynamoDbRequestTimeout);
+                        queryRequest = queryRequest.toBuilder()
+                                .exclusiveStartKey(lastEvaluatedKey)
+                                .build();
+                        queryResponse = FutureUtils.resolveOrCancelFuture(
+                                dynamoDBClient.query(queryRequest), dynamoDbRequestTimeout);
                     }
                 }
                 return result;
@@ -502,8 +518,8 @@ public class DynamoDBLeaseRefresher implements LeaseRefresher {
     }
 
     @Override
-    public Map.Entry<List<Lease>, List<String>> listLeasesParallely(final ExecutorService parallelScanExecutorService,
-            final int parallelScanTotalSegment)
+    public Map.Entry<List<Lease>, List<String>> listLeasesParallely(
+            final ExecutorService parallelScanExecutorService, final int parallelScanTotalSegment)
             throws DependencyException, InvalidStateException, ProvisionedThroughputException {
         final List<String> leaseItemFailedDeserialize = new ArrayList<>();
         final List<Lease> response = new ArrayList<>();
@@ -615,17 +631,18 @@ public class DynamoDBLeaseRefresher implements LeaseRefresher {
      * @throws DependencyException if DynamoDB scan fail in an unexpected way
      * @throws ProvisionedThroughputException if DynamoDB scan fail due to exceeded capacity
      */
-    private List<Lease> list(Integer limit, Integer maxPages, StreamIdentifier streamIdentifier) throws DependencyException, InvalidStateException,
-            ProvisionedThroughputException {
+    private List<Lease> list(Integer limit, Integer maxPages, StreamIdentifier streamIdentifier)
+            throws DependencyException, InvalidStateException, ProvisionedThroughputException {
         log.debug("Listing leases from table {}", table);
 
         ScanRequest.Builder scanRequestBuilder = ScanRequest.builder().tableName(table);
 
         if (streamIdentifier != null) {
             final Map<String, AttributeValue> expressionAttributeValues = ImmutableMap.of(
-                 DDB_STREAM_NAME, AttributeValue.builder().s(streamIdentifier.serialize()).build()
-            );
-            scanRequestBuilder = scanRequestBuilder.filterExpression(STREAM_NAME + " = " + DDB_STREAM_NAME)
+                    DDB_STREAM_NAME,
+                    AttributeValue.builder().s(streamIdentifier.serialize()).build());
+            scanRequestBuilder = scanRequestBuilder
+                    .filterExpression(STREAM_NAME + " = " + DDB_STREAM_NAME)
                     .expressionAttributeValues(expressionAttributeValues);
         }
 
@@ -635,12 +652,13 @@ public class DynamoDBLeaseRefresher implements LeaseRefresher {
         ScanRequest scanRequest = scanRequestBuilder.build();
 
         final AWSExceptionManager exceptionManager = createExceptionManager();
-        exceptionManager.add(ResourceNotFoundException.class, t ->  t);
+        exceptionManager.add(ResourceNotFoundException.class, t -> t);
         exceptionManager.add(ProvisionedThroughputExceededException.class, t -> t);
 
         try {
             try {
-                ScanResponse scanResult = FutureUtils.resolveOrCancelFuture(dynamoDBClient.scan(scanRequest), dynamoDbRequestTimeout);
+                ScanResponse scanResult =
+                        FutureUtils.resolveOrCancelFuture(dynamoDBClient.scan(scanRequest), dynamoDbRequestTimeout);
                 List<Lease> result = new ArrayList<>();
 
                 while (scanResult != null) {
@@ -656,9 +674,12 @@ public class DynamoDBLeaseRefresher implements LeaseRefresher {
                         log.debug("lastEvaluatedKey was null - scan finished.");
                     } else {
                         // Make another request, picking up where we left off.
-                        scanRequest = scanRequest.toBuilder().exclusiveStartKey(lastEvaluatedKey).build();
+                        scanRequest = scanRequest.toBuilder()
+                                .exclusiveStartKey(lastEvaluatedKey)
+                                .build();
                         log.debug("lastEvaluatedKey was {}, continuing scan.", lastEvaluatedKey);
-                        scanResult = FutureUtils.resolveOrCancelFuture(dynamoDBClient.scan(scanRequest), dynamoDbRequestTimeout);
+                        scanResult = FutureUtils.resolveOrCancelFuture(
+                                dynamoDBClient.scan(scanRequest), dynamoDbRequestTimeout);
                     }
                 }
                 log.debug("Listed {} leases from table {}", result.size(), table);
@@ -686,8 +707,11 @@ public class DynamoDBLeaseRefresher implements LeaseRefresher {
             throws DependencyException, InvalidStateException, ProvisionedThroughputException {
         log.debug("Creating lease: {}", lease);
 
-        PutItemRequest request = PutItemRequest.builder().tableName(table).item(serializer.toDynamoRecord(lease))
-                .expected(serializer.getDynamoNonexistantExpectation()).build();
+        PutItemRequest request = PutItemRequest.builder()
+                .tableName(table)
+                .item(serializer.toDynamoRecord(lease))
+                .expected(serializer.getDynamoNonexistantExpectation())
+                .build();
 
         final AWSExceptionManager exceptionManager = createExceptionManager();
         exceptionManager.add(ConditionalCheckFailedException.class, t -> t);
@@ -719,12 +743,16 @@ public class DynamoDBLeaseRefresher implements LeaseRefresher {
             throws DependencyException, InvalidStateException, ProvisionedThroughputException {
         log.debug("Getting lease with key {}", leaseKey);
 
-        GetItemRequest request = GetItemRequest.builder().tableName(table).key(serializer.getDynamoHashKey(leaseKey))
-                .consistentRead(consistentReads).build();
+        GetItemRequest request = GetItemRequest.builder()
+                .tableName(table)
+                .key(serializer.getDynamoHashKey(leaseKey))
+                .consistentRead(consistentReads)
+                .build();
         final AWSExceptionManager exceptionManager = createExceptionManager();
         try {
             try {
-                GetItemResponse result = FutureUtils.resolveOrCancelFuture(dynamoDBClient.getItem(request), dynamoDbRequestTimeout);
+                GetItemResponse result =
+                        FutureUtils.resolveOrCancelFuture(dynamoDBClient.getItem(request), dynamoDbRequestTimeout);
 
                 Map<String, AttributeValue> dynamoRecord = result.item();
                 if (CollectionUtils.isNullOrEmpty(dynamoRecord)) {
@@ -767,7 +795,9 @@ public class DynamoDBLeaseRefresher implements LeaseRefresher {
         // attributes in the in-memory lease and retry the renewal without the expectedValue,
         // allowing it to complete successfully
         if (!lease.shutdownRequested()) {
-            expected.put(CHECKPOINT_OWNER, ExpectedAttributeValue.builder().exists(false).build());
+            expected.put(
+                    CHECKPOINT_OWNER,
+                    ExpectedAttributeValue.builder().exists(false).build());
         }
 
         final UpdateItemRequest request = UpdateItemRequest.builder()
@@ -779,7 +809,7 @@ public class DynamoDBLeaseRefresher implements LeaseRefresher {
                 .build();
 
         final AWSExceptionManager exceptionManager = createExceptionManager();
-        exceptionManager.add(ConditionalCheckFailedException.class, t ->  t);
+        exceptionManager.add(ConditionalCheckFailedException.class, t -> t);
 
         try {
             try {
@@ -805,8 +835,10 @@ public class DynamoDBLeaseRefresher implements LeaseRefresher {
                     return handleGracefulShutdown(lease, ddbLease);
                 }
             }
-            log.debug("Lease renewal failed for lease with key {} because the lease counter was not {}",
-                    lease.leaseKey(), lease.leaseCounter());
+            log.debug(
+                    "Lease renewal failed for lease with key {} because the lease counter was not {}",
+                    lease.leaseKey(),
+                    lease.leaseCounter());
             // If we had a spurious retry during the Dynamo update, then this conditional PUT failure
             // might be incorrect. So, we get the item straight away and check if the lease owner + lease
             // counter are what we expected.
@@ -815,7 +847,8 @@ public class DynamoDBLeaseRefresher implements LeaseRefresher {
             final String expectedOwner = lease.actualOwner();
             Long expectedCounter = lease.leaseCounter() + 1;
             final Lease updatedLease = getLease(lease.leaseKey());
-            if (updatedLease == null || !expectedOwner.equals(updatedLease.leaseOwner())
+            if (updatedLease == null
+                    || !expectedOwner.equals(updatedLease.leaseOwner())
                     || !expectedCounter.equals(updatedLease.leaseCounter())) {
                 return false;
             }
@@ -837,8 +870,11 @@ public class DynamoDBLeaseRefresher implements LeaseRefresher {
             throws DependencyException, InvalidStateException, ProvisionedThroughputException {
         final String oldOwner = lease.leaseOwner();
 
-        log.debug("Taking lease with leaseKey {} from {} to {}", lease.leaseKey(),
-                lease.leaseOwner() == null ? "nobody" : lease.leaseOwner(), owner);
+        log.debug(
+                "Taking lease with leaseKey {} from {} to {}",
+                lease.leaseKey(),
+                lease.leaseOwner() == null ? "nobody" : lease.leaseOwner(),
+                owner);
 
         final AWSExceptionManager exceptionManager = createExceptionManager();
         exceptionManager.add(ConditionalCheckFailedException.class, t -> t);
@@ -846,8 +882,12 @@ public class DynamoDBLeaseRefresher implements LeaseRefresher {
         Map<String, AttributeValueUpdate> updates = serializer.getDynamoLeaseCounterUpdate(lease);
         updates.putAll(serializer.getDynamoTakeLeaseUpdate(lease, owner));
 
-        UpdateItemRequest request = UpdateItemRequest.builder().tableName(table).key(serializer.getDynamoHashKey(lease))
-                .expected(serializer.getDynamoLeaseCounterExpectation(lease)).attributeUpdates(updates).build();
+        UpdateItemRequest request = UpdateItemRequest.builder()
+                .tableName(table)
+                .key(serializer.getDynamoHashKey(lease))
+                .expected(serializer.getDynamoLeaseCounterExpectation(lease))
+                .attributeUpdates(updates)
+                .build();
 
         try {
             try {
@@ -859,8 +899,10 @@ public class DynamoDBLeaseRefresher implements LeaseRefresher {
                 throw new DependencyException(e);
             }
         } catch (ConditionalCheckFailedException e) {
-            log.debug("Lease renewal failed for lease with key {} because the lease counter was not {}",
-                    lease.leaseKey(), lease.leaseCounter());
+            log.debug(
+                    "Lease renewal failed for lease with key {} because the lease counter was not {}",
+                    lease.leaseKey(),
+                    lease.leaseCounter());
             return false;
         } catch (DynamoDbException | TimeoutException e) {
             throw convertAndRethrowExceptions("take", lease.leaseKey(), e);
@@ -886,8 +928,11 @@ public class DynamoDBLeaseRefresher implements LeaseRefresher {
             throws DependencyException, InvalidStateException, ProvisionedThroughputException {
         final String oldOwner = lease.leaseOwner();
 
-        log.debug("Initiating graceful lease handoff for leaseKey {} from {} to {}",
-                lease.leaseKey(), oldOwner, newOwner);
+        log.debug(
+                "Initiating graceful lease handoff for leaseKey {} from {} to {}",
+                lease.leaseKey(),
+                oldOwner,
+                newOwner);
 
         final AWSExceptionManager exceptionManager = createExceptionManager();
         exceptionManager.add(ConditionalCheckFailedException.class, t -> t);
@@ -900,23 +945,28 @@ public class DynamoDBLeaseRefresher implements LeaseRefresher {
         // enters the pendingCheckpoint state, the only remaining state change will be the reassignment,
         // which causes the current owner to relinquish ownership so there will be no rewriting of pendingCheckpoint
         // if there are concurrent LAM assignments somehow.
-        updates.put(LEASE_OWNER_KEY, AttributeValueUpdate.builder()
-                .value(DynamoUtils.createAttributeValue(newOwner))
-                .action(AttributeAction.PUT)
-                .build());
-        updates.put(CHECKPOINT_OWNER, AttributeValueUpdate.builder()
-                .value(DynamoUtils.createAttributeValue(lease.leaseOwner()))
-                .action(AttributeAction.PUT)
-                .build());
+        updates.put(
+                LEASE_OWNER_KEY,
+                AttributeValueUpdate.builder()
+                        .value(DynamoUtils.createAttributeValue(newOwner))
+                        .action(AttributeAction.PUT)
+                        .build());
+        updates.put(
+                CHECKPOINT_OWNER,
+                AttributeValueUpdate.builder()
+                        .value(DynamoUtils.createAttributeValue(lease.leaseOwner()))
+                        .action(AttributeAction.PUT)
+                        .build());
 
         // The conditional checks ensure that the lease is not pending shutdown,
         // so it should have the leaseOwner field, but not the checkpointOwner field.
-        expectedAttributeValueMap.put(LEASE_OWNER_KEY, ExpectedAttributeValue.builder()
-                .value(DynamoUtils.createAttributeValue(lease.leaseOwner()))
-                .build());
-        expectedAttributeValueMap.put(CHECKPOINT_OWNER, ExpectedAttributeValue.builder()
-                .exists(false)
-                .build());
+        expectedAttributeValueMap.put(
+                LEASE_OWNER_KEY,
+                ExpectedAttributeValue.builder()
+                        .value(DynamoUtils.createAttributeValue(lease.leaseOwner()))
+                        .build());
+        expectedAttributeValueMap.put(
+                CHECKPOINT_OWNER, ExpectedAttributeValue.builder().exists(false).build());
         // see assignLease()
         expectedAttributeValueMap.putAll(serializer.getDynamoExistentExpectation(lease.leaseKey()));
 
@@ -940,9 +990,11 @@ public class DynamoDBLeaseRefresher implements LeaseRefresher {
                 throw new DependencyException(e);
             }
         } catch (final ConditionalCheckFailedException e) {
-            log.debug("Initiate graceful lease handoff failed for lease with key {} because the lease owner was not {}"
-                    + " or the checkpoint owner was not empty or lease doesn't exist anymore",
-                    lease.leaseKey(), lease.leaseOwner());
+            log.debug(
+                    "Initiate graceful lease handoff failed for lease with key {} because the lease owner was not {}"
+                            + " or the checkpoint owner was not empty or lease doesn't exist anymore",
+                    lease.leaseKey(),
+                    lease.leaseOwner());
             return false;
         } catch (final DynamoDbException | TimeoutException e) {
             throw convertAndRethrowExceptions("initiate_lease_handoff", lease.leaseKey(), e);
@@ -966,8 +1018,12 @@ public class DynamoDBLeaseRefresher implements LeaseRefresher {
             throws DependencyException, InvalidStateException, ProvisionedThroughputException {
         final String oldOwner = lease.leaseOwner();
         final String checkpointOwner = lease.checkpointOwner() == null ? "nobody" : lease.checkpointOwner();
-        log.debug("Assigning lease with leaseKey {} from {} to {} with checkpoint owner {}", lease.leaseKey(),
-                lease.leaseOwner() == null ? "nobody" : lease.leaseOwner(), newOwner, checkpointOwner);
+        log.debug(
+                "Assigning lease with leaseKey {} from {} to {} with checkpoint owner {}",
+                lease.leaseKey(),
+                lease.leaseOwner() == null ? "nobody" : lease.leaseOwner(),
+                newOwner,
+                checkpointOwner);
 
         final AWSExceptionManager exceptionManager = createExceptionManager();
         exceptionManager.add(ConditionalCheckFailedException.class, t -> t);
@@ -975,8 +1031,7 @@ public class DynamoDBLeaseRefresher implements LeaseRefresher {
         // Performs the PUT action on leaseOwner and ADD action on the leaseCounter
         // Updating leaseCounter will cause the existing owner to lose the lease.
         // This also clears checkpointOwner attribute to trigger an immediate assignment.
-        final  Map<String, AttributeValueUpdate> updates = serializer.getDynamoAssignLeaseUpdate(lease, newOwner);
-
+        final Map<String, AttributeValueUpdate> updates = serializer.getDynamoAssignLeaseUpdate(lease, newOwner);
 
         // Assignment should only happen when leaseOwner match and lease still exists. Lease exists check is required
         // because in case of no leaseOwner, the conditional check no leaseOwner exists is met
@@ -988,7 +1043,6 @@ public class DynamoDBLeaseRefresher implements LeaseRefresher {
         // Make sure that the lease is always present and not deleted between read and update of assignLease call
         // and when the owner is null on lease as conditional check on owner wont come into play.
         expectedAttributeValueMap.putAll(serializer.getDynamoExistentExpectation(lease.leaseKey()));
-
 
         final UpdateItemRequest request = UpdateItemRequest.builder()
                 .tableName(table)
@@ -1014,11 +1068,15 @@ public class DynamoDBLeaseRefresher implements LeaseRefresher {
             if (e.hasItem()) {
                 failedCheckpointOwner = serializer.fromDynamoRecord(e.item()).checkpointOwner();
             }
-            log.debug("Assign lease failed for lease with key {} because the lease owner was not {} or the checkpoint" +
-                            " owner was not {} but was {}",
-                    lease.leaseKey(), lease.leaseOwner(), checkpointOwner, failedCheckpointOwner);
+            log.debug(
+                    "Assign lease failed for lease with key {} because the lease owner was not {} or the checkpoint"
+                            + " owner was not {} but was {}",
+                    lease.leaseKey(),
+                    lease.leaseOwner(),
+                    checkpointOwner,
+                    failedCheckpointOwner);
             return false;
-        } catch (final  DynamoDbException | TimeoutException e) {
+        } catch (final DynamoDbException | TimeoutException e) {
             throw convertAndRethrowExceptions("assign", lease.leaseKey(), e);
         }
 
@@ -1027,8 +1085,12 @@ public class DynamoDBLeaseRefresher implements LeaseRefresher {
         lease.leaseOwner(updatedLease.leaseOwner());
         lease.ownerSwitchesSinceCheckpoint(updatedLease.ownerSwitchesSinceCheckpoint());
         clearPendingShutdownAttributes(lease);
-        log.info("Assigned lease {} ownership from {} to {} with checkpoint owner {}", lease.leaseKey(),
-                oldOwner, newOwner, checkpointOwner);
+        log.info(
+                "Assigned lease {} ownership from {} to {} with checkpoint owner {}",
+                lease.leaseKey(),
+                oldOwner,
+                newOwner,
+                checkpointOwner);
 
         return true;
     }
@@ -1055,8 +1117,8 @@ public class DynamoDBLeaseRefresher implements LeaseRefresher {
         // as the leaseCounter is frequently updated in other parts of the process.
         // - ensure owner fields match
         // - ensure lease still exists to ensure we don't end up creating malformed lease
-        final Map<String, ExpectedAttributeValue> expectedAttributeValueMap
-                = serializer.getDynamoLeaseOwnerExpectation(lease);
+        final Map<String, ExpectedAttributeValue> expectedAttributeValueMap =
+                serializer.getDynamoLeaseOwnerExpectation(lease);
         expectedAttributeValueMap.putAll(serializer.getDynamoExistentExpectation(lease.leaseKey()));
 
         final UpdateItemRequest request = UpdateItemRequest.builder()
@@ -1070,7 +1132,8 @@ public class DynamoDBLeaseRefresher implements LeaseRefresher {
         UpdateItemResponse response = null;
         try {
             try {
-                response = FutureUtils.resolveOrCancelFuture(dynamoDBClient.updateItem(request), dynamoDbRequestTimeout);
+                response =
+                        FutureUtils.resolveOrCancelFuture(dynamoDBClient.updateItem(request), dynamoDbRequestTimeout);
             } catch (ExecutionException e) {
                 throw exceptionManager.apply(e.getCause());
             } catch (InterruptedException e) {
@@ -1078,8 +1141,10 @@ public class DynamoDBLeaseRefresher implements LeaseRefresher {
                 throw new DependencyException(e);
             }
         } catch (ConditionalCheckFailedException e) {
-            log.debug("Lease eviction failed for lease with key {} because the lease owner was not {}",
-                    lease.leaseKey(), lease.leaseOwner());
+            log.debug(
+                    "Lease eviction failed for lease with key {} because the lease owner was not {}",
+                    lease.leaseKey(),
+                    lease.leaseOwner());
             return false;
         } catch (DynamoDbException | TimeoutException e) {
             throw convertAndRethrowExceptions("evict", lease.leaseKey(), e);
@@ -1104,8 +1169,10 @@ public class DynamoDBLeaseRefresher implements LeaseRefresher {
 
         final AWSExceptionManager exceptionManager = createExceptionManager();
         for (final Lease lease : allLeases) {
-            DeleteItemRequest deleteRequest = DeleteItemRequest.builder().tableName(table)
-                    .key(serializer.getDynamoHashKey(lease)).build();
+            DeleteItemRequest deleteRequest = DeleteItemRequest.builder()
+                    .tableName(table)
+                    .key(serializer.getDynamoHashKey(lease))
+                    .build();
 
             try {
                 try {
@@ -1131,8 +1198,10 @@ public class DynamoDBLeaseRefresher implements LeaseRefresher {
             throws DependencyException, InvalidStateException, ProvisionedThroughputException {
         log.debug("Deleting lease with leaseKey {}", lease.leaseKey());
 
-        DeleteItemRequest deleteRequest = DeleteItemRequest.builder().tableName(table)
-                .key(serializer.getDynamoHashKey(lease)).build();
+        DeleteItemRequest deleteRequest = DeleteItemRequest.builder()
+                .tableName(table)
+                .key(serializer.getDynamoHashKey(lease))
+                .build();
 
         final AWSExceptionManager exceptionManager = createExceptionManager();
         try {
@@ -1165,8 +1234,12 @@ public class DynamoDBLeaseRefresher implements LeaseRefresher {
         Map<String, AttributeValueUpdate> updates = serializer.getDynamoLeaseCounterUpdate(lease);
         updates.putAll(serializer.getDynamoUpdateLeaseUpdate(lease));
 
-        UpdateItemRequest request = UpdateItemRequest.builder().tableName(table).key(serializer.getDynamoHashKey(lease))
-                .expected(serializer.getDynamoLeaseCounterExpectation(lease)).attributeUpdates(updates).build();
+        UpdateItemRequest request = UpdateItemRequest.builder()
+                .tableName(table)
+                .key(serializer.getDynamoHashKey(lease))
+                .expected(serializer.getDynamoLeaseCounterExpectation(lease))
+                .attributeUpdates(updates)
+                .build();
 
         try {
             try {
@@ -1177,8 +1250,10 @@ public class DynamoDBLeaseRefresher implements LeaseRefresher {
                 throw new DependencyException(e);
             }
         } catch (ConditionalCheckFailedException e) {
-            log.debug("Lease update failed for lease with key {} because the lease counter was not {}",
-                    lease.leaseKey(), lease.leaseCounter());
+            log.debug(
+                    "Lease update failed for lease with key {} because the lease counter was not {}",
+                    lease.leaseKey(),
+                    lease.leaseCounter());
             return false;
         } catch (DynamoDbException | TimeoutException e) {
             throw convertAndRethrowExceptions("update", lease.leaseKey(), e);
@@ -1196,9 +1271,12 @@ public class DynamoDBLeaseRefresher implements LeaseRefresher {
         final AWSExceptionManager exceptionManager = createExceptionManager();
         exceptionManager.add(ConditionalCheckFailedException.class, t -> t);
         Map<String, AttributeValueUpdate> updates = serializer.getDynamoUpdateLeaseUpdate(lease, updateField);
-        UpdateItemRequest request = UpdateItemRequest.builder().tableName(table).key(serializer.getDynamoHashKey(lease))
+        UpdateItemRequest request = UpdateItemRequest.builder()
+                .tableName(table)
+                .key(serializer.getDynamoHashKey(lease))
                 .expected(serializer.getDynamoExistentExpectation(lease.leaseKey()))
-                .attributeUpdates(updates).build();
+                .attributeUpdates(updates)
+                .build();
         try {
             try {
                 FutureUtils.resolveOrCancelFuture(dynamoDBClient.updateItem(request), dynamoDbRequestTimeout);
@@ -1208,8 +1286,10 @@ public class DynamoDBLeaseRefresher implements LeaseRefresher {
                 throw new DependencyException(e);
             }
         } catch (ConditionalCheckFailedException e) {
-            log.warn("Lease update failed for lease with key {} because the lease did not exist at the time of the update",
-                    lease.leaseKey(), e);
+            log.warn(
+                    "Lease update failed for lease with key {} because the lease did not exist at the time of the update",
+                    lease.leaseKey(),
+                    e);
         } catch (DynamoDbException | TimeoutException e) {
             throw convertAndRethrowExceptions("update", lease.leaseKey(), e);
         }
@@ -1244,8 +1324,8 @@ public class DynamoDBLeaseRefresher implements LeaseRefresher {
             throw new ProvisionedThroughputException(e);
         } else if (e instanceof ResourceNotFoundException) {
             throw new InvalidStateException(
-                    String.format("Cannot %s lease with key %s because table %s does not exist.",
-                            operation, leaseKey, table),
+                    String.format(
+                            "Cannot %s lease with key %s because table %s does not exist.", operation, leaseKey, table),
                     e);
         } else {
             return new DependencyException(e);
@@ -1253,10 +1333,12 @@ public class DynamoDBLeaseRefresher implements LeaseRefresher {
     }
 
     private CreateTableRequest.Builder createTableRequestBuilder(final DdbTableConfig tableConfig) {
-        final CreateTableRequest.Builder builder = CreateTableRequest.builder().tableName(table).keySchema(serializer.getKeySchema())
-                        .attributeDefinitions(serializer.getAttributeDefinitions())
-                        .deletionProtectionEnabled(leaseTableDeletionProtectionEnabled)
-                        .tags(tags);
+        final CreateTableRequest.Builder builder = CreateTableRequest.builder()
+                .tableName(table)
+                .keySchema(serializer.getKeySchema())
+                .attributeDefinitions(serializer.getAttributeDefinitions())
+                .deletionProtectionEnabled(leaseTableDeletionProtectionEnabled)
+                .tags(tags);
         if (BillingMode.PAY_PER_REQUEST.equals(tableConfig.billingMode())) {
             builder.billingMode(BillingMode.PAY_PER_REQUEST);
         } else {
@@ -1276,8 +1358,10 @@ public class DynamoDBLeaseRefresher implements LeaseRefresher {
     }
 
     void performPostTableCreationAction() {
-        tableCreatorCallback.performAction(
-                TableCreatorCallbackInput.builder().dynamoDbClient(dynamoDBClient).tableName(table).build());
+        tableCreatorCallback.performAction(TableCreatorCallbackInput.builder()
+                .dynamoDbClient(dynamoDBClient)
+                .tableName(table)
+                .build());
     }
 
     private boolean handleGracefulShutdown(Lease lease, Lease ddbLease)
@@ -1292,9 +1376,11 @@ public class DynamoDBLeaseRefresher implements LeaseRefresher {
         // thread handling the lease graceful shutdown can perform the shutdown logic by checking this signal.
         lease.checkpointOwner(ddbLease.checkpointOwner());
         lease.leaseOwner(ddbLease.leaseOwner());
-        log.debug("Retry renewing lease with key {} as shutdown requested for leaseOwner {} and "
-                        + "checkpointOwner {}",
-                lease.leaseKey(), lease.leaseOwner(), lease.checkpointOwner());
+        log.debug(
+                "Retry renewing lease with key {} as shutdown requested for leaseOwner {} and " + "checkpointOwner {}",
+                lease.leaseKey(),
+                lease.leaseOwner(),
+                lease.checkpointOwner());
         // Retry lease renewal after updating the in-memory lease with shutdown attributes
         return renewLease(lease);
     }

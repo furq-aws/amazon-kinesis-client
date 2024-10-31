@@ -18,7 +18,6 @@ package software.amazon.kinesis.coordinator;
 import lombok.Data;
 import lombok.NonNull;
 import lombok.experimental.Accessors;
-
 import software.amazon.kinesis.common.DdbTableConfig;
 import software.amazon.kinesis.leases.NoOpShardPrioritization;
 import software.amazon.kinesis.leases.ShardPrioritization;
@@ -155,5 +154,4 @@ public class CoordinatorConfig {
      */
     @NonNull
     private final CoordinatorStateTableConfig coordinatorStateConfig;
-
 }

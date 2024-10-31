@@ -14,6 +14,11 @@
  */
 package software.amazon.kinesis.coordinator.migration;
 
+import java.util.AbstractMap.SimpleEntry;
+import java.util.Map;
+import java.util.Random;
+import java.util.concurrent.Callable;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import software.amazon.awssdk.annotations.ThreadSafe;
@@ -25,11 +30,6 @@ import software.amazon.kinesis.coordinator.CoordinatorStateDAO;
 import software.amazon.kinesis.leases.exceptions.DependencyException;
 import software.amazon.kinesis.leases.exceptions.InvalidStateException;
 import software.amazon.kinesis.leases.exceptions.ProvisionedThroughputException;
-
-import java.util.AbstractMap.SimpleEntry;
-import java.util.Map;
-import java.util.Random;
-import java.util.concurrent.Callable;
 
 import static software.amazon.kinesis.coordinator.migration.ClientVersion.CLIENT_VERSION_2x;
 import static software.amazon.kinesis.coordinator.migration.ClientVersion.CLIENT_VERSION_3x;
@@ -70,9 +70,7 @@ public class MigrationClientVersionStateInitializer {
     private final Random random;
     private final String workerIdentifier;
 
-    public SimpleEntry<ClientVersion, MigrationState> getInitialState()
-        throws DependencyException
-    {
+    public SimpleEntry<ClientVersion, MigrationState> getInitialState() throws DependencyException {
         log.info("Initializing migration state machine starting state, configured version {}", clientVersionConfig);
 
         try {
@@ -88,17 +86,20 @@ public class MigrationClientVersionStateInitializer {
                         return new SimpleEntry<>(initialClientVersion, migrationState);
                     }
                     final long delay = getInitializationRetryDelay();
-                    log.warn("Failed to update migration state with {}, retry after delay {}", initialClientVersion, delay);
+                    log.warn(
+                            "Failed to update migration state with {}, retry after delay {}",
+                            initialClientVersion,
+                            delay);
                     safeSleep(delay);
                 } else {
                     return new SimpleEntry<>(initialClientVersion, migrationState);
                 }
             }
-        }  catch (final InvalidStateException e) {
+        } catch (final InvalidStateException e) {
             log.error("Unable to initialize state machine", e);
         }
-        throw new DependencyException(new RuntimeException(
-            "Unable to determine initial state for migration state machine"));
+        throw new DependencyException(
+                new RuntimeException("Unable to determine initial state for migration state machine"));
     }
 
     public ClientVersion getClientVersionForInitialization(final MigrationState migrationState) {
@@ -143,9 +144,8 @@ public class MigrationClientVersionStateInitializer {
      * the method will read the latest value and return so that initialization can be retried.
      * If the value does not exist in dynamo, it will creat it.
      */
-    private MigrationState updateMigrationStateInDynamo(final MigrationState migrationState,
-        final ClientVersion nextClientVersion) throws InvalidStateException
-    {
+    private MigrationState updateMigrationStateInDynamo(
+            final MigrationState migrationState, final ClientVersion nextClientVersion) throws InvalidStateException {
         try {
             if (migrationState.getClientVersion() == ClientVersion.CLIENT_VERSION_INIT) {
                 migrationState.update(nextClientVersion, workerIdentifier);
@@ -157,11 +157,11 @@ public class MigrationClientVersionStateInitializer {
                 }
             } else {
                 log.info("Updating {} with {}", migrationState, nextClientVersion);
-                final Map<String, ExpectedAttributeValue> expectations
-                    = migrationState.getDynamoClientVersionExpectation();
+                final Map<String, ExpectedAttributeValue> expectations =
+                        migrationState.getDynamoClientVersionExpectation();
                 migrationState.update(nextClientVersion, workerIdentifier);
-                final boolean updated = coordinatorStateDAO.updateCoordinatorStateWithExpectation(migrationState,
-                    expectations);
+                final boolean updated =
+                        coordinatorStateDAO.updateCoordinatorStateWithExpectation(migrationState, expectations);
                 if (!updated) {
                     log.debug("Update {} did not succeed", migrationState);
                     return getMigrationStateFromDynamo();
@@ -169,8 +169,11 @@ public class MigrationClientVersionStateInitializer {
             }
             return migrationState;
         } catch (final ProvisionedThroughputException | DependencyException e) {
-            log.debug("Failed to update migration state {} with {}, return previous value to trigger a retry",
-                migrationState, nextClientVersion, e);
+            log.debug(
+                    "Failed to update migration state {} with {}, return previous value to trigger a retry",
+                    migrationState,
+                    nextClientVersion,
+                    e);
             return migrationState;
         }
     }
@@ -193,20 +196,20 @@ public class MigrationClientVersionStateInitializer {
      */
     private MigrationState getMigrationStateFromDynamo() throws InvalidStateException {
         return executeCallableWithRetryAndJitter(
-            () -> {
-                final CoordinatorState state = coordinatorStateDAO.getCoordinatorState(MIGRATION_HASH_KEY);
-                if (state == null) {
-                    log.info("No Migration state available in DDB");
-                    return new MigrationState(MIGRATION_HASH_KEY, workerIdentifier);
-                }
-                if (state instanceof MigrationState) {
-                    log.info("Current migration state in DDB {}", state);
-                    return (MigrationState) state;
-                }
-                throw new InvalidStateException(String.format(
-                    "Unexpected state found not confirming to MigrationState schema %s", state));
-            },
-            "get MigrationState from DDB");
+                () -> {
+                    final CoordinatorState state = coordinatorStateDAO.getCoordinatorState(MIGRATION_HASH_KEY);
+                    if (state == null) {
+                        log.info("No Migration state available in DDB");
+                        return new MigrationState(MIGRATION_HASH_KEY, workerIdentifier);
+                    }
+                    if (state instanceof MigrationState) {
+                        log.info("Current migration state in DDB {}", state);
+                        return (MigrationState) state;
+                    }
+                    throw new InvalidStateException(
+                            String.format("Unexpected state found not confirming to MigrationState schema %s", state));
+                },
+                "get MigrationState from DDB");
     }
 
     /**
@@ -221,7 +224,7 @@ public class MigrationClientVersionStateInitializer {
      *                                  be thrown back.
      */
     private <T> T executeCallableWithRetryAndJitter(final Callable<T> callable, final String description)
-        throws InvalidStateException {
+            throws InvalidStateException {
         int retryCount = 0;
         while (retryCount++ < MAX_INITIALIZATION_RETRY) {
             try {
@@ -237,8 +240,8 @@ public class MigrationClientVersionStateInitializer {
                 safeSleep(delay);
             }
         }
-        throw new RuntimeException(String.format("Failed to %s after %d retries, giving up", description,
-            MAX_INITIALIZATION_RETRY));
+        throw new RuntimeException(
+                String.format("Failed to %s after %d retries, giving up", description, MAX_INITIALIZATION_RETRY));
     }
 
     private void safeSleep(final long delay) {

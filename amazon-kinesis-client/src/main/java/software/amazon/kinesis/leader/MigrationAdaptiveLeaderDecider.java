@@ -1,7 +1,6 @@
 package software.amazon.kinesis.leader;
 
 import lombok.extern.slf4j.Slf4j;
-
 import software.amazon.awssdk.annotations.ThreadSafe;
 import software.amazon.awssdk.services.cloudwatch.model.StandardUnit;
 import software.amazon.kinesis.annotations.KinesisClientInternalApi;
@@ -35,8 +34,8 @@ public class MigrationAdaptiveLeaderDecider implements LeaderDecider {
             throw new IllegalStateException("LeaderDecider uninitialized");
         }
 
-        final MetricsScope scope = MetricsUtil.createMetricsWithOperation(metricsFactory,
-                METRIC_OPERATION_LEADER_DECIDER);
+        final MetricsScope scope =
+                MetricsUtil.createMetricsWithOperation(metricsFactory, METRIC_OPERATION_LEADER_DECIDER);
         try {
             publishSelectedLeaderDeciderMetrics(scope, currentLeaderDecider);
             return currentLeaderDecider.isLeader(workerId);
@@ -45,19 +44,23 @@ public class MigrationAdaptiveLeaderDecider implements LeaderDecider {
         }
     }
 
-    private static void publishSelectedLeaderDeciderMetrics(final MetricsScope scope,
-            final LeaderDecider leaderDecider) {
-        scope.addData(String.format(leaderDecider.getClass().getSimpleName()), 1D, StandardUnit.COUNT,
-                MetricsLevel.DETAILED);
+    private static void publishSelectedLeaderDeciderMetrics(
+            final MetricsScope scope, final LeaderDecider leaderDecider) {
+        scope.addData(
+                String.format(leaderDecider.getClass().getSimpleName()), 1D, StandardUnit.COUNT, MetricsLevel.DETAILED);
     }
 
     public synchronized void updateLeaderDecider(final LeaderDecider leaderDecider) {
         if (currentLeaderDecider != null) {
             currentLeaderDecider.shutdown();
-            log.info("Updating leader decider dynamically from {} to {}",
-                this.currentLeaderDecider.getClass().getSimpleName(), leaderDecider.getClass().getSimpleName());
+            log.info(
+                    "Updating leader decider dynamically from {} to {}",
+                    this.currentLeaderDecider.getClass().getSimpleName(),
+                    leaderDecider.getClass().getSimpleName());
         } else {
-            log.info("Initializing dynamic leader decider with {}", leaderDecider.getClass().getSimpleName());
+            log.info(
+                    "Initializing dynamic leader decider with {}",
+                    leaderDecider.getClass().getSimpleName());
         }
         currentLeaderDecider = leaderDecider;
         currentLeaderDecider.initialize();
@@ -73,5 +76,4 @@ public class MigrationAdaptiveLeaderDecider implements LeaderDecider {
             log.info("LeaderDecider has already been shutdown");
         }
     }
-
 }

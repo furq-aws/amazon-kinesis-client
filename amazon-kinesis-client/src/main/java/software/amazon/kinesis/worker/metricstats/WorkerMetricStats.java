@@ -12,7 +12,6 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbAttribute;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbIgnore;
@@ -37,27 +36,30 @@ import static java.util.Objects.isNull;
 @Builder
 @DynamoDbBean
 @NoArgsConstructor
-@AllArgsConstructor (access = AccessLevel.PRIVATE)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Slf4j
 public class WorkerMetricStats {
 
     static final String KEY_LAST_UPDATE_TIME = "lut";
     static final String KEY_WORKER_ID = "wid";
 
-    @Getter(onMethod_ = { @DynamoDbPartitionKey, @DynamoDbAttribute(KEY_WORKER_ID) })
+    @Getter(onMethod_ = {@DynamoDbPartitionKey, @DynamoDbAttribute(KEY_WORKER_ID)})
     private String workerId;
-    @Getter(onMethod_ = { @DynamoDbAttribute(KEY_LAST_UPDATE_TIME) })
+
+    @Getter(onMethod_ = {@DynamoDbAttribute(KEY_LAST_UPDATE_TIME)})
     private Long lastUpdateTime;
-    @Getter(onMethod_ = { @DynamoDbAttribute("sts") })
+
+    @Getter(onMethod_ = {@DynamoDbAttribute("sts")})
     private Map<String, List<Double>> metricStats;
-    @Getter(onMethod_ = { @DynamoDbAttribute("opr") })
+
+    @Getter(onMethod_ = {@DynamoDbAttribute("opr")})
     private Map<String, List<Long>> operatingRange;
 
     /**
      * This map contains the WorkerMetric to its metric stat value. Metric stat value stored in this is exponentially averaged over
      * available number of different datapoints.
      */
-    @Getter(onMethod_ = { @DynamoDbIgnore })
+    @Getter(onMethod_ = {@DynamoDbIgnore})
     @EqualsAndHashCode.Exclude
     @Builder.Default
     private Map<String, Double> metricStatsMap = new HashMap<>();
@@ -65,7 +67,7 @@ public class WorkerMetricStats {
     /**
      * Alpha value used to compute the exponential moving average for worker metrics values.
      */
-    @Getter(onMethod_ = { @DynamoDbIgnore })
+    @Getter(onMethod_ = {@DynamoDbIgnore})
     @EqualsAndHashCode.Exclude
     @Builder.Default
     private double emaAlpha = 0.2;
@@ -94,16 +96,20 @@ public class WorkerMetricStats {
             final double increaseThroughput,
             final double averageLeaseCount) {
 
-        metricStatsMap.replaceAll((key, value) -> extrapolateMetricsValue(key,
+        metricStatsMap.replaceAll((key, value) -> extrapolateMetricsValue(
+                key,
                 workerMetricsToFleetLevelAverageMap.get(key),
                 averageThroughput,
-                increaseThroughput, averageLeaseCount));
+                increaseThroughput,
+                averageLeaseCount));
     }
 
-    private double extrapolateMetricsValue(final String metricName,
+    private double extrapolateMetricsValue(
+            final String metricName,
             final double fleetLevelMetricAverage,
             final double averageThroughput,
-            final double increaseThroughput, final double averageLeaseCount) {
+            final double increaseThroughput,
+            final double averageLeaseCount) {
 
         if (averageThroughput > 0) {
             return metricStatsMap.get(metricName) + increaseThroughput * fleetLevelMetricAverage / averageThroughput;
@@ -119,12 +125,15 @@ public class WorkerMetricStats {
             final double averageLeaseCount) {
         for (final String metricStatName : metricStats.keySet()) {
             final double fleetLevelAverageForMetric = workerMetricsToFleetLevelAverageMap.get(metricStatName);
-            final double updatedValueToBe = extrapolateMetricsValue(metricStatName, fleetLevelAverageForMetric,
+            final double updatedValueToBe = extrapolateMetricsValue(
+                    metricStatName,
+                    fleetLevelAverageForMetric,
                     averageThroughput,
-                    increaseThroughput, averageLeaseCount);
+                    increaseThroughput,
+                    averageLeaseCount);
 
-            if (updatedValueToBe > fleetLevelAverageForMetric || updatedValueToBe > operatingRange.get(metricStatName)
-                    .get(0)) {
+            if (updatedValueToBe > fleetLevelAverageForMetric
+                    || updatedValueToBe > operatingRange.get(metricStatName).get(0)) {
                 return true;
             }
         }
@@ -138,19 +147,19 @@ public class WorkerMetricStats {
      * average leases are assigned to a worker and thus 1 lease addition increases the metric stat value by fleet level
      * average of metric stat by averageLeaseCount
      */
-    public void extrapolateMetricStatValuesForAddedLease(final Map<String, Double> workerMetricToFleetLevelAverage,
-            final int averageLeaseCount) {
+    public void extrapolateMetricStatValuesForAddedLease(
+            final Map<String, Double> workerMetricToFleetLevelAverage, final int averageLeaseCount) {
         for (Map.Entry<String, Double> workerMetricToMetricStat : metricStatsMap.entrySet()) {
             final String workerMetricName = workerMetricToMetricStat.getKey();
-            final Double updatedValue =
-                    workerMetricToMetricStat.getValue() + workerMetricToFleetLevelAverage.get(workerMetricName) / averageLeaseCount;
+            final Double updatedValue = workerMetricToMetricStat.getValue()
+                    + workerMetricToFleetLevelAverage.get(workerMetricName) / averageLeaseCount;
             metricStatsMap.replace(workerMetricName, updatedValue);
         }
     }
 
     /**
      * Determines percentage of load to reach the mean for the worker. In case of multiple worker metrics the metric stat
-     * value closest to mean is used to determine the percentage value. This value is indication of how much load in 
+     * value closest to mean is used to determine the percentage value. This value is indication of how much load in
      * percentage to current load the worker can take to reach mean value.
      * @param workerMetricToFleetLevelAverage : WorkerMetric to fleet level mean value.
      * @return percentage to reach mean based on the WorkerMetric closest to its corresponding average.
@@ -165,7 +174,8 @@ public class WorkerMetricStats {
                 // can take 100% more load than the current to reach average.
                 differenceRatio = 1;
             } else {
-                differenceRatio = (workerMetricToFleetLevelAverage.get(workerMetricName) - metricStatValue) / metricStatValue;
+                differenceRatio =
+                        (workerMetricToFleetLevelAverage.get(workerMetricName) - metricStatValue) / metricStatValue;
             }
             minDifferencePercentage = Math.min(minDifferencePercentage, differenceRatio);
         }
@@ -202,7 +212,9 @@ public class WorkerMetricStats {
             if (resourceStatsEntry.getValue().isEmpty()) {
                 continue;
             }
-            final Double lastEntry = resourceStatsEntry.getValue().get(resourceStatsEntry.getValue().size() - 1);
+            final Double lastEntry = resourceStatsEntry
+                    .getValue()
+                    .get(resourceStatsEntry.getValue().size() - 1);
             if (lastEntry != null && lastEntry == -1D) {
                 response = true;
                 break;
@@ -238,16 +250,18 @@ public class WorkerMetricStats {
                 return false;
             }
         }
-        for (final Map.Entry<String, List<Long>> operatingRangeEntry :  operatingRange.entrySet()) {
+        for (final Map.Entry<String, List<Long>> operatingRangeEntry : operatingRange.entrySet()) {
             // If operatingRange for a WorkerMetric is missing or if maxUtilization is 0 then its not valid entry.
-            if (operatingRangeEntry.getValue().isEmpty() || operatingRangeEntry.getValue().get(0) == 0) {
+            if (operatingRangeEntry.getValue().isEmpty()
+                    || operatingRangeEntry.getValue().get(0) == 0) {
                 return false;
             }
         }
         return true;
     }
 
-    public boolean isAnyWorkerMetricAboveAverageUtilizationOrOperatingRange(final Map<String, Double> workerMetricToFleetLevelAverage) {
+    public boolean isAnyWorkerMetricAboveAverageUtilizationOrOperatingRange(
+            final Map<String, Double> workerMetricToFleetLevelAverage) {
         for (final String workerMetricName : metricStats.keySet()) {
             final double value = getMetricStat(workerMetricName);
             if (value > workerMetricToFleetLevelAverage.get(workerMetricName)) {
@@ -281,7 +295,8 @@ public class WorkerMetricStats {
      * @return true if metric stat exists and is above operatingRange for the WorkerMetric
      */
     public boolean isWorkerMetricAboveOperatingRange(final String workerMetricName) {
-        return metricStatsMap.containsKey(workerMetricName) && metricStatsMap.get(workerMetricName) > operatingRange.get(
-                workerMetricName).get(0);
+        return metricStatsMap.containsKey(workerMetricName)
+                && metricStatsMap.get(workerMetricName)
+                        > operatingRange.get(workerMetricName).get(0);
     }
 }

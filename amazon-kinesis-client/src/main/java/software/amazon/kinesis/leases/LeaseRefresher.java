@@ -50,31 +50,30 @@ public interface LeaseRefresher {
     /**
      * Creates the table that will store leases. Table is now created in PayPerRequest billing mode by default.
      * Succeeds if table already exists.
-     * 
+     *
      * @return true if we created a new table (table didn't exist before)
-     * 
+     *
      * @throws ProvisionedThroughputException if we cannot create the lease table due to per-AWS-account capacity
      *         restrictions.
      * @throws DependencyException if DynamoDB createTable fails in an unexpected way
      */
-    boolean createLeaseTableIfNotExists()
-        throws ProvisionedThroughputException, DependencyException;
+    boolean createLeaseTableIfNotExists() throws ProvisionedThroughputException, DependencyException;
 
     /**
      * @return true if the lease table already exists.
-     * 
+     *
      * @throws DependencyException if DynamoDB describeTable fails in an unexpected way
      */
     boolean leaseTableExists() throws DependencyException;
 
     /**
      * Blocks until the lease table exists by polling leaseTableExists.
-     * 
+     *
      * @param secondsBetweenPolls time to wait between polls in seconds
      * @param timeoutSeconds total time to wait in seconds
-     * 
+     *
      * @return true if table exists, false if timeout was reached
-     * 
+     *
      * @throws DependencyException if DynamoDB describeTable fails in an unexpected way
      */
     boolean waitUntilLeaseTableExists(long secondsBetweenPolls, long timeoutSeconds) throws DependencyException;
@@ -98,8 +97,8 @@ public interface LeaseRefresher {
      *
      * @return true if index on the table exists and is ACTIVE, false if timeout was reached
      */
-    default boolean waitUntilLeaseOwnerToLeaseKeyIndexExists(final long secondsBetweenPolls,
-            final long timeoutSeconds) {
+    default boolean waitUntilLeaseOwnerToLeaseKeyIndexExists(
+            final long secondsBetweenPolls, final long timeoutSeconds) {
         return false;
     }
 
@@ -119,8 +118,8 @@ public interface LeaseRefresher {
      *
      * @return list of leases
      */
-    List<Lease> listLeasesForStream(StreamIdentifier streamIdentifier) throws DependencyException, InvalidStateException,
-            ProvisionedThroughputException;
+    List<Lease> listLeasesForStream(StreamIdentifier streamIdentifier)
+            throws DependencyException, InvalidStateException, ProvisionedThroughputException;
 
     /**
      * List all leases for a given workerIdentifier synchronously.
@@ -135,19 +134,18 @@ public interface LeaseRefresher {
     default List<String> listLeaseKeysForWorker(final String workerIdentifier)
             throws DependencyException, InvalidStateException, ProvisionedThroughputException {
         return listLeases().stream()
-                           .filter(lease -> lease.leaseOwner()
-                                                 .equals(workerIdentifier))
-                           .map(Lease::leaseKey)
-                           .collect(Collectors.toList());
+                .filter(lease -> lease.leaseOwner().equals(workerIdentifier))
+                .map(Lease::leaseKey)
+                .collect(Collectors.toList());
     }
 
     /**
      * List all objects in table synchronously.
-     * 
+     *
      * @throws DependencyException if DynamoDB scan fails in an unexpected way
      * @throws InvalidStateException if lease table does not exist
      * @throws ProvisionedThroughputException if DynamoDB scan fails due to lack of capacity
-     * 
+     *
      * @return list of leases
      */
     List<Lease> listLeases() throws DependencyException, InvalidStateException, ProvisionedThroughputException;
@@ -163,33 +161,33 @@ public interface LeaseRefresher {
      * @throws InvalidStateException          if lease table does not exist
      * @throws ProvisionedThroughputException if DynamoDB scan fails due to lack of capacity
      */
-    default Map.Entry<List<Lease>, List<String>> listLeasesParallely(final ExecutorService threadPool,
-            final int parallelismFactor)
+    default Map.Entry<List<Lease>, List<String>> listLeasesParallely(
+            final ExecutorService threadPool, final int parallelismFactor)
             throws DependencyException, InvalidStateException, ProvisionedThroughputException {
         throw new UnsupportedOperationException("listLeasesParallely is not implemented");
     }
 
     /**
      * Create a new lease. Conditional on a lease not already existing with this shardId.
-     * 
+     *
      * @param lease the lease to create
-     * 
+     *
      * @return true if lease was created, false if lease already exists
-     * 
+     *
      * @throws DependencyException if DynamoDB put fails in an unexpected way
      * @throws InvalidStateException if lease table does not exist
      * @throws ProvisionedThroughputException if DynamoDB put fails due to lack of capacity
      */
     boolean createLeaseIfNotExists(Lease lease)
-        throws DependencyException, InvalidStateException, ProvisionedThroughputException;
+            throws DependencyException, InvalidStateException, ProvisionedThroughputException;
 
     /**
      * @param leaseKey Get the lease for this leasekey
-     * 
+     *
      * @throws InvalidStateException if lease table does not exist
      * @throws ProvisionedThroughputException if DynamoDB get fails due to lack of capacity
      * @throws DependencyException if DynamoDB get fails in an unexpected way
-     * 
+     *
      * @return lease for the specified leaseKey, or null if one doesn't exist
      */
     Lease getLease(String leaseKey) throws DependencyException, InvalidStateException, ProvisionedThroughputException;
@@ -197,34 +195,33 @@ public interface LeaseRefresher {
     /**
      * Renew a lease by incrementing the lease counter. Conditional on the leaseCounter in DynamoDB matching the leaseCounter
      * of the input. Mutates the leaseCounter of the passed-in lease object after updating the record in DynamoDB.
-     * 
+     *
      * @param lease the lease to renew
-     * 
+     *
      * @return true if renewal succeeded, false otherwise
-     * 
+     *
      * @throws InvalidStateException if lease table does not exist
      * @throws ProvisionedThroughputException if DynamoDB update fails due to lack of capacity
      * @throws DependencyException if DynamoDB update fails in an unexpected way
      */
-    boolean renewLease(Lease lease)
-        throws DependencyException, InvalidStateException, ProvisionedThroughputException;
+    boolean renewLease(Lease lease) throws DependencyException, InvalidStateException, ProvisionedThroughputException;
 
     /**
      * Take a lease for the given owner by incrementing its leaseCounter and setting its owner field. Conditional on
      * the leaseCounter in DynamoDB matching the leaseCounter of the input. Mutates the leaseCounter and owner of the
      * passed-in lease object after updating DynamoDB.
-     * 
+     *
      * @param lease the lease to take
      * @param owner the new owner
-     * 
+     *
      * @return true if lease was successfully taken, false otherwise
-     * 
+     *
      * @throws InvalidStateException if lease table does not exist
      * @throws ProvisionedThroughputException if DynamoDB update fails due to lack of capacity
      * @throws DependencyException if DynamoDB update fails in an unexpected way
      */
     boolean takeLease(Lease lease, String owner)
-        throws DependencyException, InvalidStateException, ProvisionedThroughputException;
+            throws DependencyException, InvalidStateException, ProvisionedThroughputException;
 
     /**
      * Assigns given lease to newOwner owner by incrementing its leaseCounter and setting its owner field. Conditional
@@ -270,23 +267,22 @@ public interface LeaseRefresher {
     /**
      * Evict the current owner of lease by setting owner to null. Conditional on the owner in DynamoDB matching the owner of
      * the input. Mutates the lease counter and owner of the passed-in lease object after updating the record in DynamoDB.
-     * 
+     *
      * @param lease the lease to void
-     * 
+     *
      * @return true if eviction succeeded, false otherwise
-     * 
+     *
      * @throws InvalidStateException if lease table does not exist
      * @throws ProvisionedThroughputException if DynamoDB update fails due to lack of capacity
      * @throws DependencyException if DynamoDB update fails in an unexpected way
      */
-    boolean evictLease(Lease lease)
-        throws DependencyException, InvalidStateException, ProvisionedThroughputException;
+    boolean evictLease(Lease lease) throws DependencyException, InvalidStateException, ProvisionedThroughputException;
 
     /**
      * Delete the given lease from DynamoDB. Does nothing when passed a lease that does not exist in DynamoDB.
-     * 
+     *
      * @param lease the lease to delete
-     * 
+     *
      * @throws InvalidStateException if lease table does not exist
      * @throws ProvisionedThroughputException if DynamoDB delete fails due to lack of capacity
      * @throws DependencyException if DynamoDB delete fails in an unexpected way
@@ -295,7 +291,7 @@ public interface LeaseRefresher {
 
     /**
      * Delete all leases from DynamoDB. Useful for tools/utils and testing.
-     * 
+     *
      * @throws InvalidStateException if lease table does not exist
      * @throws ProvisionedThroughputException if DynamoDB scan or delete fail due to lack of capacity
      * @throws DependencyException if DynamoDB scan or delete fail in an unexpected way
@@ -307,15 +303,14 @@ public interface LeaseRefresher {
      * library such as leaseCounter, leaseOwner, or leaseKey. Conditional on the leaseCounter in DynamoDB matching the
      * leaseCounter of the input. Increments the lease counter in DynamoDB so that updates can be contingent on other
      * updates. Mutates the lease counter of the passed-in lease object.
-     * 
+     *
      * @return true if update succeeded, false otherwise
-     * 
+     *
      * @throws InvalidStateException if lease table does not exist
      * @throws ProvisionedThroughputException if DynamoDB update fails due to lack of capacity
      * @throws DependencyException if DynamoDB update fails in an unexpected way
      */
-    boolean updateLease(Lease lease)
-        throws DependencyException, InvalidStateException, ProvisionedThroughputException;
+    boolean updateLease(Lease lease) throws DependencyException, InvalidStateException, ProvisionedThroughputException;
 
     /**
      * Update application-specific fields of the given lease in DynamoDB. Does not update fields managed by the leasing
@@ -332,9 +327,9 @@ public interface LeaseRefresher {
 
     /**
      * Check (synchronously) if there are any leases in the lease table.
-     * 
+     *
      * @return true if there are no leases in the lease table
-     * 
+     *
      * @throws DependencyException if DynamoDB scan fails in an unexpected way
      * @throws InvalidStateException if lease table does not exist
      * @throws ProvisionedThroughputException if DynamoDB scan fails due to lack of capacity

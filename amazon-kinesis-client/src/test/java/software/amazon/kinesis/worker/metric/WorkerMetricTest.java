@@ -1,8 +1,8 @@
 package software.amazon.kinesis.worker.metric;
 
-import org.junit.jupiter.api.Test;
-
 import java.util.function.Supplier;
+
+import org.junit.jupiter.api.Test;
 
 import static org.junit.Assert.assertTrue;
 
@@ -18,7 +18,8 @@ class WorkerMetricTest {
         WorkerMetric.WorkerMetricValue.builder().value(99.00001D).build();
 
         assertFailure(() -> WorkerMetric.WorkerMetricValue.builder().value(-1D).build(), -1D);
-        assertFailure(() -> WorkerMetric.WorkerMetricValue.builder().value(100.00001D).build(), 100.00001D);
+        assertFailure(
+                () -> WorkerMetric.WorkerMetricValue.builder().value(100.00001D).build(), 100.00001D);
     }
 
     private void assertFailure(final Supplier<WorkerMetric.WorkerMetricValue> supplier, final double value) {

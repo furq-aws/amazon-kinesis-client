@@ -17,6 +17,7 @@ public class ExponentialMovingAverage {
 
     @Getter
     private double value;
+
     private boolean initialized = false;
 
     public void add(final double newValue) {

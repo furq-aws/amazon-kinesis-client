@@ -20,7 +20,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-
 import com.google.common.base.Strings;
 import software.amazon.awssdk.services.dynamodb.model.AttributeAction;
 import software.amazon.awssdk.services.dynamodb.model.AttributeDefinition;
@@ -73,8 +72,12 @@ public class DynamoDBLeaseSerializer implements LeaseSerializer {
         }
 
         result.put(OWNER_SWITCHES_KEY, DynamoUtils.createAttributeValue(lease.ownerSwitchesSinceCheckpoint()));
-        result.put(CHECKPOINT_SEQUENCE_NUMBER_KEY, DynamoUtils.createAttributeValue(lease.checkpoint().sequenceNumber()));
-        result.put(CHECKPOINT_SUBSEQUENCE_NUMBER_KEY, DynamoUtils.createAttributeValue(lease.checkpoint().subSequenceNumber()));
+        result.put(
+                CHECKPOINT_SEQUENCE_NUMBER_KEY,
+                DynamoUtils.createAttributeValue(lease.checkpoint().sequenceNumber()));
+        result.put(
+                CHECKPOINT_SUBSEQUENCE_NUMBER_KEY,
+                DynamoUtils.createAttributeValue(lease.checkpoint().subSequenceNumber()));
         if (lease.parentShardIds() != null && !lease.parentShardIds().isEmpty()) {
             result.put(PARENT_SHARD_ID_KEY, DynamoUtils.createAttributeValue(lease.parentShardIds()));
         }
@@ -82,18 +85,31 @@ public class DynamoDBLeaseSerializer implements LeaseSerializer {
             result.put(CHILD_SHARD_IDS_KEY, DynamoUtils.createAttributeValue(lease.childShardIds()));
         }
 
-        if (lease.pendingCheckpoint() != null && !lease.pendingCheckpoint().sequenceNumber().isEmpty()) {
-            result.put(PENDING_CHECKPOINT_SEQUENCE_KEY, DynamoUtils.createAttributeValue(lease.pendingCheckpoint().sequenceNumber()));
-            result.put(PENDING_CHECKPOINT_SUBSEQUENCE_KEY, DynamoUtils.createAttributeValue(lease.pendingCheckpoint().subSequenceNumber()));
+        if (lease.pendingCheckpoint() != null
+                && !lease.pendingCheckpoint().sequenceNumber().isEmpty()) {
+            result.put(
+                    PENDING_CHECKPOINT_SEQUENCE_KEY,
+                    DynamoUtils.createAttributeValue(lease.pendingCheckpoint().sequenceNumber()));
+            result.put(
+                    PENDING_CHECKPOINT_SUBSEQUENCE_KEY,
+                    DynamoUtils.createAttributeValue(lease.pendingCheckpoint().subSequenceNumber()));
         }
 
         if (lease.pendingCheckpointState() != null) {
-            result.put(PENDING_CHECKPOINT_STATE_KEY, DynamoUtils.createAttributeValue(lease.checkpoint().subSequenceNumber()));
+            result.put(
+                    PENDING_CHECKPOINT_STATE_KEY,
+                    DynamoUtils.createAttributeValue(lease.checkpoint().subSequenceNumber()));
         }
 
         if (lease.hashKeyRangeForLease() != null) {
-            result.put(STARTING_HASH_KEY, DynamoUtils.createAttributeValue(lease.hashKeyRangeForLease().serializedStartingHashKey()));
-            result.put(ENDING_HASH_KEY, DynamoUtils.createAttributeValue(lease.hashKeyRangeForLease().serializedEndingHashKey()));
+            result.put(
+                    STARTING_HASH_KEY,
+                    DynamoUtils.createAttributeValue(
+                            lease.hashKeyRangeForLease().serializedStartingHashKey()));
+            result.put(
+                    ENDING_HASH_KEY,
+                    DynamoUtils.createAttributeValue(
+                            lease.hashKeyRangeForLease().serializedEndingHashKey()));
         }
 
         if (lease.throughputKBps() != null) {
@@ -119,20 +135,16 @@ public class DynamoDBLeaseSerializer implements LeaseSerializer {
         leaseToUpdate.leaseCounter(DynamoUtils.safeGetLong(dynamoRecord, LEASE_COUNTER_KEY));
 
         leaseToUpdate.ownerSwitchesSinceCheckpoint(DynamoUtils.safeGetLong(dynamoRecord, OWNER_SWITCHES_KEY));
-        leaseToUpdate.checkpoint(
-                new ExtendedSequenceNumber(
-                        DynamoUtils.safeGetString(dynamoRecord, CHECKPOINT_SEQUENCE_NUMBER_KEY),
-                        DynamoUtils.safeGetLong(dynamoRecord, CHECKPOINT_SUBSEQUENCE_NUMBER_KEY))
-        );
+        leaseToUpdate.checkpoint(new ExtendedSequenceNumber(
+                DynamoUtils.safeGetString(dynamoRecord, CHECKPOINT_SEQUENCE_NUMBER_KEY),
+                DynamoUtils.safeGetLong(dynamoRecord, CHECKPOINT_SUBSEQUENCE_NUMBER_KEY)));
         leaseToUpdate.parentShardIds(DynamoUtils.safeGetSS(dynamoRecord, PARENT_SHARD_ID_KEY));
         leaseToUpdate.childShardIds(DynamoUtils.safeGetSS(dynamoRecord, CHILD_SHARD_IDS_KEY));
 
         if (!Strings.isNullOrEmpty(DynamoUtils.safeGetString(dynamoRecord, PENDING_CHECKPOINT_SEQUENCE_KEY))) {
-            leaseToUpdate.pendingCheckpoint(
-                    new ExtendedSequenceNumber(
-                            DynamoUtils.safeGetString(dynamoRecord, PENDING_CHECKPOINT_SEQUENCE_KEY),
-                            DynamoUtils.safeGetLong(dynamoRecord, PENDING_CHECKPOINT_SUBSEQUENCE_KEY))
-            );
+            leaseToUpdate.pendingCheckpoint(new ExtendedSequenceNumber(
+                    DynamoUtils.safeGetString(dynamoRecord, PENDING_CHECKPOINT_SEQUENCE_KEY),
+                    DynamoUtils.safeGetLong(dynamoRecord, PENDING_CHECKPOINT_SUBSEQUENCE_KEY)));
         }
 
         leaseToUpdate.pendingCheckpointState(DynamoUtils.safeGetByteArray(dynamoRecord, PENDING_CHECKPOINT_STATE_KEY));
@@ -176,7 +188,9 @@ public class DynamoDBLeaseSerializer implements LeaseSerializer {
     public Map<String, ExpectedAttributeValue> getDynamoLeaseCounterExpectation(final Long leaseCounter) {
         Map<String, ExpectedAttributeValue> result = new HashMap<>();
 
-        ExpectedAttributeValue eav = ExpectedAttributeValue.builder().value(DynamoUtils.createAttributeValue(leaseCounter)).build();
+        ExpectedAttributeValue eav = ExpectedAttributeValue.builder()
+                .value(DynamoUtils.createAttributeValue(leaseCounter))
+                .build();
         result.put(LEASE_COUNTER_KEY, eav);
 
         return result;
@@ -194,7 +208,8 @@ public class DynamoDBLeaseSerializer implements LeaseSerializer {
     public Map<String, ExpectedAttributeValue> getDynamoNonexistantExpectation() {
         Map<String, ExpectedAttributeValue> result = new HashMap<>();
 
-        ExpectedAttributeValue expectedAV = ExpectedAttributeValue.builder().exists(false).build();
+        ExpectedAttributeValue expectedAV =
+                ExpectedAttributeValue.builder().exists(false).build();
         result.put(LEASE_KEY_KEY, expectedAV);
 
         return result;
@@ -221,8 +236,10 @@ public class DynamoDBLeaseSerializer implements LeaseSerializer {
     public Map<String, AttributeValueUpdate> getDynamoLeaseCounterUpdate(Long leaseCounter) {
         Map<String, AttributeValueUpdate> result = new HashMap<>();
 
-        AttributeValueUpdate avu =
-                AttributeValueUpdate.builder().value(DynamoUtils.createAttributeValue(leaseCounter + 1)).action(AttributeAction.PUT).build();
+        AttributeValueUpdate avu = AttributeValueUpdate.builder()
+                .value(DynamoUtils.createAttributeValue(leaseCounter + 1))
+                .action(AttributeAction.PUT)
+                .build();
         result.put(LEASE_COUNTER_KEY, avu);
 
         return result;
@@ -232,20 +249,29 @@ public class DynamoDBLeaseSerializer implements LeaseSerializer {
     public Map<String, AttributeValueUpdate> getDynamoTakeLeaseUpdate(final Lease lease, String owner) {
         Map<String, AttributeValueUpdate> result = new HashMap<>();
 
-        result.put(LEASE_OWNER_KEY, AttributeValueUpdate.builder().value(DynamoUtils.createAttributeValue(owner))
-                .action(AttributeAction.PUT).build());
+        result.put(
+                LEASE_OWNER_KEY,
+                AttributeValueUpdate.builder()
+                        .value(DynamoUtils.createAttributeValue(owner))
+                        .action(AttributeAction.PUT)
+                        .build());
         // this method is currently used by assignLease and takeLease. In both case we want the checkpoint owner to be
         // deleted as this is a fresh assignment
-        result.put(CHECKPOINT_OWNER, AttributeValueUpdate.builder().action(AttributeAction.DELETE).build());
+        result.put(
+                CHECKPOINT_OWNER,
+                AttributeValueUpdate.builder().action(AttributeAction.DELETE).build());
 
         String oldOwner = lease.leaseOwner();
         String checkpointOwner = lease.checkpointOwner();
         // if checkpoint owner is not null, this update is supposed to remove the checkpoint owner
         // and transfer the lease ownership to the leaseOwner so incrementing the owner switch key
-        if (oldOwner != null && !oldOwner.equals(owner) ||
-                (checkpointOwner != null && checkpointOwner.equals(owner))) {
-            result.put(OWNER_SWITCHES_KEY, AttributeValueUpdate.builder().value(DynamoUtils.createAttributeValue(1L))
-                    .action(AttributeAction.ADD).build());
+        if (oldOwner != null && !oldOwner.equals(owner) || (checkpointOwner != null && checkpointOwner.equals(owner))) {
+            result.put(
+                    OWNER_SWITCHES_KEY,
+                    AttributeValueUpdate.builder()
+                            .value(DynamoUtils.createAttributeValue(1L))
+                            .action(AttributeAction.ADD)
+                            .build());
         }
 
         return result;
@@ -272,71 +298,113 @@ public class DynamoDBLeaseSerializer implements LeaseSerializer {
         // checkpoint owner so the next owner (leaseOwner) can pick up the lease without waiting for assignment.
         // Otherwise, remove the leaseOwner
         if (lease.checkpointOwner() == null) {
-            result.put(LEASE_OWNER_KEY, AttributeValueUpdate.builder().action(AttributeAction.DELETE).build());
+            result.put(
+                    LEASE_OWNER_KEY,
+                    AttributeValueUpdate.builder()
+                            .action(AttributeAction.DELETE)
+                            .build());
         }
         // We always want to remove checkpointOwner, it's ok even if it's null
-        result.put(CHECKPOINT_OWNER, AttributeValueUpdate.builder().action(AttributeAction.DELETE).build());
+        result.put(
+                CHECKPOINT_OWNER,
+                AttributeValueUpdate.builder().action(AttributeAction.DELETE).build());
         result.put(LEASE_COUNTER_KEY, getAttributeValueUpdateForAdd());
         return result;
     }
 
     protected AttributeValueUpdate putUpdate(AttributeValue attributeValue) {
-        return AttributeValueUpdate.builder().value(attributeValue).action(AttributeAction.PUT).build();
+        return AttributeValueUpdate.builder()
+                .value(attributeValue)
+                .action(AttributeAction.PUT)
+                .build();
     }
 
     @Override
     public Map<String, AttributeValueUpdate> getDynamoUpdateLeaseUpdate(final Lease lease) {
         Map<String, AttributeValueUpdate> result = new HashMap<>();
-        result.put(CHECKPOINT_SEQUENCE_NUMBER_KEY, putUpdate(DynamoUtils.createAttributeValue(lease.checkpoint().sequenceNumber())));
-        result.put(CHECKPOINT_SUBSEQUENCE_NUMBER_KEY, putUpdate(DynamoUtils.createAttributeValue(lease.checkpoint().subSequenceNumber())));
-        result.put(OWNER_SWITCHES_KEY, putUpdate(DynamoUtils.createAttributeValue(lease.ownerSwitchesSinceCheckpoint())));
+        result.put(
+                CHECKPOINT_SEQUENCE_NUMBER_KEY,
+                putUpdate(DynamoUtils.createAttributeValue(lease.checkpoint().sequenceNumber())));
+        result.put(
+                CHECKPOINT_SUBSEQUENCE_NUMBER_KEY,
+                putUpdate(DynamoUtils.createAttributeValue(lease.checkpoint().subSequenceNumber())));
+        result.put(
+                OWNER_SWITCHES_KEY, putUpdate(DynamoUtils.createAttributeValue(lease.ownerSwitchesSinceCheckpoint())));
 
-        if (lease.pendingCheckpoint() != null && !lease.pendingCheckpoint().sequenceNumber().isEmpty()) {
-            result.put(PENDING_CHECKPOINT_SEQUENCE_KEY, putUpdate(DynamoUtils.createAttributeValue(lease.pendingCheckpoint().sequenceNumber())));
-            result.put(PENDING_CHECKPOINT_SUBSEQUENCE_KEY, putUpdate(DynamoUtils.createAttributeValue(
-                    lease.pendingCheckpoint().subSequenceNumber())));
+        if (lease.pendingCheckpoint() != null
+                && !lease.pendingCheckpoint().sequenceNumber().isEmpty()) {
+            result.put(
+                    PENDING_CHECKPOINT_SEQUENCE_KEY,
+                    putUpdate(DynamoUtils.createAttributeValue(
+                            lease.pendingCheckpoint().sequenceNumber())));
+            result.put(
+                    PENDING_CHECKPOINT_SUBSEQUENCE_KEY,
+                    putUpdate(DynamoUtils.createAttributeValue(
+                            lease.pendingCheckpoint().subSequenceNumber())));
         } else {
-            result.put(PENDING_CHECKPOINT_SEQUENCE_KEY, AttributeValueUpdate.builder().action(AttributeAction.DELETE).build());
-            result.put(PENDING_CHECKPOINT_SUBSEQUENCE_KEY, AttributeValueUpdate.builder().action(AttributeAction.DELETE).build());
+            result.put(
+                    PENDING_CHECKPOINT_SEQUENCE_KEY,
+                    AttributeValueUpdate.builder()
+                            .action(AttributeAction.DELETE)
+                            .build());
+            result.put(
+                    PENDING_CHECKPOINT_SUBSEQUENCE_KEY,
+                    AttributeValueUpdate.builder()
+                            .action(AttributeAction.DELETE)
+                            .build());
         }
 
         if (lease.pendingCheckpointState() != null) {
-            result.put(PENDING_CHECKPOINT_STATE_KEY, putUpdate(DynamoUtils.createAttributeValue(lease.pendingCheckpointState())));
+            result.put(
+                    PENDING_CHECKPOINT_STATE_KEY,
+                    putUpdate(DynamoUtils.createAttributeValue(lease.pendingCheckpointState())));
         } else {
-            result.put(PENDING_CHECKPOINT_STATE_KEY, AttributeValueUpdate.builder().action(AttributeAction.DELETE).build());
+            result.put(
+                    PENDING_CHECKPOINT_STATE_KEY,
+                    AttributeValueUpdate.builder()
+                            .action(AttributeAction.DELETE)
+                            .build());
         }
-
 
         if (!CollectionUtils.isNullOrEmpty(lease.childShardIds())) {
             result.put(CHILD_SHARD_IDS_KEY, putUpdate(DynamoUtils.createAttributeValue(lease.childShardIds())));
         }
 
         if (lease.hashKeyRangeForLease() != null) {
-            result.put(STARTING_HASH_KEY, putUpdate(DynamoUtils.createAttributeValue(lease.hashKeyRangeForLease().serializedStartingHashKey())));
-            result.put(ENDING_HASH_KEY, putUpdate(DynamoUtils.createAttributeValue(lease.hashKeyRangeForLease().serializedEndingHashKey())));
+            result.put(
+                    STARTING_HASH_KEY,
+                    putUpdate(DynamoUtils.createAttributeValue(
+                            lease.hashKeyRangeForLease().serializedStartingHashKey())));
+            result.put(
+                    ENDING_HASH_KEY,
+                    putUpdate(DynamoUtils.createAttributeValue(
+                            lease.hashKeyRangeForLease().serializedEndingHashKey())));
         }
 
         return result;
     }
 
     @Override
-    public Map<String, AttributeValueUpdate> getDynamoUpdateLeaseUpdate(Lease lease,
-            UpdateField updateField) {
+    public Map<String, AttributeValueUpdate> getDynamoUpdateLeaseUpdate(Lease lease, UpdateField updateField) {
         Map<String, AttributeValueUpdate> result = new HashMap<>();
         switch (updateField) {
-        case CHILD_SHARDS:
-            if (!CollectionUtils.isNullOrEmpty(lease.childShardIds())) {
-                result.put(CHILD_SHARD_IDS_KEY, putUpdate(DynamoUtils.createAttributeValue(lease.childShardIds())));
-            }
-            break;
-        case HASH_KEY_RANGE:
-            if (lease.hashKeyRangeForLease() != null) {
-                result.put(STARTING_HASH_KEY, putUpdate(
-                        DynamoUtils.createAttributeValue(lease.hashKeyRangeForLease().serializedStartingHashKey())));
-                result.put(ENDING_HASH_KEY, putUpdate(
-                        DynamoUtils.createAttributeValue(lease.hashKeyRangeForLease().serializedEndingHashKey())));
-            }
-            break;
+            case CHILD_SHARDS:
+                if (!CollectionUtils.isNullOrEmpty(lease.childShardIds())) {
+                    result.put(CHILD_SHARD_IDS_KEY, putUpdate(DynamoUtils.createAttributeValue(lease.childShardIds())));
+                }
+                break;
+            case HASH_KEY_RANGE:
+                if (lease.hashKeyRangeForLease() != null) {
+                    result.put(
+                            STARTING_HASH_KEY,
+                            putUpdate(DynamoUtils.createAttributeValue(
+                                    lease.hashKeyRangeForLease().serializedStartingHashKey())));
+                    result.put(
+                            ENDING_HASH_KEY,
+                            putUpdate(DynamoUtils.createAttributeValue(
+                                    lease.hashKeyRangeForLease().serializedEndingHashKey())));
+                }
+                break;
         }
         return result;
     }
@@ -344,7 +412,10 @@ public class DynamoDBLeaseSerializer implements LeaseSerializer {
     @Override
     public Collection<KeySchemaElement> getKeySchema() {
         List<KeySchemaElement> keySchema = new ArrayList<>();
-        keySchema.add(KeySchemaElement.builder().attributeName(LEASE_KEY_KEY).keyType(KeyType.HASH).build());
+        keySchema.add(KeySchemaElement.builder()
+                .attributeName(LEASE_KEY_KEY)
+                .keyType(KeyType.HASH)
+                .build());
 
         return keySchema;
     }
@@ -352,8 +423,10 @@ public class DynamoDBLeaseSerializer implements LeaseSerializer {
     @Override
     public Collection<AttributeDefinition> getAttributeDefinitions() {
         List<AttributeDefinition> definitions = new ArrayList<>();
-        definitions.add(AttributeDefinition.builder().attributeName(LEASE_KEY_KEY)
-                .attributeType(ScalarAttributeType.S).build());
+        definitions.add(AttributeDefinition.builder()
+                .attributeName(LEASE_KEY_KEY)
+                .attributeType(ScalarAttributeType.S)
+                .build());
 
         return definitions;
     }
@@ -361,8 +434,14 @@ public class DynamoDBLeaseSerializer implements LeaseSerializer {
     @Override
     public Collection<KeySchemaElement> getWorkerIdToLeaseKeyIndexKeySchema() {
         final List<KeySchemaElement> keySchema = new ArrayList<>();
-        keySchema.add(KeySchemaElement.builder().attributeName(LEASE_OWNER_KEY).keyType(KeyType.HASH).build());
-        keySchema.add(KeySchemaElement.builder().attributeName(LEASE_KEY_KEY).keyType(KeyType.RANGE).build());
+        keySchema.add(KeySchemaElement.builder()
+                .attributeName(LEASE_OWNER_KEY)
+                .keyType(KeyType.HASH)
+                .build());
+        keySchema.add(KeySchemaElement.builder()
+                .attributeName(LEASE_KEY_KEY)
+                .keyType(KeyType.RANGE)
+                .build());
         return keySchema;
     }
 
@@ -370,13 +449,13 @@ public class DynamoDBLeaseSerializer implements LeaseSerializer {
     public Collection<AttributeDefinition> getWorkerIdToLeaseKeyIndexAttributeDefinitions() {
         final List<AttributeDefinition> definitions = new ArrayList<>();
         definitions.add(AttributeDefinition.builder()
-                                           .attributeName(LEASE_OWNER_KEY)
-                                           .attributeType(ScalarAttributeType.S)
-                                           .build());
+                .attributeName(LEASE_OWNER_KEY)
+                .attributeType(ScalarAttributeType.S)
+                .build());
         definitions.add(AttributeDefinition.builder()
-                                           .attributeName(LEASE_KEY_KEY)
-                                           .attributeType(ScalarAttributeType.S)
-                                           .build());
+                .attributeName(LEASE_KEY_KEY)
+                .attributeType(ScalarAttributeType.S)
+                .build());
         return definitions;
     }
 
@@ -384,9 +463,9 @@ public class DynamoDBLeaseSerializer implements LeaseSerializer {
     public Map<String, AttributeValueUpdate> getDynamoLeaseThroughputKbpsUpdate(Lease lease) {
         final Map<String, AttributeValueUpdate> result = new HashMap<>();
         final AttributeValueUpdate avu = AttributeValueUpdate.builder()
-                                                             .value(DynamoUtils.createAttributeValue(lease.throughputKBps()))
-                                                             .action(AttributeAction.PUT)
-                                                             .build();
+                .value(DynamoUtils.createAttributeValue(lease.throughputKBps()))
+                .action(AttributeAction.PUT)
+                .build();
         result.put(THROUGHOUT_PUT_KBPS, avu);
         return result;
     }
@@ -394,7 +473,9 @@ public class DynamoDBLeaseSerializer implements LeaseSerializer {
     private static ExpectedAttributeValue buildExpectedAttributeValueIfExistsOrValue(String value) {
         return value == null
                 ? ExpectedAttributeValue.builder().exists(false).build()
-                : ExpectedAttributeValue.builder().value(DynamoUtils.createAttributeValue(value)).build();
+                : ExpectedAttributeValue.builder()
+                        .value(DynamoUtils.createAttributeValue(value))
+                        .build();
     }
 
     private static AttributeValueUpdate getAttributeValueUpdateForAdd() {

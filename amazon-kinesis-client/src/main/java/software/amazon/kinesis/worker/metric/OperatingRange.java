@@ -1,9 +1,8 @@
 package software.amazon.kinesis.worker.metric;
 
+import com.google.common.base.Preconditions;
 import lombok.Builder;
 import lombok.Data;
-
-import com.google.common.base.Preconditions;
 
 @Data
 @Builder

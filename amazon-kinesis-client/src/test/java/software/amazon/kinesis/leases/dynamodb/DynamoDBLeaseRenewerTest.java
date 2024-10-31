@@ -1,5 +1,13 @@
 package software.amazon.kinesis.leases.dynamodb;
 
+import java.time.Duration;
+import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.function.Consumer;
+
 import com.amazonaws.services.dynamodbv2.local.embedded.DynamoDBEmbedded;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -10,7 +18,6 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
-
 import software.amazon.awssdk.core.util.DefaultSdkAutoConstructList;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
@@ -25,14 +32,6 @@ import software.amazon.kinesis.leases.exceptions.InvalidStateException;
 import software.amazon.kinesis.leases.exceptions.ProvisionedThroughputException;
 import software.amazon.kinesis.metrics.NullMetricsFactory;
 
-import java.time.Duration;
-import java.util.Map;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.function.Consumer;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -46,37 +45,42 @@ import static software.amazon.kinesis.retrieval.kpl.ExtendedSequenceNumber.TRIM_
 class DynamoDBLeaseRenewerTest {
 
     private static final String TEST_NUMBER_VALUE_BELOW_DDB_RANGE =
-            "0.00000000000000000000000000000000000000000000000000000000000000" +
-                    "000000000000000000000000000000000000000000000000000000000000000000001";
+            "0.00000000000000000000000000000000000000000000000000000000000000"
+                    + "000000000000000000000000000000000000000000000000000000000000000000001";
     private static final String TEST_NUMBER_HIGHER_PRECISION = "1.00000000000000000000000000000000000001";
     private static final String TEST_NUMBER_WITH_HIGH_DECIMAL_VALUES =
-            "0.00000000000000000000000000000000000000000000000000000000000000" +
-                    "000000000000000000000000000000000000000000000000000000000000000000016843473634062791";
+            "0.00000000000000000000000000000000000000000000000000000000000000"
+                    + "000000000000000000000000000000000000000000000000000000000000000000016843473634062791";
     private static final String TEST_NUMBER_WITH_ALL_ZERO_DECIMAL_VALUES =
-            "0.00000000000000000000000000000000000000000000000000000000000000" +
-                    "000000000000000000000000000000000000000000000000000000000000000000000000000000";
+            "0.00000000000000000000000000000000000000000000000000000000000000"
+                    + "000000000000000000000000000000000000000000000000000000000000000000000000000000";
 
     private static final String WORKER_ID = "WorkerId";
     private static final String TEST_LEASE_TABLE = "SomeTable";
     private DynamoDBLeaseRefresher leaseRefresher;
     private DynamoDBLeaseRenewer leaseRenewer;
     private LeaseStatsRecorder leaseStatsRecorder;
+
     @Mock
     private Consumer<Lease> mockLeaseGracefulShutdownCallBack;
+
     @Mock
     private ExecutorService mockExecutorService;
+
     @Mock
     private Future mockFuture;
+
     private Callable leaseRenewalCallable;
 
-    private final DynamoDbAsyncClient dynamoDbAsyncClient = DynamoDBEmbedded.create()
-            .dynamoDbAsyncClient();
+    private final DynamoDbAsyncClient dynamoDbAsyncClient =
+            DynamoDBEmbedded.create().dynamoDbAsyncClient();
 
     @BeforeEach
     void setup() throws Exception {
         MockitoAnnotations.initMocks(this);
         this.leaseStatsRecorder = Mockito.mock(LeaseStatsRecorder.class);
-        this.leaseRefresher = new DynamoDBLeaseRefresher(TEST_LEASE_TABLE,
+        this.leaseRefresher = new DynamoDBLeaseRefresher(
+                TEST_LEASE_TABLE,
                 dynamoDbAsyncClient,
                 new DynamoDBLeaseSerializer(),
                 true,
@@ -85,39 +89,37 @@ class DynamoDBLeaseRenewerTest {
                 new DdbTableConfig().billingMode(BillingMode.PAY_PER_REQUEST),
                 LeaseManagementConfig.DEFAULT_LEASE_TABLE_DELETION_PROTECTION_ENABLED,
                 DefaultSdkAutoConstructList.getInstance());
-        this.leaseRenewer = new DynamoDBLeaseRenewer(leaseRefresher,
+        this.leaseRenewer = new DynamoDBLeaseRenewer(
+                leaseRefresher,
                 WORKER_ID,
                 Duration.ofHours(1).toMillis(),
                 Executors.newFixedThreadPool(1),
                 new NullMetricsFactory(),
                 leaseStatsRecorder,
-                mockLeaseGracefulShutdownCallBack
-                );
+                mockLeaseGracefulShutdownCallBack);
         this.leaseRefresher.createLeaseTableIfNotExists();
         this.leaseRefresher.waitUntilLeaseTableExists(1, 30);
     }
 
     @ParameterizedTest
     @CsvSource({
-            TEST_NUMBER_VALUE_BELOW_DDB_RANGE + ",0.0",
-            TEST_NUMBER_HIGHER_PRECISION + ",1.0",
-            "1.024,1.024",
-            "1024.1024, 1024.1024",
-            "1024.102412324, 1024.102412",
-            "1999999.123213213123123213213, 1999999.123213",
-            TEST_NUMBER_WITH_HIGH_DECIMAL_VALUES + ",0.0",
-            TEST_NUMBER_WITH_ALL_ZERO_DECIMAL_VALUES + ",0.0"
+        TEST_NUMBER_VALUE_BELOW_DDB_RANGE + ",0.0",
+        TEST_NUMBER_HIGHER_PRECISION + ",1.0",
+        "1.024,1.024",
+        "1024.1024, 1024.1024",
+        "1024.102412324, 1024.102412",
+        "1999999.123213213123123213213, 1999999.123213",
+        TEST_NUMBER_WITH_HIGH_DECIMAL_VALUES + ",0.0",
+        TEST_NUMBER_WITH_ALL_ZERO_DECIMAL_VALUES + ",0.0"
     })
-    void renewLeases_withDifferentInputFromLeaseRecorder_assertNoFailureAndExpectedValue(final String inputNumber,
-            final double expected) throws Exception {
-        when(leaseStatsRecorder.getThroughputKBps("key-1"))
-                .thenReturn(Double.parseDouble(inputNumber));
+    void renewLeases_withDifferentInputFromLeaseRecorder_assertNoFailureAndExpectedValue(
+            final String inputNumber, final double expected) throws Exception {
+        when(leaseStatsRecorder.getThroughputKBps("key-1")).thenReturn(Double.parseDouble(inputNumber));
         final Lease lease = createDummyLease("key-1", WORKER_ID);
         leaseRefresher.createLeaseIfNotExists(lease);
         leaseRenewer.addLeasesToRenew(ImmutableList.of(lease));
         leaseRenewer.renewLeases();
-        assertEquals(expected, leaseRefresher.getLease("key-1").throughputKBps(),
-                "Throughput value is not matching");
+        assertEquals(expected, leaseRefresher.getLease("key-1").throughputKBps(), "Throughput value is not matching");
     }
 
     @Test
@@ -186,7 +188,8 @@ class DynamoDBLeaseRenewerTest {
     private void createAndPutBadLeaseEntryInTable() {
         final PutItemRequest putItemRequest = PutItemRequest.builder()
                 .tableName(TEST_LEASE_TABLE)
-                .item(ImmutableMap.of("leaseKey", AttributeValue.builder().s("badLeaseKey").build()))
+                .item(ImmutableMap.of(
+                        "leaseKey", AttributeValue.builder().s("badLeaseKey").build()))
                 .build();
 
         dynamoDbAsyncClient.putItem(putItemRequest);
@@ -198,14 +201,14 @@ class DynamoDBLeaseRenewerTest {
             return mockFuture;
         });
         when(mockFuture.get()).thenReturn(false);
-        this.leaseRenewer = new DynamoDBLeaseRenewer(leaseRefresher,
+        this.leaseRenewer = new DynamoDBLeaseRenewer(
+                leaseRefresher,
                 WORKER_ID,
                 Duration.ofHours(1).toMillis(),
                 mockExecutorService,
                 new NullMetricsFactory(),
                 leaseStatsRecorder,
-                mockLeaseGracefulShutdownCallBack
-        );
+                mockLeaseGracefulShutdownCallBack);
         this.leaseRefresher.createLeaseTableIfNotExists();
         this.leaseRefresher.waitUntilLeaseTableExists(1, 30);
     }

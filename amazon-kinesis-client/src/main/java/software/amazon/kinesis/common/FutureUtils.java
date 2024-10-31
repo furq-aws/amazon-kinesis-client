@@ -37,8 +37,7 @@ public class FutureUtils {
 
     public static <T> T unwrappingFuture(final Supplier<CompletableFuture<T>> supplier) {
         try {
-            return supplier.get()
-                .join();
+            return supplier.get().join();
         } catch (CompletionException e) {
             if (e.getCause() instanceof RuntimeException) {
                 throw (RuntimeException) e.getCause();

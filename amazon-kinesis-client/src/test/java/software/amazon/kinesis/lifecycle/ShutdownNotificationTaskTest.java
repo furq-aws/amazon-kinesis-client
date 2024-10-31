@@ -1,5 +1,8 @@
 package software.amazon.kinesis.lifecycle;
 
+import java.util.Collections;
+import java.util.UUID;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
@@ -13,9 +16,6 @@ import software.amazon.kinesis.leases.ShardInfo;
 import software.amazon.kinesis.leases.dynamodb.DynamoDBLeaseCoordinator;
 import software.amazon.kinesis.processor.ShardRecordProcessor;
 
-import java.util.Collections;
-import java.util.UUID;
-
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -24,14 +24,19 @@ import static org.mockito.Mockito.when;
 class ShutdownNotificationTaskTest {
     private static final String LEASE_OWNER = "leaseOwner";
     private final Lease lease = LeaseHelper.createLease("shardId-9", LEASE_OWNER, Collections.emptyList());
+
     @Mock
     private ShardRecordProcessorCheckpointer mockRecordProcessorCheckpointer;
+
     @Mock
     private LeaseRefresher mockLeaseRefresher;
+
     @Mock
     private LeaseCoordinator mockLeaseCoordinator;
+
     @Mock
     private ShardRecordProcessor mockShardRecordProcessor;
+
     private ShutdownNotificationTask shutdownNotificationTask;
 
     @BeforeEach

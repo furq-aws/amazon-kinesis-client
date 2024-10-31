@@ -14,6 +14,12 @@
  */
 package software.amazon.kinesis.coordinator.migration;
 
+import java.util.AbstractMap.SimpleEntry;
+import java.util.Random;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import software.amazon.awssdk.annotations.ThreadSafe;
@@ -28,12 +34,6 @@ import software.amazon.kinesis.metrics.MetricsLevel;
 import software.amazon.kinesis.metrics.MetricsScope;
 import software.amazon.kinesis.metrics.MetricsUtil;
 
-import java.util.AbstractMap.SimpleEntry;
-import java.util.Random;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-
 /**
  * Implementation of {@link MigrationStateMachine}
  */
@@ -45,7 +45,7 @@ public class MigrationStateMachineImpl implements MigrationStateMachine {
     public static final String FAULT_METRIC = "Fault";
     public static final String METRICS_OPERATION = "Migration";
 
-    private final static long THREAD_POOL_SHUTDOWN_TIMEOUT_SECONDS = 5L;
+    private static final long THREAD_POOL_SHUTDOWN_TIMEOUT_SECONDS = 5L;
 
     private final MetricsFactory metricsFactory;
     private final Callable<Long> timeProvider;
@@ -57,6 +57,7 @@ public class MigrationStateMachineImpl implements MigrationStateMachine {
     private final String workerId;
     private final long flipTo3XStabilizerTimeInSeconds;
     private MigrationState startingMigrationState;
+
     @Getter
     private ClientVersion startingClientVersion;
 
@@ -78,12 +79,16 @@ public class MigrationStateMachineImpl implements MigrationStateMachine {
     };
     private boolean terminated = false;
 
-    public MigrationStateMachineImpl(final MetricsFactory metricsFactory,
-        final Callable<Long> timeProvider, final CoordinatorStateDAO coordinatorStateDAO,
-        final ScheduledExecutorService stateMachineThreadPool, final ClientVersionConfig clientVersionConfig,
-        final Random random, final DynamicMigrationComponentsInitializer initializer, final String workerId,
-        final long flipTo3XStabilizerTimeInSeconds)
-    {
+    public MigrationStateMachineImpl(
+            final MetricsFactory metricsFactory,
+            final Callable<Long> timeProvider,
+            final CoordinatorStateDAO coordinatorStateDAO,
+            final ScheduledExecutorService stateMachineThreadPool,
+            final ClientVersionConfig clientVersionConfig,
+            final Random random,
+            final DynamicMigrationComponentsInitializer initializer,
+            final String workerId,
+            final long flipTo3XStabilizerTimeInSeconds) {
         this.metricsFactory = metricsFactory;
         this.timeProvider = timeProvider;
         this.coordinatorStateDAO = coordinatorStateDAO;
@@ -100,11 +105,11 @@ public class MigrationStateMachineImpl implements MigrationStateMachine {
         if (startingClientVersion == null) {
             log.info("Initializing MigrationStateMachine");
             coordinatorStateDAO.initialize();
-            final MigrationClientVersionStateInitializer startingStateInitializer
-                = new MigrationClientVersionStateInitializer(timeProvider, coordinatorStateDAO, clientVersionConfig,
-                    random, workerId);
-            final SimpleEntry<ClientVersion, MigrationState> dataForInitialization
-                = startingStateInitializer.getInitialState();
+            final MigrationClientVersionStateInitializer startingStateInitializer =
+                    new MigrationClientVersionStateInitializer(
+                            timeProvider, coordinatorStateDAO, clientVersionConfig, random, workerId);
+            final SimpleEntry<ClientVersion, MigrationState> dataForInitialization =
+                    startingStateInitializer.getInitialState();
             initializer.initialize(dataForInitialization.getKey());
             transitionTo(dataForInitialization.getKey(), dataForInitialization.getValue());
             startingClientVersion = dataForInitialization.getKey();
@@ -122,8 +127,9 @@ public class MigrationStateMachineImpl implements MigrationStateMachine {
             stateMachineThreadPool.shutdown();
             try {
                 if (stateMachineThreadPool.awaitTermination(THREAD_POOL_SHUTDOWN_TIMEOUT_SECONDS, TimeUnit.SECONDS)) {
-                    log.info("StateMachineThreadPool did not shutdown within {} seconds, forcefully shutting down",
-                        THREAD_POOL_SHUTDOWN_TIMEOUT_SECONDS);
+                    log.info(
+                            "StateMachineThreadPool did not shutdown within {} seconds, forcefully shutting down",
+                            THREAD_POOL_SHUTDOWN_TIMEOUT_SECONDS);
                     stateMachineThreadPool.shutdownNow();
                 }
             } catch (final InterruptedException e) {
@@ -147,18 +153,19 @@ public class MigrationStateMachineImpl implements MigrationStateMachine {
 
     @Override
     public synchronized void transitionTo(final ClientVersion nextClientVersion, final MigrationState migrationState)
-        throws DependencyException
-    {
+            throws DependencyException {
         if (terminated) {
-            throw new IllegalStateException(
-                String.format("Cannot transition to %s after state machine is terminated, %s",
+            throw new IllegalStateException(String.format(
+                    "Cannot transition to %s after state machine is terminated, %s",
                     nextClientVersion.name(), migrationState));
         }
 
-        final MigrationClientVersionState nextMigrationClientVersionState = createMigrationClientVersionState(
-            nextClientVersion, migrationState);
-        log.info("Attempting to transition from {} to {}", currentMigrationClientVersionState.clientVersion(),
-            nextClientVersion);
+        final MigrationClientVersionState nextMigrationClientVersionState =
+                createMigrationClientVersionState(nextClientVersion, migrationState);
+        log.info(
+                "Attempting to transition from {} to {}",
+                currentMigrationClientVersionState.clientVersion(),
+                nextClientVersion);
         currentMigrationClientVersionState.leave();
 
         enter(nextMigrationClientVersionState);
@@ -191,9 +198,11 @@ public class MigrationStateMachineImpl implements MigrationStateMachine {
                 if (currentMigrationClientVersionState.clientVersion() == ClientVersion.CLIENT_VERSION_INIT) {
                     throw e;
                 }
-                log.info("Transitioning from {} to {} failed, retrying after a minute",
-                    currentMigrationClientVersionState.clientVersion(), nextMigrationClientVersionState.clientVersion(),
-                    e);
+                log.info(
+                        "Transitioning from {} to {} failed, retrying after a minute",
+                        currentMigrationClientVersionState.clientVersion(),
+                        nextMigrationClientVersionState.clientVersion(),
+                        e);
 
                 final MetricsScope scope = MetricsUtil.createMetricsWithOperation(metricsFactory, METRICS_OPERATION);
                 scope.addData(FAULT_METRIC, 1, StandardUnit.COUNT, MetricsLevel.SUMMARY);
@@ -208,19 +217,25 @@ public class MigrationStateMachineImpl implements MigrationStateMachine {
         }
     }
 
-    private MigrationClientVersionState createMigrationClientVersionState(final ClientVersion clientVersion,
-        final MigrationState migrationState)
-    {
+    private MigrationClientVersionState createMigrationClientVersionState(
+            final ClientVersion clientVersion, final MigrationState migrationState) {
         switch (clientVersion) {
             case CLIENT_VERSION_2x:
-                return new MigrationClientVersion2xState(this, coordinatorStateDAO, stateMachineThreadPool,
-                    initializer, random);
+                return new MigrationClientVersion2xState(
+                        this, coordinatorStateDAO, stateMachineThreadPool, initializer, random);
             case CLIENT_VERSION_UPGRADE_FROM_2x:
-                return new MigrationClientVersionUpgradeFrom2xState(this, timeProvider, coordinatorStateDAO,
-                    stateMachineThreadPool, initializer, random, migrationState, flipTo3XStabilizerTimeInSeconds);
+                return new MigrationClientVersionUpgradeFrom2xState(
+                        this,
+                        timeProvider,
+                        coordinatorStateDAO,
+                        stateMachineThreadPool,
+                        initializer,
+                        random,
+                        migrationState,
+                        flipTo3XStabilizerTimeInSeconds);
             case CLIENT_VERSION_3x_WITH_ROLLBACK:
-                return new MigrationClientVersion3xWithRollbackState(this, coordinatorStateDAO,
-                    stateMachineThreadPool, initializer, random);
+                return new MigrationClientVersion3xWithRollbackState(
+                        this, coordinatorStateDAO, stateMachineThreadPool, initializer, random);
             case CLIENT_VERSION_3x:
                 return new MigrationClientVersion3xState(this, initializer);
         }
@@ -233,7 +248,7 @@ public class MigrationStateMachineImpl implements MigrationStateMachine {
         } else if (terminated) {
             return ClientVersion.CLIENT_VERSION_3x;
         }
-        throw new UnsupportedOperationException("No current state when state machine is either not initialized" +
-            " or already terminated");
+        throw new UnsupportedOperationException(
+                "No current state when state machine is either not initialized" + " or already terminated");
     }
 }

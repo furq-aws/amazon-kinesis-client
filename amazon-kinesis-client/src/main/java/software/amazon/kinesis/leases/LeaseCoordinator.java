@@ -35,8 +35,7 @@ public interface LeaseCoordinator {
      * @throws DependencyException
      * @throws ProvisionedThroughputException
      */
-    void initialize()
-        throws ProvisionedThroughputException, DependencyException, IllegalStateException;
+    void initialize() throws ProvisionedThroughputException, DependencyException, IllegalStateException;
 
     /**
      * Start background LeaseHolder and LeaseTaker threads.
@@ -47,7 +46,7 @@ public interface LeaseCoordinator {
      * @throws DependencyException If we encountered exception taking to DynamoDB
      */
     void start(final MigrationAdaptiveLeaseAssignmentModeProvider leaseAssignmentModeProvider)
-        throws DependencyException, InvalidStateException, ProvisionedThroughputException;
+            throws DependencyException, InvalidStateException, ProvisionedThroughputException;
 
     /**
      * Runs a single iteration of the lease taker - used by integration tests.
@@ -141,7 +140,7 @@ public interface LeaseCoordinator {
      * @return all leases for the application that are in the lease table
      */
     default List<Lease> allLeases() {
-       return Collections.emptyList();
+        return Collections.emptyList();
     }
 
     /**

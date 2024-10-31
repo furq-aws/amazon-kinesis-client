@@ -26,8 +26,8 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.BooleanSupplier;
 import java.util.stream.Collectors;
-import lombok.extern.slf4j.Slf4j;
 
+import lombok.extern.slf4j.Slf4j;
 import software.amazon.awssdk.services.cloudwatch.model.StandardUnit;
 import software.amazon.awssdk.utils.CollectionUtils;
 import software.amazon.kinesis.leases.Lease;
@@ -51,8 +51,7 @@ import software.amazon.kinesis.metrics.MetricsUtil;
  * This ensures redundancy for shard-sync during host failures.
  */
 @Slf4j
-public class DeterministicShuffleShardSyncLeaderDecider
-        implements LeaderDecider {
+public class DeterministicShuffleShardSyncLeaderDecider implements LeaderDecider {
     // Fixed seed so that the shuffle order is preserved across workers
     static final int DETERMINISTIC_SHUFFLE_SEED = 1947;
 
@@ -74,14 +73,17 @@ public class DeterministicShuffleShardSyncLeaderDecider
      * @param leaderElectionThreadPool    Thread-pool to be used for leaderElection.
      * @param numPeriodicShardSyncWorkers Number of leaders that will be elected to perform periodic shard syncs.
      */
-    public DeterministicShuffleShardSyncLeaderDecider(LeaseRefresher leaseRefresher,
-                                               ScheduledExecutorService leaderElectionThreadPool,
-                                               int numPeriodicShardSyncWorkers,
-                                               MetricsFactory metricsFactory) {
-        this(leaseRefresher,
+    public DeterministicShuffleShardSyncLeaderDecider(
+            LeaseRefresher leaseRefresher,
+            ScheduledExecutorService leaderElectionThreadPool,
+            int numPeriodicShardSyncWorkers,
+            MetricsFactory metricsFactory) {
+        this(
+                leaseRefresher,
                 leaderElectionThreadPool,
                 numPeriodicShardSyncWorkers,
-                new ReentrantReadWriteLock(), metricsFactory);
+                new ReentrantReadWriteLock(),
+                metricsFactory);
     }
 
     /**
@@ -90,11 +92,12 @@ public class DeterministicShuffleShardSyncLeaderDecider
      * @param numPeriodicShardSyncWorkers Number of leaders that will be elected to perform periodic shard syncs.
      * @param readWriteLock               Mechanism to lock for reading and writing of critical components
      */
-    DeterministicShuffleShardSyncLeaderDecider(LeaseRefresher leaseRefresher,
-                                               ScheduledExecutorService leaderElectionThreadPool,
-                                               int numPeriodicShardSyncWorkers,
-                                               ReadWriteLock readWriteLock,
-                                               MetricsFactory metricsFactory) {
+    DeterministicShuffleShardSyncLeaderDecider(
+            LeaseRefresher leaseRefresher,
+            ScheduledExecutorService leaderElectionThreadPool,
+            int numPeriodicShardSyncWorkers,
+            ReadWriteLock readWriteLock,
+            MetricsFactory metricsFactory) {
         this.leaseRefresher = leaseRefresher;
         this.leaderElectionThreadPool = leaderElectionThreadPool;
         this.numPeriodicShardSyncWorkers = numPeriodicShardSyncWorkers;
@@ -111,8 +114,12 @@ public class DeterministicShuffleShardSyncLeaderDecider
         try {
             log.debug("Started leader election at: " + Instant.now());
             List<Lease> leases = leaseRefresher.listLeases();
-            List<String> uniqueHosts = leases.stream().map(Lease::leaseOwner)
-                    .filter(owner -> owner != null).distinct().sorted().collect(Collectors.toList());
+            List<String> uniqueHosts = leases.stream()
+                    .map(Lease::leaseOwner)
+                    .filter(owner -> owner != null)
+                    .distinct()
+                    .sorted()
+                    .collect(Collectors.toList());
 
             Collections.shuffle(uniqueHosts, new Random(DETERMINISTIC_SHUFFLE_SEED));
             int numShardSyncWorkers = Math.min(uniqueHosts.size(), numPeriodicShardSyncWorkers);
@@ -147,14 +154,17 @@ public class DeterministicShuffleShardSyncLeaderDecider
             // The first run will be after a minute.
             // We don't need jitter since it is scheduled with a fixed delay and time taken to scan leases
             // will be different at different times and on different hosts/workers.
-            leaderElectionThreadPool.scheduleWithFixedDelay(this::electLeaders, ELECTION_INITIAL_DELAY_MILLIS,
-                    ELECTION_SCHEDULING_INTERVAL_MILLIS, TimeUnit.MILLISECONDS);
+            leaderElectionThreadPool.scheduleWithFixedDelay(
+                    this::electLeaders,
+                    ELECTION_INITIAL_DELAY_MILLIS,
+                    ELECTION_SCHEDULING_INTERVAL_MILLIS,
+                    TimeUnit.MILLISECONDS);
         }
         final boolean response = executeConditionCheckWithReadLock(() -> isWorkerLeaderForShardSync(workerId));
-        final MetricsScope metricsScope = MetricsUtil.createMetricsWithOperation(metricsFactory,
-                METRIC_OPERATION_LEADER_DECIDER);
-        metricsScope.addData(METRIC_OPERATION_LEADER_DECIDER_IS_LEADER, response ? 1 : 0, StandardUnit.COUNT,
-                MetricsLevel.DETAILED);
+        final MetricsScope metricsScope =
+                MetricsUtil.createMetricsWithOperation(metricsFactory, METRIC_OPERATION_LEADER_DECIDER);
+        metricsScope.addData(
+                METRIC_OPERATION_LEADER_DECIDER_IS_LEADER, response ? 1 : 0, StandardUnit.COUNT, MetricsLevel.DETAILED);
         MetricsUtil.endScope(metricsScope);
         return response;
     }
@@ -167,7 +177,8 @@ public class DeterministicShuffleShardSyncLeaderDecider
                 log.info("Successfully stopped leader election on the worker");
             } else {
                 leaderElectionThreadPool.shutdownNow();
-                log.info(String.format("Stopped leader election thread after awaiting termination for %d milliseconds",
+                log.info(String.format(
+                        "Stopped leader election thread after awaiting termination for %d milliseconds",
                         AWAIT_TERMINATION_MILLIS));
             }
 

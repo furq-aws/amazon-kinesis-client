@@ -1,5 +1,14 @@
 package software.amazon.kinesis.lifecycle;
 
+import java.util.Collections;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
@@ -10,15 +19,6 @@ import software.amazon.kinesis.leases.LeaseHelper;
 import software.amazon.kinesis.leases.LeaseRefresher;
 import software.amazon.kinesis.leases.ShardInfo;
 import software.amazon.kinesis.leases.dynamodb.DynamoDBLeaseCoordinator;
-
-import java.util.Collections;
-import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
-import java.util.function.Supplier;
 
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyLong;
@@ -41,26 +41,32 @@ class LeaseGracefulShutdownHandlerTest {
 
     @Mock
     private LeaseCoordinator mockLeaseCoordinator;
+
     @Mock
     private Supplier<Long> mockTimeSupplier;
+
     @Mock
     private ShardConsumer mockShardConsumer;
+
     @Mock
     private ScheduledExecutorService mockScheduledExecutorService;
+
     @Mock
     private LeaseRefresher mockLeaseRefresher;
 
     @BeforeEach
     void setUp() throws Exception {
         MockitoAnnotations.initMocks(this);
-        when(mockScheduledExecutorService.scheduleAtFixedRate(any(Runnable.class), anyLong(), anyLong(),
-                any(TimeUnit.class))).thenAnswer(invocation -> {
-            Object[] args = invocation.getArguments();
-            this.gracefulShutdownRunnable = (Runnable) args[0];
-            return mock(ScheduledFuture.class);
-        });
+        when(mockScheduledExecutorService.scheduleAtFixedRate(
+                        any(Runnable.class), anyLong(), anyLong(), any(TimeUnit.class)))
+                .thenAnswer(invocation -> {
+                    Object[] args = invocation.getArguments();
+                    this.gracefulShutdownRunnable = (Runnable) args[0];
+                    return mock(ScheduledFuture.class);
+                });
         when(mockLeaseCoordinator.leaseRefresher()).thenReturn(mockLeaseRefresher);
-        when(mockLeaseRefresher.assignLease(any(Lease.class), any(String.class))).thenReturn(true);
+        when(mockLeaseRefresher.assignLease(any(Lease.class), any(String.class)))
+                .thenReturn(true);
 
         when(mockLeaseCoordinator.workerIdentifier()).thenReturn(WORKER_ID);
         when(mockTimeSupplier.get()).thenReturn(0L);
@@ -70,8 +76,7 @@ class LeaseGracefulShutdownHandlerTest {
                 shardConsumerMap,
                 mockLeaseCoordinator,
                 mockTimeSupplier,
-                mockScheduledExecutorService
-        );
+                mockScheduledExecutorService);
 
         lease.checkpointOwner(WORKER_ID);
         lease.concurrencyToken(UUID.randomUUID());
@@ -83,8 +88,8 @@ class LeaseGracefulShutdownHandlerTest {
     void testSubsequentStarts() {
         handler.start();
         handler.start();
-        verify(mockScheduledExecutorService).scheduleAtFixedRate(any(Runnable.class), anyLong(), anyLong(),
-                any(TimeUnit.class));
+        verify(mockScheduledExecutorService)
+                .scheduleAtFixedRate(any(Runnable.class), anyLong(), anyLong(), any(TimeUnit.class));
     }
 
     @Test
@@ -110,7 +115,8 @@ class LeaseGracefulShutdownHandlerTest {
         // adding another lease to check it's enqueued
         final Lease lease2 = createShardConsumerForLease("shardId-2");
         handler.enqueueShutdown(lease2);
-        verify(shardConsumerMap.get(DynamoDBLeaseCoordinator.convertLeaseToAssignment(lease2)), times(1)).gracefulShutdown(null);
+        verify(shardConsumerMap.get(DynamoDBLeaseCoordinator.convertLeaseToAssignment(lease2)), times(1))
+                .gracefulShutdown(null);
     }
 
     @Test
