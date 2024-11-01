@@ -15,6 +15,9 @@
 
 package software.amazon.kinesis.multilang.config;
 
+import java.util.Arrays;
+import java.util.NoSuchElementException;
+
 import org.apache.commons.beanutils.BeanUtilsBean;
 import org.apache.commons.beanutils.ConvertUtilsBean;
 import org.junit.After;
@@ -37,9 +40,6 @@ import software.amazon.kinesis.leases.LeaseManagementConfig;
 import software.amazon.kinesis.processor.ShardRecordProcessorFactory;
 import software.amazon.kinesis.retrieval.fanout.FanOutConfig;
 import software.amazon.kinesis.retrieval.polling.PollingConfig;
-
-import java.util.Arrays;
-import java.util.NoSuchElementException;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.instanceOf;
@@ -200,9 +200,7 @@ public class MultiLangDaemonConfigurationTest {
     @Test
     public void testWorkerUtilizationAwareAssignmentConfigUsesDefaults() {
         final LeaseManagementConfig.WorkerUtilizationAwareAssignmentConfig defaultWorkerUtilAwareAssignmentConfig =
-                getTestConfigsBuilder()
-                        .leaseManagementConfig()
-                        .workerUtilizationAwareAssignmentConfig();
+                getTestConfigsBuilder().leaseManagementConfig().workerUtilizationAwareAssignmentConfig();
 
         final MultiLangDaemonConfiguration configuration = baseConfiguration();
         configuration.setVarianceBalancingFrequency(
@@ -212,9 +210,7 @@ public class MultiLangDaemonConfigurationTest {
                 configuration.resolvedConfiguration(shardRecordProcessorFactory);
 
         final LeaseManagementConfig.WorkerUtilizationAwareAssignmentConfig resolvedWorkerUtilAwareAssignmentConfig =
-                resolvedConfiguration
-                        .leaseManagementConfig
-                        .workerUtilizationAwareAssignmentConfig();
+                resolvedConfiguration.leaseManagementConfig.workerUtilizationAwareAssignmentConfig();
 
         assertNotEquals(defaultWorkerUtilAwareAssignmentConfig, resolvedWorkerUtilAwareAssignmentConfig);
 
@@ -251,25 +247,24 @@ public class MultiLangDaemonConfigurationTest {
 
     @Test
     public void testWorkerMetricsTableConfigUsesDefaults() {
-        final LeaseManagementConfig.WorkerMetricsTableConfig defaultWorkerMetricsTableConfig =
-                getTestConfigsBuilder()
-                        .leaseManagementConfig()
-                        .workerUtilizationAwareAssignmentConfig()
-                        .workerMetricsTableConfig();
+        final LeaseManagementConfig.WorkerMetricsTableConfig defaultWorkerMetricsTableConfig = getTestConfigsBuilder()
+                .leaseManagementConfig()
+                .workerUtilizationAwareAssignmentConfig()
+                .workerMetricsTableConfig();
 
         final MultiLangDaemonConfiguration configuration = baseConfiguration();
         configuration.setWorkerMetricsBillingMode(Arrays.stream(BillingMode.values())
                 .filter(billingMode -> billingMode != defaultWorkerMetricsTableConfig.billingMode())
-                .findFirst().orElseThrow(NoSuchElementException::new));
+                .findFirst()
+                .orElseThrow(NoSuchElementException::new));
 
         final MultiLangDaemonConfiguration.ResolvedConfiguration resolvedConfiguration =
                 configuration.resolvedConfiguration(shardRecordProcessorFactory);
 
-        final LeaseManagementConfig.WorkerMetricsTableConfig resolvedWorkerMetricsTableConfig =
-                resolvedConfiguration
-                        .leaseManagementConfig
-                        .workerUtilizationAwareAssignmentConfig()
-                        .workerMetricsTableConfig();
+        final LeaseManagementConfig.WorkerMetricsTableConfig resolvedWorkerMetricsTableConfig = resolvedConfiguration
+                .leaseManagementConfig
+                .workerUtilizationAwareAssignmentConfig()
+                .workerMetricsTableConfig();
 
         assertNotEquals(defaultWorkerMetricsTableConfig, resolvedWorkerMetricsTableConfig);
 
@@ -303,21 +298,16 @@ public class MultiLangDaemonConfigurationTest {
     @Test
     public void testCoordinatorStateTableConfigUsesDefaults() {
         final CoordinatorConfig.CoordinatorStateTableConfig defaultCoordinatorStateTableConfig =
-                getTestConfigsBuilder()
-                        .coordinatorConfig()
-                        .coordinatorStateConfig();
+                getTestConfigsBuilder().coordinatorConfig().coordinatorStateConfig();
 
         final MultiLangDaemonConfiguration configuration = baseConfiguration();
-        configuration.setCoordinatorStateWriteCapacity(
-                defaultCoordinatorStateTableConfig.writeCapacity() + 12345);
+        configuration.setCoordinatorStateWriteCapacity(defaultCoordinatorStateTableConfig.writeCapacity() + 12345);
 
         final MultiLangDaemonConfiguration.ResolvedConfiguration resolvedConfiguration =
                 configuration.resolvedConfiguration(shardRecordProcessorFactory);
 
         final CoordinatorConfig.CoordinatorStateTableConfig resolvedCoordinatorStateTableConfig =
-                resolvedConfiguration
-                        .coordinatorConfig
-                        .coordinatorStateConfig();
+                resolvedConfiguration.coordinatorConfig.coordinatorStateConfig();
 
         assertNotEquals(defaultCoordinatorStateTableConfig, resolvedCoordinatorStateTableConfig);
 
