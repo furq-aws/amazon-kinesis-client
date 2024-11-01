@@ -394,22 +394,19 @@ public class MultiLangDaemonConfiguration {
                 retrievalMode.builder(this).build(configsBuilder.kinesisClient(), this));
     }
 
-    private LeaseManagementConfig.WorkerUtilizationAwareAssignmentConfig handleWorkerUtilizationAwareAssignmentConfig() {
-        LeaseManagementConfig.WorkerUtilizationAwareAssignmentConfig config =
-                this.workerUtilizationAwareAssignmentConfigBean.create();
-        config.workerMetricsTableConfig(
-                this.workerMetricsTableConfigBean.create(this.applicationName)
-        );
-        return config;
-    }
-
     private void handleLeaseManagementConfig(LeaseManagementConfig leaseManagementConfig) {
         ConfigurationSettableUtils.resolveFields(
-                this.gracefulLeaseHandoffConfigBean, leaseManagementConfig.gracefulLeaseHandoffConfig());
-
-        LeaseManagementConfig.WorkerUtilizationAwareAssignmentConfig workerConfig =
-                handleWorkerUtilizationAwareAssignmentConfig();
-        leaseManagementConfig.workerUtilizationAwareAssignmentConfig(workerConfig);
+                this.gracefulLeaseHandoffConfigBean,
+                leaseManagementConfig.gracefulLeaseHandoffConfig()
+        );
+        ConfigurationSettableUtils.resolveFields(
+                this.workerUtilizationAwareAssignmentConfigBean,
+                leaseManagementConfig.workerUtilizationAwareAssignmentConfig()
+        );
+        ConfigurationSettableUtils.resolveFields(
+                this.workerMetricsTableConfigBean,
+                leaseManagementConfig.workerUtilizationAwareAssignmentConfig().workerMetricsTableConfig()
+        );
     }
 
     private Object adjustKinesisHttpConfiguration(Object builderObj) {

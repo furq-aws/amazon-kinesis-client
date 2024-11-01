@@ -33,7 +33,7 @@ public class WorkerUtilizationAwareAssignmentConfigBean {
         int getNoOfPersistedMetricsPerWorkerMetrics();
         void setNoOfPersistedMetricsPerWorkerMetrics(int value);
 
-        boolean isDisableWorkerMetrics();
+        Boolean getDisableWorkerMetrics();
         void setDisableWorkerMetrics(boolean value);
 
         double getMaxThroughputPerHostKBps();
@@ -45,7 +45,7 @@ public class WorkerUtilizationAwareAssignmentConfigBean {
         int getReBalanceThresholdPercentage();
         void setReBalanceThresholdPercentage(int value);
 
-        boolean isAllowThroughputOvershoot();
+        Boolean getAllowThroughputOvershoot();
         void setAllowThroughputOvershoot(boolean value);
 
         int getVarianceBalancingFrequency();
@@ -66,7 +66,7 @@ public class WorkerUtilizationAwareAssignmentConfigBean {
     private int noOfPersistedMetricsPerWorkerMetrics;
 
     @ConfigurationSettable(configurationClass = WorkerUtilizationAwareAssignmentConfig.class)
-    private boolean disableWorkerMetrics;
+    private Boolean disableWorkerMetrics;
 
     @ConfigurationSettable(configurationClass = WorkerUtilizationAwareAssignmentConfig.class)
     private double maxThroughputPerHostKBps;
@@ -78,18 +78,11 @@ public class WorkerUtilizationAwareAssignmentConfigBean {
     private int reBalanceThresholdPercentage;
 
     @ConfigurationSettable(configurationClass = WorkerUtilizationAwareAssignmentConfig.class)
-    private boolean allowThroughputOvershoot;
+    private Boolean allowThroughputOvershoot;
 
     @ConfigurationSettable(configurationClass = WorkerUtilizationAwareAssignmentConfig.class)
     private int varianceBalancingFrequency;
 
     @ConfigurationSettable(configurationClass = WorkerUtilizationAwareAssignmentConfig.class)
     private double workerMetricsEMAAlpha;
-
-
-    public WorkerUtilizationAwareAssignmentConfig create() {
-        return ConfigurationSettableUtils.resolveFields(
-                this, new WorkerUtilizationAwareAssignmentConfig()
-        );
-    }
 }

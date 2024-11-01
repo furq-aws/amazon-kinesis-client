@@ -202,8 +202,10 @@ public class MultiLangDaemonConfigurationTest {
         MultiLangDaemonConfiguration.ResolvedConfiguration resolvedConfiguration =
                 configuration.resolvedConfiguration(shardRecordProcessorFactory);
         LeaseManagementConfig leaseManagementConfig = resolvedConfiguration.leaseManagementConfig;
-        LeaseManagementConfig.WorkerUtilizationAwareAssignmentConfig workerUtilizationConfig = leaseManagementConfig.workerUtilizationAwareAssignmentConfig();
-        LeaseManagementConfig.WorkerMetricsTableConfig workerMetricsConfig = workerUtilizationConfig.workerMetricsTableConfig();
+        LeaseManagementConfig.WorkerUtilizationAwareAssignmentConfig workerUtilizationConfig =
+                leaseManagementConfig.workerUtilizationAwareAssignmentConfig();
+        LeaseManagementConfig.WorkerMetricsTableConfig workerMetricsConfig =
+                workerUtilizationConfig.workerMetricsTableConfig();
 
         assertEquals(workerMetricsConfig.tableName(), "testTable");
         assertEquals(workerMetricsConfig.readCapacity(), 123);

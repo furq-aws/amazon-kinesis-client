@@ -159,7 +159,7 @@ public class ConfigurationSettableUtilsTest {
         private Long boxedLong;
         private ComplexValue complexValue;
         @Builder.Default
-        private boolean bool = true;
+        private Boolean bool = true;
         private Optional<String> optionalString;
         private Optional<Integer> optionalInteger;
         private Optional<Long> optionalLong;
@@ -190,7 +190,7 @@ public class ConfigurationSettableUtilsTest {
 
         @ConfigurationSettable(configurationClass = ConfigResult.class)
         @Builder.Default
-        private boolean bool = true;
+        private Boolean bool = true;
 
         @ConfigurationSettable(configurationClass = ConfigResult.class)
         private Integer boxedInt;

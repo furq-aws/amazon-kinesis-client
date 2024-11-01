@@ -43,10 +43,4 @@ public class WorkerMetricsTableConfigBean {
 
     @ConfigurationSettable(configurationClass = WorkerMetricsTableConfig.class)
     private long writeCapacity;
-
-    public WorkerMetricsTableConfig create(String applicationName) {
-        return ConfigurationSettableUtils.resolveFields(
-                this, new WorkerMetricsTableConfig(applicationName)
-        );
-    }
 }
