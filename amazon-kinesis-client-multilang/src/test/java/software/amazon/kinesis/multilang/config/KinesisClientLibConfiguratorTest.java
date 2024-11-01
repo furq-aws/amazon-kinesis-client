@@ -188,6 +188,93 @@ public class KinesisClientLibConfiguratorTest {
         assertEquals(testClientVersionConfig, config.getClientVersionConfig());
     }
 
+    @Test
+    public void testCoordinatorStateConfig() {
+        final String testCoordinatorStateTableName = "CoordState";
+        final long testCoordinatorStateReadCapacity = 123;
+        final long testCoordinatorStateWriteCapacity = 123;
+
+        final MultiLangDaemonConfiguration config = getConfiguration(StringUtils.join(
+                new String[] {
+                        "applicationName = dummyApplicationName",
+                        "streamName = dummyStreamName",
+                        "AWSCredentialsProvider = " + credentialName1 + ", " + credentialName2,
+                        "coordinatorStateTableName = " + testCoordinatorStateTableName,
+                        "coordinatorStateReadCapacity = " + testCoordinatorStateReadCapacity,
+                        "coordinatorStateWriteCapacity = " + testCoordinatorStateWriteCapacity
+                },
+                '\n'));
+
+        assertEquals(testCoordinatorStateTableName, config.getCoordinatorStateTableName());
+        assertEquals(testCoordinatorStateReadCapacity, config.getCoordinatorStateReadCapacity());
+        assertEquals(testCoordinatorStateWriteCapacity, config.getCoordinatorStateWriteCapacity());
+    }
+
+    @Test
+    public void testWorkerUtilizationAwareAssignmentConfig() {
+        final long testInMemoryWorkerMetricsCaptureFrequencyMillis = 123;
+        final long testWorkerMetricsReporterFreqInMillis = 123;
+        final long testNoOfPersistedMetricsPerWorkerMetrics = 123;
+        final Boolean testDisableWorkerMetrics = true;
+        final double testMaxThroughputPerHostKBps = 123;
+        final long testDampeningPercentage = 12;
+        final long testReBalanceThresholdPercentage = 12;
+        final Boolean testAllowThroughputOvershoot = false;
+        final long testVarianceBalancingFrequency = 12;
+        final double testWorkerMetricsEMAAlpha = .123;
+
+        final MultiLangDaemonConfiguration config = getConfiguration(StringUtils.join(
+                new String[] {
+                        "applicationName = dummyApplicationName",
+                        "streamName = dummyStreamName",
+                        "AWSCredentialsProvider = " + credentialName1 + ", " + credentialName2,
+                        "inMemoryWorkerMetricsCaptureFrequencyMillis = " + testInMemoryWorkerMetricsCaptureFrequencyMillis,
+                        "workerMetricsReporterFreqInMillis = " + testWorkerMetricsReporterFreqInMillis,
+                        "noOfPersistedMetricsPerWorkerMetrics = " + testNoOfPersistedMetricsPerWorkerMetrics,
+                        "disableWorkerMetrics = " + testDisableWorkerMetrics,
+                        "maxThroughputPerHostKBps = " + testMaxThroughputPerHostKBps,
+                        "dampeningPercentage = " + testDampeningPercentage,
+                        "reBalanceThresholdPercentage = " + testReBalanceThresholdPercentage,
+                        "allowThroughputOvershoot = " + testAllowThroughputOvershoot,
+                        "varianceBalancingFrequency = " + testVarianceBalancingFrequency,
+                        "workerMetricsEMAAlpha = " + testWorkerMetricsEMAAlpha
+                },
+                '\n'));
+
+        assertEquals(testInMemoryWorkerMetricsCaptureFrequencyMillis, config.getInMemoryWorkerMetricsCaptureFrequencyMillis());
+        assertEquals(testWorkerMetricsReporterFreqInMillis, config.getWorkerMetricsReporterFreqInMillis());
+        assertEquals(testNoOfPersistedMetricsPerWorkerMetrics, config.getNoOfPersistedMetricsPerWorkerMetrics());
+        assertEquals(testDisableWorkerMetrics, config.getDisableWorkerMetrics());
+        assertEquals(testMaxThroughputPerHostKBps, config.getMaxThroughputPerHostKBps(), 0.0001);
+        assertEquals(testDampeningPercentage, config.getDampeningPercentage());
+        assertEquals(testReBalanceThresholdPercentage, config.getReBalanceThresholdPercentage());
+        assertEquals(testAllowThroughputOvershoot, config.getAllowThroughputOvershoot());
+        assertEquals(testVarianceBalancingFrequency, config.getVarianceBalancingFrequency());
+        assertEquals(testWorkerMetricsEMAAlpha, config.getWorkerMetricsEMAAlpha(), 0.0001);
+    }
+
+    @Test
+    public void testWorkerMetricsConfig() {
+        final String testWorkerMetricsTableName = "CoordState";
+        final long testWorkerMetricsReadCapacity = 123;
+        final long testWorkerMetricsWriteCapacity = 123;
+
+        final MultiLangDaemonConfiguration config = getConfiguration(StringUtils.join(
+                new String[] {
+                        "applicationName = dummyApplicationName",
+                        "streamName = dummyStreamName",
+                        "AWSCredentialsProvider = " + credentialName1 + ", " + credentialName2,
+                        "workerMetricsTableName = " + testWorkerMetricsTableName,
+                        "workerMetricsReadCapacity = " + testWorkerMetricsReadCapacity,
+                        "workerMetricsWriteCapacity = " + testWorkerMetricsWriteCapacity
+                },
+                '\n'));
+
+        assertEquals(testWorkerMetricsTableName, config.getWorkerMetricsTableName());
+        assertEquals(testWorkerMetricsReadCapacity, config.getWorkerMetricsReadCapacity());
+        assertEquals(testWorkerMetricsWriteCapacity, config.getWorkerMetricsWriteCapacity());
+    }
+
     @Test(expected = IllegalArgumentException.class)
     public void testInvalidClientVersionConfig() {
         getConfiguration(StringUtils.join(

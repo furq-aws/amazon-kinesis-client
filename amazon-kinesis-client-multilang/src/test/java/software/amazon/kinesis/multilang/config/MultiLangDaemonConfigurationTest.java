@@ -167,7 +167,7 @@ public class MultiLangDaemonConfigurationTest {
         configuration.setWorkerMetricsReporterFreqInMillis(123);
         configuration.setNoOfPersistedMetricsPerWorkerMetrics(123);
         configuration.setDisableWorkerMetrics(true);
-        configuration.setMaxThroughputPerHostKBps(123);
+        configuration.setMaxThroughputPerHostKBps(.123);
         configuration.setDampeningPercentage(12);
         configuration.setReBalanceThresholdPercentage(12);
         configuration.setAllowThroughputOvershoot(false);
@@ -183,7 +183,7 @@ public class MultiLangDaemonConfigurationTest {
         assertEquals(config.workerMetricsReporterFreqInMillis(), 123);
         assertEquals(config.noOfPersistedMetricsPerWorkerMetrics(), 123);
         assertTrue(config.disableWorkerMetrics());
-        assertEquals(config.maxThroughputPerHostKBps(), 123, .25);
+        assertEquals(config.maxThroughputPerHostKBps(), .123, .25);
         assertEquals(config.dampeningPercentage(), 12);
         assertEquals(config.reBalanceThresholdPercentage(), 12);
         assertFalse(config.allowThroughputOvershoot());
@@ -196,8 +196,8 @@ public class MultiLangDaemonConfigurationTest {
         MultiLangDaemonConfiguration configuration = baseConfiguration();
 
         configuration.setWorkerMetricsTableName("testTable");
-        configuration.setReadCapacity(123);
-        configuration.setWriteCapacity(123);
+        configuration.setWorkerMetricsReadCapacity(123);
+        configuration.setWorkerMetricsWriteCapacity(123);
 
         MultiLangDaemonConfiguration.ResolvedConfiguration resolvedConfiguration =
                 configuration.resolvedConfiguration(shardRecordProcessorFactory);
@@ -210,6 +210,24 @@ public class MultiLangDaemonConfigurationTest {
         assertEquals(workerMetricsConfig.tableName(), "testTable");
         assertEquals(workerMetricsConfig.readCapacity(), 123);
         assertEquals(workerMetricsConfig.writeCapacity(), 123);
+    }
+
+    @Test
+    public void testCoordinatorStateTableConfigBean() {
+        MultiLangDaemonConfiguration configuration = baseConfiguration();
+
+        configuration.setCoordinatorStateTableName("testTable");
+        configuration.setCoordinatorStateReadCapacity(123);
+        configuration.setCoordinatorStateWriteCapacity(123);
+
+        MultiLangDaemonConfiguration.ResolvedConfiguration resolvedConfiguration =
+                configuration.resolvedConfiguration(shardRecordProcessorFactory);
+        CoordinatorConfig coordinatorConfig = resolvedConfiguration.getCoordinatorConfig();
+        CoordinatorConfig.CoordinatorStateTableConfig coordinatorStateConfig =
+                coordinatorConfig.coordinatorStateConfig();
+        assertEquals(coordinatorStateConfig.tableName(), "testTable");
+        assertEquals(coordinatorStateConfig.readCapacity(), 123);
+        assertEquals(coordinatorStateConfig.writeCapacity(), 123);
     }
 
 //    @Test

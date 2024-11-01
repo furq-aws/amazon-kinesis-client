@@ -201,6 +201,9 @@ public class MultiLangDaemonConfiguration {
     @Delegate(types = WorkerMetricsTableConfigBean.WorkerMetricsTableConfigBeanDelegate.class)
     private final WorkerMetricsTableConfigBean workerMetricsTableConfigBean = new WorkerMetricsTableConfigBean();
 
+    @Delegate(types = CoordinatorStateConfigBean.CoordinatorStateConfigBeanDelegate.class)
+    private final CoordinatorStateConfigBean coordinatorStateConfigBean = new CoordinatorStateConfigBean();
+
 
     private boolean validateSequenceNumberBeforeCheckpointing;
 
@@ -394,6 +397,13 @@ public class MultiLangDaemonConfiguration {
                 retrievalMode.builder(this).build(configsBuilder.kinesisClient(), this));
     }
 
+    private void handleCoordinatorConfig(CoordinatorConfig  coordinatorConfig){
+        ConfigurationSettableUtils.resolveFields(
+                this.coordinatorStateConfigBean,
+                coordinatorConfig.coordinatorStateConfig()
+        );
+    }
+
     private void handleLeaseManagementConfig(LeaseManagementConfig leaseManagementConfig) {
         ConfigurationSettableUtils.resolveFields(
                 this.gracefulLeaseHandoffConfigBean,
@@ -487,8 +497,9 @@ public class MultiLangDaemonConfiguration {
                 processorConfig,
                 retrievalConfig);
 
-        handleRetrievalConfig(retrievalConfig, configsBuilder);
+        handleCoordinatorConfig(coordinatorConfig);
         handleLeaseManagementConfig(leaseManagementConfig);
+        handleRetrievalConfig(retrievalConfig, configsBuilder);
 
         resolveFields(configObjects, null, new HashSet<>(Arrays.asList(ConfigsBuilder.class, PollingConfig.class)));
 

@@ -34,7 +34,7 @@ public class WorkerUtilizationAwareAssignmentConfigBean {
         void setNoOfPersistedMetricsPerWorkerMetrics(int value);
 
         Boolean getDisableWorkerMetrics();
-        void setDisableWorkerMetrics(boolean value);
+        void setDisableWorkerMetrics(Boolean value);
 
         double getMaxThroughputPerHostKBps();
         void setMaxThroughputPerHostKBps(double value);
@@ -46,7 +46,7 @@ public class WorkerUtilizationAwareAssignmentConfigBean {
         void setReBalanceThresholdPercentage(int value);
 
         Boolean getAllowThroughputOvershoot();
-        void setAllowThroughputOvershoot(boolean value);
+        void setAllowThroughputOvershoot(Boolean value);
 
         int getVarianceBalancingFrequency();
         void setVarianceBalancingFrequency(int value);

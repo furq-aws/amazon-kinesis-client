@@ -28,19 +28,19 @@ public class WorkerMetricsTableConfigBean {
         String getWorkerMetricsTableName();
         void setWorkerMetricsTableName(String value);
 
-        long getReadCapacity();
-        void setReadCapacity(long value);
+        long getWorkerMetricsReadCapacity();
+        void setWorkerMetricsReadCapacity(long value);
 
-        long getWriteCapacity();
-        void setWriteCapacity(long value);
+        long getWorkerMetricsWriteCapacity();
+        void setWorkerMetricsWriteCapacity(long value);
     }
 
     @ConfigurationSettable(configurationClass = WorkerMetricsTableConfig.class, methodName = "tableName")
     private String workerMetricsTableName;
 
-    @ConfigurationSettable(configurationClass = WorkerMetricsTableConfig.class)
-    private long readCapacity;
+    @ConfigurationSettable(configurationClass = WorkerMetricsTableConfig.class, methodName = "readCapacity")
+    private long workerMetricsReadCapacity;
 
-    @ConfigurationSettable(configurationClass = WorkerMetricsTableConfig.class)
-    private long writeCapacity;
+    @ConfigurationSettable(configurationClass = WorkerMetricsTableConfig.class, methodName = "writeCapacity")
+    private long workerMetricsWriteCapacity;
 }
