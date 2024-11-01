@@ -38,10 +38,14 @@ import software.amazon.kinesis.processor.ShardRecordProcessorFactory;
 import software.amazon.kinesis.retrieval.fanout.FanOutConfig;
 import software.amazon.kinesis.retrieval.polling.PollingConfig;
 
+import java.util.Arrays;
+import java.util.NoSuchElementException;
+
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
@@ -193,6 +197,33 @@ public class MultiLangDaemonConfigurationTest {
     }
 
     @Test
+    public void testWorkerUtilizationAwareAssignmentConfigUsesDefaults() {
+        final LeaseManagementConfig.WorkerUtilizationAwareAssignmentConfig defaultWorkerUtilAwareAssignmentConfig =
+                getTestConfigsBuilder()
+                        .leaseManagementConfig()
+                        .workerUtilizationAwareAssignmentConfig();
+
+        final MultiLangDaemonConfiguration configuration = baseConfiguration();
+        configuration.setVarianceBalancingFrequency(
+                defaultWorkerUtilAwareAssignmentConfig.varianceBalancingFrequency() + 12345);
+
+        final MultiLangDaemonConfiguration.ResolvedConfiguration resolvedConfiguration =
+                configuration.resolvedConfiguration(shardRecordProcessorFactory);
+
+        final LeaseManagementConfig.WorkerUtilizationAwareAssignmentConfig resolvedWorkerUtilAwareAssignmentConfig =
+                resolvedConfiguration
+                        .leaseManagementConfig
+                        .workerUtilizationAwareAssignmentConfig();
+
+        assertNotEquals(defaultWorkerUtilAwareAssignmentConfig, resolvedWorkerUtilAwareAssignmentConfig);
+
+        // apart from the single updated configuration, all other config values should be equal to the default
+        resolvedWorkerUtilAwareAssignmentConfig.varianceBalancingFrequency(
+                defaultWorkerUtilAwareAssignmentConfig.varianceBalancingFrequency());
+        assertEquals(defaultWorkerUtilAwareAssignmentConfig, resolvedWorkerUtilAwareAssignmentConfig);
+    }
+
+    @Test
     public void testWorkerMetricsTableConfigBean() {
         final BillingMode testWorkerMetricsTableBillingMode = BillingMode.PROVISIONED;
 
@@ -218,6 +249,35 @@ public class MultiLangDaemonConfigurationTest {
     }
 
     @Test
+    public void testWorkerMetricsTableConfigUsesDefaults() {
+        final LeaseManagementConfig.WorkerMetricsTableConfig defaultWorkerMetricsTableConfig =
+                getTestConfigsBuilder()
+                        .leaseManagementConfig()
+                        .workerUtilizationAwareAssignmentConfig()
+                        .workerMetricsTableConfig();
+
+        final MultiLangDaemonConfiguration configuration = baseConfiguration();
+        configuration.setWorkerMetricsBillingMode(Arrays.stream(BillingMode.values())
+                .filter(billingMode -> billingMode != defaultWorkerMetricsTableConfig.billingMode())
+                .findFirst().orElseThrow(NoSuchElementException::new));
+
+        final MultiLangDaemonConfiguration.ResolvedConfiguration resolvedConfiguration =
+                configuration.resolvedConfiguration(shardRecordProcessorFactory);
+
+        final LeaseManagementConfig.WorkerMetricsTableConfig resolvedWorkerMetricsTableConfig =
+                resolvedConfiguration
+                        .leaseManagementConfig
+                        .workerUtilizationAwareAssignmentConfig()
+                        .workerMetricsTableConfig();
+
+        assertNotEquals(defaultWorkerMetricsTableConfig, resolvedWorkerMetricsTableConfig);
+
+        // apart from the single updated configuration, all other config values should be equal to the default
+        resolvedWorkerMetricsTableConfig.billingMode(defaultWorkerMetricsTableConfig.billingMode());
+        assertEquals(defaultWorkerMetricsTableConfig, resolvedWorkerMetricsTableConfig);
+    }
+
+    @Test
     public void testCoordinatorStateTableConfigBean() {
         final BillingMode testWorkerMetricsTableBillingMode = BillingMode.PAY_PER_REQUEST;
 
@@ -237,6 +297,32 @@ public class MultiLangDaemonConfigurationTest {
         assertEquals(coordinatorStateConfig.billingMode(), testWorkerMetricsTableBillingMode);
         assertEquals(coordinatorStateConfig.readCapacity(), 123);
         assertEquals(coordinatorStateConfig.writeCapacity(), 123);
+    }
+
+    @Test
+    public void testCoordinatorStateTableConfigUsesDefaults() {
+        final CoordinatorConfig.CoordinatorStateTableConfig defaultCoordinatorStateTableConfig =
+                getTestConfigsBuilder()
+                        .coordinatorConfig()
+                        .coordinatorStateConfig();
+
+        final MultiLangDaemonConfiguration configuration = baseConfiguration();
+        configuration.setCoordinatorStateWriteCapacity(
+                defaultCoordinatorStateTableConfig.writeCapacity() + 12345);
+
+        final MultiLangDaemonConfiguration.ResolvedConfiguration resolvedConfiguration =
+                configuration.resolvedConfiguration(shardRecordProcessorFactory);
+
+        final CoordinatorConfig.CoordinatorStateTableConfig resolvedCoordinatorStateTableConfig =
+                resolvedConfiguration
+                        .coordinatorConfig
+                        .coordinatorStateConfig();
+
+        assertNotEquals(defaultCoordinatorStateTableConfig, resolvedCoordinatorStateTableConfig);
+
+        // apart from the single updated configuration, all other config values should be equal to the default
+        resolvedCoordinatorStateTableConfig.writeCapacity(defaultCoordinatorStateTableConfig.writeCapacity());
+        assertEquals(defaultCoordinatorStateTableConfig, resolvedCoordinatorStateTableConfig);
     }
 
 //    @Test
