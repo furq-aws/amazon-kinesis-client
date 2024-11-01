@@ -34,8 +34,8 @@ public class PropertiesMappingE2ETest {
                 "MultiLangTest-CoordinatorState-CustomName",
                 kclV3Config.coordinatorConfig.coordinatorStateConfig().tableName());
         assertEquals(
-        BillingMode.PROVISIONED,
-        kclV3Config.coordinatorConfig.coordinatorStateConfig().billingMode());
+                BillingMode.PROVISIONED,
+                kclV3Config.coordinatorConfig.coordinatorStateConfig().billingMode());
         assertEquals(
                 1000, kclV3Config.coordinatorConfig.coordinatorStateConfig().readCapacity());
         assertEquals(500, kclV3Config.coordinatorConfig.coordinatorStateConfig().writeCapacity());
@@ -91,23 +91,23 @@ public class PropertiesMappingE2ETest {
                 .workerUtilizationAwareAssignmentConfig()
                 .allowThroughputOvershoot());
         assertEquals(
-            Duration.ofHours(12),
-            kclV3Config
-                .leaseManagementConfig
-                .workerUtilizationAwareAssignmentConfig()
-                .staleWorkerMetricsEntryCleanupDuration());
+                Duration.ofHours(12),
+                kclV3Config
+                        .leaseManagementConfig
+                        .workerUtilizationAwareAssignmentConfig()
+                        .staleWorkerMetricsEntryCleanupDuration());
         assertEquals(
-            5,
-            kclV3Config
-                .leaseManagementConfig
-                .workerUtilizationAwareAssignmentConfig()
-                .varianceBalancingFrequency());
+                5,
+                kclV3Config
+                        .leaseManagementConfig
+                        .workerUtilizationAwareAssignmentConfig()
+                        .varianceBalancingFrequency());
         assertEquals(
                 0.18D,
                 kclV3Config
-                    .leaseManagementConfig
-                    .workerUtilizationAwareAssignmentConfig()
-                    .workerMetricsEMAAlpha());
+                        .leaseManagementConfig
+                        .workerUtilizationAwareAssignmentConfig()
+                        .workerMetricsEMAAlpha());
 
         assertEquals(
                 "MultiLangTest-WorkerMetrics-CustomName",
@@ -117,12 +117,12 @@ public class PropertiesMappingE2ETest {
                         .workerMetricsTableConfig()
                         .tableName());
         assertEquals(
-        BillingMode.PROVISIONED,
-        kclV3Config
-                .leaseManagementConfig
-                .workerUtilizationAwareAssignmentConfig()
-                .workerMetricsTableConfig()
-                .billingMode());
+                BillingMode.PROVISIONED,
+                kclV3Config
+                        .leaseManagementConfig
+                        .workerUtilizationAwareAssignmentConfig()
+                        .workerMetricsTableConfig()
+                        .billingMode());
         assertEquals(
                 250,
                 kclV3Config
@@ -149,7 +149,7 @@ public class PropertiesMappingE2ETest {
         assertEquals(ClientVersionConfig.CLIENT_VERSION_CONFIG_3X, kclV3Config.coordinatorConfig.clientVersionConfig());
 
         assertEquals(
-            "MultiLangTest-CoordinatorState",
+                "MultiLangTest-CoordinatorState",
                 kclV3Config.coordinatorConfig.coordinatorStateConfig().tableName());
         assertEquals(
                 BillingMode.PAY_PER_REQUEST,
@@ -212,20 +212,20 @@ public class PropertiesMappingE2ETest {
                         .workerUtilizationAwareAssignmentConfig()
                         .staleWorkerMetricsEntryCleanupDuration());
         assertEquals(
-            3,
-            kclV3Config
-                .leaseManagementConfig
-                .workerUtilizationAwareAssignmentConfig()
-                .varianceBalancingFrequency());
+                3,
+                kclV3Config
+                        .leaseManagementConfig
+                        .workerUtilizationAwareAssignmentConfig()
+                        .varianceBalancingFrequency());
         assertEquals(
-            0.5D,
-            kclV3Config
-                .leaseManagementConfig
-                .workerUtilizationAwareAssignmentConfig()
-                .workerMetricsEMAAlpha());
+                0.5D,
+                kclV3Config
+                        .leaseManagementConfig
+                        .workerUtilizationAwareAssignmentConfig()
+                        .workerMetricsEMAAlpha());
 
         assertEquals(
-            "MultiLangTest-WorkerMetricStats",
+                "MultiLangTest-WorkerMetricStats",
                 kclV3Config
                         .leaseManagementConfig
                         .workerUtilizationAwareAssignmentConfig()

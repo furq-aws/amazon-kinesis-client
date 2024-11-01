@@ -27,36 +27,47 @@ public class WorkerUtilizationAwareAssignmentConfigBean {
 
     interface WorkerUtilizationAwareAssignmentConfigBeanDelegate {
         long getInMemoryWorkerMetricsCaptureFrequencyMillis();
+
         void setInMemoryWorkerMetricsCaptureFrequencyMillis(long value);
 
         long getWorkerMetricsReporterFreqInMillis();
+
         void setWorkerMetricsReporterFreqInMillis(long value);
 
         int getNoOfPersistedMetricsPerWorkerMetrics();
+
         void setNoOfPersistedMetricsPerWorkerMetrics(int value);
 
         Boolean getDisableWorkerMetrics();
+
         void setDisableWorkerMetrics(Boolean value);
 
         double getMaxThroughputPerHostKBps();
+
         void setMaxThroughputPerHostKBps(double value);
 
         int getDampeningPercentage();
+
         void setDampeningPercentage(int value);
 
         int getReBalanceThresholdPercentage();
+
         void setReBalanceThresholdPercentage(int value);
 
         Boolean getAllowThroughputOvershoot();
+
         void setAllowThroughputOvershoot(Boolean value);
 
         int getVarianceBalancingFrequency();
+
         void setVarianceBalancingFrequency(int value);
 
         double getWorkerMetricsEMAAlpha();
+
         void setWorkerMetricsEMAAlpha(double value);
 
         void setStaleWorkerMetricsEntryCleanupDuration(Duration value);
+
         Duration getStaleWorkerMetricsEntryCleanupDuration();
     }
 

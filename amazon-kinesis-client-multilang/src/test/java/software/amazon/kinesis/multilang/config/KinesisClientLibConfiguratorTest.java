@@ -160,11 +160,11 @@ public class KinesisClientLibConfiguratorTest {
 
         final MultiLangDaemonConfiguration config = getConfiguration(StringUtils.join(
                 new String[] {
-                        "applicationName = dummyApplicationName",
-                        "streamName = dummyStreamName",
-                        "AWSCredentialsProvider = " + credentialName1 + ", " + credentialName2,
-                        "gracefulLeaseHandoffTimeoutMillis = " + testGracefulLeaseHandoffTimeoutMillis,
-                        "isGracefulLeaseHandoffEnabled = " + testGracefulLeaseHandoffEnabled
+                    "applicationName = dummyApplicationName",
+                    "streamName = dummyStreamName",
+                    "AWSCredentialsProvider = " + credentialName1 + ", " + credentialName2,
+                    "gracefulLeaseHandoffTimeoutMillis = " + testGracefulLeaseHandoffTimeoutMillis,
+                    "isGracefulLeaseHandoffEnabled = " + testGracefulLeaseHandoffEnabled
                 },
                 '\n'));
 
@@ -175,14 +175,16 @@ public class KinesisClientLibConfiguratorTest {
     @Test
     public void testClientVersionConfig() {
         final CoordinatorConfig.ClientVersionConfig testClientVersionConfig = Arrays.stream(
-                CoordinatorConfig.ClientVersionConfig.values()).findAny().orElseThrow(NoSuchElementException::new);
+                        CoordinatorConfig.ClientVersionConfig.values())
+                .findAny()
+                .orElseThrow(NoSuchElementException::new);
 
         final MultiLangDaemonConfiguration config = getConfiguration(StringUtils.join(
                 new String[] {
-                        "applicationName = dummyApplicationName",
-                        "streamName = dummyStreamName",
-                        "AWSCredentialsProvider = " + credentialName1 + ", " + credentialName2,
-                        "clientVersionConfig = " + testClientVersionConfig.name()
+                    "applicationName = dummyApplicationName",
+                    "streamName = dummyStreamName",
+                    "AWSCredentialsProvider = " + credentialName1 + ", " + credentialName2,
+                    "clientVersionConfig = " + testClientVersionConfig.name()
                 },
                 '\n'));
 
@@ -198,13 +200,13 @@ public class KinesisClientLibConfiguratorTest {
 
         final MultiLangDaemonConfiguration config = getConfiguration(StringUtils.join(
                 new String[] {
-                        "applicationName = dummyApplicationName",
-                        "streamName = dummyStreamName",
-                        "AWSCredentialsProvider = " + credentialName1 + ", " + credentialName2,
-                        "coordinatorStateTableName = " + testCoordinatorStateTableName,
-                        "coordinatorStateBillingMode = " + testCoordinatorStateBillingMode.name(),
-                        "coordinatorStateReadCapacity = " + testCoordinatorStateReadCapacity,
-                        "coordinatorStateWriteCapacity = " + testCoordinatorStateWriteCapacity
+                    "applicationName = dummyApplicationName",
+                    "streamName = dummyStreamName",
+                    "AWSCredentialsProvider = " + credentialName1 + ", " + credentialName2,
+                    "coordinatorStateTableName = " + testCoordinatorStateTableName,
+                    "coordinatorStateBillingMode = " + testCoordinatorStateBillingMode.name(),
+                    "coordinatorStateReadCapacity = " + testCoordinatorStateReadCapacity,
+                    "coordinatorStateWriteCapacity = " + testCoordinatorStateWriteCapacity
                 },
                 '\n'));
 
@@ -229,23 +231,25 @@ public class KinesisClientLibConfiguratorTest {
 
         final MultiLangDaemonConfiguration config = getConfiguration(StringUtils.join(
                 new String[] {
-                        "applicationName = dummyApplicationName",
-                        "streamName = dummyStreamName",
-                        "AWSCredentialsProvider = " + credentialName1 + ", " + credentialName2,
-                        "inMemoryWorkerMetricsCaptureFrequencyMillis = " + testInMemoryWorkerMetricsCaptureFrequencyMillis,
-                        "workerMetricsReporterFreqInMillis = " + testWorkerMetricsReporterFreqInMillis,
-                        "noOfPersistedMetricsPerWorkerMetrics = " + testNoOfPersistedMetricsPerWorkerMetrics,
-                        "disableWorkerMetrics = " + testDisableWorkerMetrics,
-                        "maxThroughputPerHostKBps = " + testMaxThroughputPerHostKBps,
-                        "dampeningPercentage = " + testDampeningPercentage,
-                        "reBalanceThresholdPercentage = " + testReBalanceThresholdPercentage,
-                        "allowThroughputOvershoot = " + testAllowThroughputOvershoot,
-                        "varianceBalancingFrequency = " + testVarianceBalancingFrequency,
-                        "workerMetricsEMAAlpha = " + testWorkerMetricsEMAAlpha
+                    "applicationName = dummyApplicationName",
+                    "streamName = dummyStreamName",
+                    "AWSCredentialsProvider = " + credentialName1 + ", " + credentialName2,
+                    "inMemoryWorkerMetricsCaptureFrequencyMillis = " + testInMemoryWorkerMetricsCaptureFrequencyMillis,
+                    "workerMetricsReporterFreqInMillis = " + testWorkerMetricsReporterFreqInMillis,
+                    "noOfPersistedMetricsPerWorkerMetrics = " + testNoOfPersistedMetricsPerWorkerMetrics,
+                    "disableWorkerMetrics = " + testDisableWorkerMetrics,
+                    "maxThroughputPerHostKBps = " + testMaxThroughputPerHostKBps,
+                    "dampeningPercentage = " + testDampeningPercentage,
+                    "reBalanceThresholdPercentage = " + testReBalanceThresholdPercentage,
+                    "allowThroughputOvershoot = " + testAllowThroughputOvershoot,
+                    "varianceBalancingFrequency = " + testVarianceBalancingFrequency,
+                    "workerMetricsEMAAlpha = " + testWorkerMetricsEMAAlpha
                 },
                 '\n'));
 
-        assertEquals(testInMemoryWorkerMetricsCaptureFrequencyMillis, config.getInMemoryWorkerMetricsCaptureFrequencyMillis());
+        assertEquals(
+                testInMemoryWorkerMetricsCaptureFrequencyMillis,
+                config.getInMemoryWorkerMetricsCaptureFrequencyMillis());
         assertEquals(testWorkerMetricsReporterFreqInMillis, config.getWorkerMetricsReporterFreqInMillis());
         assertEquals(testNoOfPersistedMetricsPerWorkerMetrics, config.getNoOfPersistedMetricsPerWorkerMetrics());
         assertEquals(testDisableWorkerMetrics, config.getDisableWorkerMetrics());
@@ -266,13 +270,13 @@ public class KinesisClientLibConfiguratorTest {
 
         final MultiLangDaemonConfiguration config = getConfiguration(StringUtils.join(
                 new String[] {
-                        "applicationName = dummyApplicationName",
-                        "streamName = dummyStreamName",
-                        "AWSCredentialsProvider = " + credentialName1 + ", " + credentialName2,
-                        "workerMetricsTableName = " + testWorkerMetricsTableName,
-                        "workerMetricsBillingMode = " + testWorkerMetricsBillingMode.name(),
-                        "workerMetricsReadCapacity = " + testWorkerMetricsReadCapacity,
-                        "workerMetricsWriteCapacity = " + testWorkerMetricsWriteCapacity
+                    "applicationName = dummyApplicationName",
+                    "streamName = dummyStreamName",
+                    "AWSCredentialsProvider = " + credentialName1 + ", " + credentialName2,
+                    "workerMetricsTableName = " + testWorkerMetricsTableName,
+                    "workerMetricsBillingMode = " + testWorkerMetricsBillingMode.name(),
+                    "workerMetricsReadCapacity = " + testWorkerMetricsReadCapacity,
+                    "workerMetricsWriteCapacity = " + testWorkerMetricsWriteCapacity
                 },
                 '\n'));
 
@@ -286,10 +290,10 @@ public class KinesisClientLibConfiguratorTest {
     public void testInvalidClientVersionConfig() {
         getConfiguration(StringUtils.join(
                 new String[] {
-                        "applicationName = dummyApplicationName",
-                        "streamName = dummyStreamName",
-                        "AWSCredentialsProvider = " + credentialName1 + ", " + credentialName2,
-                        "clientVersionConfig = " + "invalid_client_version_config"
+                    "applicationName = dummyApplicationName",
+                    "streamName = dummyStreamName",
+                    "AWSCredentialsProvider = " + credentialName1 + ", " + credentialName2,
+                    "clientVersionConfig = " + "invalid_client_version_config"
                 },
                 '\n'));
     }

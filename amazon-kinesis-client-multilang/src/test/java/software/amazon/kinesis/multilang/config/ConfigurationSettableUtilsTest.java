@@ -56,9 +56,7 @@ public class ConfigurationSettableUtilsTest {
     public void testBoolean() {
         ConfigResult expected = ConfigResult.builder().bool(false).build();
 
-        ConfigObject configObject = ConfigObject.builder()
-                                    .bool(expected.bool)
-                                    .build();
+        ConfigObject configObject = ConfigObject.builder().bool(expected.bool).build();
         ConfigResult actual = resolve(configObject);
 
         assertThat(actual, equalTo(expected));
@@ -158,8 +156,10 @@ public class ConfigurationSettableUtilsTest {
         private long rawLong;
         private Long boxedLong;
         private ComplexValue complexValue;
+
         @Builder.Default
         private Boolean bool = true;
+
         private Optional<String> optionalString;
         private Optional<Integer> optionalInteger;
         private Optional<Long> optionalLong;

@@ -198,15 +198,16 @@ public class MultiLangDaemonConfiguration {
     @Delegate(types = GracefulLeaseHandoffConfigBean.GracefulLeaseHandoffConfigBeanDelegate.class)
     private final GracefulLeaseHandoffConfigBean gracefulLeaseHandoffConfigBean = new GracefulLeaseHandoffConfigBean();
 
-    @Delegate(types = WorkerUtilizationAwareAssignmentConfigBean.WorkerUtilizationAwareAssignmentConfigBeanDelegate.class)
-    private final WorkerUtilizationAwareAssignmentConfigBean workerUtilizationAwareAssignmentConfigBean = new WorkerUtilizationAwareAssignmentConfigBean();
+    @Delegate(
+            types = WorkerUtilizationAwareAssignmentConfigBean.WorkerUtilizationAwareAssignmentConfigBeanDelegate.class)
+    private final WorkerUtilizationAwareAssignmentConfigBean workerUtilizationAwareAssignmentConfigBean =
+            new WorkerUtilizationAwareAssignmentConfigBean();
 
     @Delegate(types = WorkerMetricsTableConfigBean.WorkerMetricsTableConfigBeanDelegate.class)
     private final WorkerMetricsTableConfigBean workerMetricsTableConfigBean = new WorkerMetricsTableConfigBean();
 
     @Delegate(types = CoordinatorStateConfigBean.CoordinatorStateConfigBeanDelegate.class)
     private final CoordinatorStateConfigBean coordinatorStateConfigBean = new CoordinatorStateConfigBean();
-
 
     private boolean validateSequenceNumberBeforeCheckpointing;
 
@@ -275,8 +276,8 @@ public class MultiLangDaemonConfiguration {
                 new Converter() {
                     @Override
                     public <T> T convert(Class<T> type, Object value) {
-                        return type.cast(
-                                CoordinatorConfig.ClientVersionConfig.valueOf(value.toString().toUpperCase()));
+                        return type.cast(CoordinatorConfig.ClientVersionConfig.valueOf(
+                                value.toString().toUpperCase()));
                     }
                 },
                 CoordinatorConfig.ClientVersionConfig.class);
@@ -285,8 +286,7 @@ public class MultiLangDaemonConfiguration {
                 new Converter() {
                     @Override
                     public <T> T convert(Class<T> type, Object value) {
-                        return type.cast(
-                                BillingMode.valueOf(value.toString().toUpperCase()));
+                        return type.cast(BillingMode.valueOf(value.toString().toUpperCase()));
                     }
                 },
                 BillingMode.class);
@@ -411,26 +411,20 @@ public class MultiLangDaemonConfiguration {
                 retrievalMode.builder(this).build(configsBuilder.kinesisClient(), this));
     }
 
-    private void handleCoordinatorConfig(CoordinatorConfig  coordinatorConfig){
+    private void handleCoordinatorConfig(CoordinatorConfig coordinatorConfig) {
         ConfigurationSettableUtils.resolveFields(
-                this.coordinatorStateConfigBean,
-                coordinatorConfig.coordinatorStateConfig()
-        );
+                this.coordinatorStateConfigBean, coordinatorConfig.coordinatorStateConfig());
     }
 
     private void handleLeaseManagementConfig(LeaseManagementConfig leaseManagementConfig) {
         ConfigurationSettableUtils.resolveFields(
-                this.gracefulLeaseHandoffConfigBean,
-                leaseManagementConfig.gracefulLeaseHandoffConfig()
-        );
+                this.gracefulLeaseHandoffConfigBean, leaseManagementConfig.gracefulLeaseHandoffConfig());
         ConfigurationSettableUtils.resolveFields(
                 this.workerUtilizationAwareAssignmentConfigBean,
-                leaseManagementConfig.workerUtilizationAwareAssignmentConfig()
-        );
+                leaseManagementConfig.workerUtilizationAwareAssignmentConfig());
         ConfigurationSettableUtils.resolveFields(
                 this.workerMetricsTableConfigBean,
-                leaseManagementConfig.workerUtilizationAwareAssignmentConfig().workerMetricsTableConfig()
-        );
+                leaseManagementConfig.workerUtilizationAwareAssignmentConfig().workerMetricsTableConfig());
     }
 
     private Object adjustKinesisHttpConfiguration(Object builderObj) {

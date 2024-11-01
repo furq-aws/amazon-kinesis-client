@@ -17,7 +17,6 @@ package software.amazon.kinesis.multilang.config;
 
 import lombok.Getter;
 import lombok.Setter;
-
 import software.amazon.awssdk.services.dynamodb.model.BillingMode;
 import software.amazon.kinesis.leases.LeaseManagementConfig.WorkerMetricsTableConfig;
 
@@ -27,15 +26,19 @@ public class WorkerMetricsTableConfigBean {
 
     interface WorkerMetricsTableConfigBeanDelegate {
         String getWorkerMetricsTableName();
+
         void setWorkerMetricsTableName(String value);
 
         BillingMode getWorkerMetricsBillingMode();
+
         void setWorkerMetricsBillingMode(BillingMode value);
 
         long getWorkerMetricsReadCapacity();
+
         void setWorkerMetricsReadCapacity(long value);
 
         long getWorkerMetricsWriteCapacity();
+
         void setWorkerMetricsWriteCapacity(long value);
     }
 

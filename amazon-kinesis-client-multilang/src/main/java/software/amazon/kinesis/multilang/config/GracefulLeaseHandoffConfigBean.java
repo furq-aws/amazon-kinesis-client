@@ -25,9 +25,11 @@ public class GracefulLeaseHandoffConfigBean {
 
     interface GracefulLeaseHandoffConfigBeanDelegate {
         Long getGracefulLeaseHandoffTimeoutMillis();
+
         void setGracefulLeaseHandoffTimeoutMillis(Long value);
 
         Boolean getIsGracefulLeaseHandoffEnabled();
+
         void setIsGracefulLeaseHandoffEnabled(Boolean value);
     }
 

@@ -145,8 +145,8 @@ public class MultiLangDaemonConfigurationTest {
         final LeaseManagementConfig.GracefulLeaseHandoffConfig gracefulLeaseHandoffConfig =
                 resolvedConfiguration.leaseManagementConfig.gracefulLeaseHandoffConfig();
 
-        assertEquals(testGracefulLeaseHandoffTimeoutMillis,
-                gracefulLeaseHandoffConfig.gracefulLeaseHandoffTimeoutMillis());
+        assertEquals(
+                testGracefulLeaseHandoffTimeoutMillis, gracefulLeaseHandoffConfig.gracefulLeaseHandoffTimeoutMillis());
         assertEquals(testGracefulLeaseHandoffEnabled, gracefulLeaseHandoffConfig.isGracefulLeaseHandoffEnabled());
     }
 
@@ -182,7 +182,8 @@ public class MultiLangDaemonConfigurationTest {
         MultiLangDaemonConfiguration.ResolvedConfiguration resolvedConfiguration =
                 configuration.resolvedConfiguration(shardRecordProcessorFactory);
         LeaseManagementConfig leaseManagementConfig = resolvedConfiguration.leaseManagementConfig;
-        LeaseManagementConfig.WorkerUtilizationAwareAssignmentConfig config = leaseManagementConfig.workerUtilizationAwareAssignmentConfig();
+        LeaseManagementConfig.WorkerUtilizationAwareAssignmentConfig config =
+                leaseManagementConfig.workerUtilizationAwareAssignmentConfig();
 
         assertEquals(config.inMemoryWorkerMetricsCaptureFrequencyMillis(), 123);
         assertEquals(config.workerMetricsReporterFreqInMillis(), 123);
@@ -325,16 +326,16 @@ public class MultiLangDaemonConfigurationTest {
         assertEquals(defaultCoordinatorStateTableConfig, resolvedCoordinatorStateTableConfig);
     }
 
-//    @Test
-//    public void testSetLeaseTablePitrEnabledToTrue() {
-//        MultiLangDaemonConfiguration configuration = baseConfiguration();
-//        configuration.setLeaseTablePitrEnabled(true);
-//
-//        MultiLangDaemonConfiguration.ResolvedConfiguration resolvedConfiguration =
-//                configuration.resolvedConfiguration(shardRecordProcessorFactory);
-//
-//        assertTrue(resolvedConfiguration.leaseManagementConfig.leaseTablePitrEnabled());
-//    }
+    //    @Test
+    //    public void testSetLeaseTablePitrEnabledToTrue() {
+    //        MultiLangDaemonConfiguration configuration = baseConfiguration();
+    //        configuration.setLeaseTablePitrEnabled(true);
+    //
+    //        MultiLangDaemonConfiguration.ResolvedConfiguration resolvedConfiguration =
+    //                configuration.resolvedConfiguration(shardRecordProcessorFactory);
+    //
+    //        assertTrue(resolvedConfiguration.leaseManagementConfig.leaseTablePitrEnabled());
+    //    }
 
     @Test
     public void testSetLeaseTableDeletionProtectionEnabledToFalse() {
@@ -347,16 +348,16 @@ public class MultiLangDaemonConfigurationTest {
         assertFalse(resolvedConfiguration.leaseManagementConfig.leaseTableDeletionProtectionEnabled());
     }
 
-//    @Test
-//    public void testSetLeaseTablePitrEnabledToFalse() {
-//        MultiLangDaemonConfiguration configuration = baseConfiguration();
-//        configuration.setLeaseTablePitrEnabled(false);
-//
-//        MultiLangDaemonConfiguration.ResolvedConfiguration resolvedConfiguration =
-//                configuration.resolvedConfiguration(shardRecordProcessorFactory);
-//
-//        assertFalse(resolvedConfiguration.leaseManagementConfig.leaseTablePitrEnabled());
-//    }
+    //    @Test
+    //    public void testSetLeaseTablePitrEnabledToFalse() {
+    //        MultiLangDaemonConfiguration configuration = baseConfiguration();
+    //        configuration.setLeaseTablePitrEnabled(false);
+    //
+    //        MultiLangDaemonConfiguration.ResolvedConfiguration resolvedConfiguration =
+    //                configuration.resolvedConfiguration(shardRecordProcessorFactory);
+    //
+    //        assertFalse(resolvedConfiguration.leaseManagementConfig.leaseTablePitrEnabled());
+    //    }
 
     @Test
     public void testDefaultRetrievalConfig() {
@@ -504,13 +505,19 @@ public class MultiLangDaemonConfigurationTest {
 
         final CoordinatorConfig coordinatorConfig = resolvedConfiguration.coordinatorConfig;
 
-        assertEquals(getTestConfigsBuilder().coordinatorConfig().clientVersionConfig(),
+        assertEquals(
+                getTestConfigsBuilder().coordinatorConfig().clientVersionConfig(),
                 coordinatorConfig.clientVersionConfig());
     }
 
     private ConfigsBuilder getTestConfigsBuilder() {
-        return new ConfigsBuilder(DUMMY_STREAM_NAME, DUMMY_APPLICATION_NAME, Mockito.mock(KinesisAsyncClient.class),
-                Mockito.mock(DynamoDbAsyncClient.class), Mockito.mock(CloudWatchAsyncClient.class),
-                "dummyWorkerIdentifier", shardRecordProcessorFactory);
+        return new ConfigsBuilder(
+                DUMMY_STREAM_NAME,
+                DUMMY_APPLICATION_NAME,
+                Mockito.mock(KinesisAsyncClient.class),
+                Mockito.mock(DynamoDbAsyncClient.class),
+                Mockito.mock(CloudWatchAsyncClient.class),
+                "dummyWorkerIdentifier",
+                shardRecordProcessorFactory);
     }
 }
