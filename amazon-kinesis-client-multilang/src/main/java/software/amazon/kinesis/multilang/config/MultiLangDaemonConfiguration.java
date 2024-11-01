@@ -41,6 +41,7 @@ import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.cloudwatch.CloudWatchAsyncClient;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
+import software.amazon.awssdk.services.dynamodb.model.BillingMode;
 import software.amazon.awssdk.services.kinesis.KinesisAsyncClient;
 import software.amazon.awssdk.services.kinesis.KinesisAsyncClientBuilder;
 import software.amazon.kinesis.checkpoint.CheckpointConfig;
@@ -277,6 +278,16 @@ public class MultiLangDaemonConfiguration {
                     }
                 },
                 CoordinatorConfig.ClientVersionConfig.class);
+
+        convertUtilsBean.register(
+                new Converter() {
+                    @Override
+                    public <T> T convert(Class<T> type, Object value) {
+                        return type.cast(
+                                BillingMode.valueOf(value.toString().toUpperCase()));
+                    }
+                },
+                BillingMode.class);
 
         convertUtilsBean.register(
                 new Converter() {

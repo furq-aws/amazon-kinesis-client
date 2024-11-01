@@ -18,6 +18,7 @@ package software.amazon.kinesis.multilang.config;
 import lombok.Getter;
 import lombok.Setter;
 
+import software.amazon.awssdk.services.dynamodb.model.BillingMode;
 import software.amazon.kinesis.coordinator.CoordinatorConfig.CoordinatorStateTableConfig;
 
 @Getter
@@ -28,6 +29,9 @@ public class CoordinatorStateConfigBean {
         String getCoordinatorStateTableName();
         void setCoordinatorStateTableName(String value);
 
+        BillingMode getCoordinatorStateBillingMode();
+        void setCoordinatorStateBillingMode(BillingMode value);
+
         long getCoordinatorStateReadCapacity();
         void setCoordinatorStateReadCapacity(long value);
 
@@ -37,6 +41,9 @@ public class CoordinatorStateConfigBean {
 
     @ConfigurationSettable(configurationClass = CoordinatorStateTableConfig.class, methodName = "tableName")
     private String coordinatorStateTableName;
+
+    @ConfigurationSettable(configurationClass = CoordinatorStateTableConfig.class, methodName = "billingMode")
+    private BillingMode coordinatorStateBillingMode;
 
     @ConfigurationSettable(configurationClass = CoordinatorStateTableConfig.class, methodName = "readCapacity")
     private long coordinatorStateReadCapacity;

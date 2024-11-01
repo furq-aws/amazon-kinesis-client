@@ -33,6 +33,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.runners.MockitoJUnitRunner;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
+import software.amazon.awssdk.services.dynamodb.model.BillingMode;
 import software.amazon.kinesis.common.InitialPositionInStream;
 import software.amazon.kinesis.coordinator.CoordinatorConfig;
 import software.amazon.kinesis.metrics.MetricsLevel;
@@ -191,6 +192,7 @@ public class KinesisClientLibConfiguratorTest {
     @Test
     public void testCoordinatorStateConfig() {
         final String testCoordinatorStateTableName = "CoordState";
+        final BillingMode testCoordinatorStateBillingMode = BillingMode.PAY_PER_REQUEST;
         final long testCoordinatorStateReadCapacity = 123;
         final long testCoordinatorStateWriteCapacity = 123;
 
@@ -200,12 +202,14 @@ public class KinesisClientLibConfiguratorTest {
                         "streamName = dummyStreamName",
                         "AWSCredentialsProvider = " + credentialName1 + ", " + credentialName2,
                         "coordinatorStateTableName = " + testCoordinatorStateTableName,
+                        "coordinatorStateBillingMode = " + testCoordinatorStateBillingMode.name(),
                         "coordinatorStateReadCapacity = " + testCoordinatorStateReadCapacity,
                         "coordinatorStateWriteCapacity = " + testCoordinatorStateWriteCapacity
                 },
                 '\n'));
 
         assertEquals(testCoordinatorStateTableName, config.getCoordinatorStateTableName());
+        assertEquals(testCoordinatorStateBillingMode, config.getCoordinatorStateBillingMode());
         assertEquals(testCoordinatorStateReadCapacity, config.getCoordinatorStateReadCapacity());
         assertEquals(testCoordinatorStateWriteCapacity, config.getCoordinatorStateWriteCapacity());
     }
@@ -256,6 +260,7 @@ public class KinesisClientLibConfiguratorTest {
     @Test
     public void testWorkerMetricsConfig() {
         final String testWorkerMetricsTableName = "CoordState";
+        final BillingMode testWorkerMetricsBillingMode = BillingMode.PROVISIONED;
         final long testWorkerMetricsReadCapacity = 123;
         final long testWorkerMetricsWriteCapacity = 123;
 
@@ -265,12 +270,14 @@ public class KinesisClientLibConfiguratorTest {
                         "streamName = dummyStreamName",
                         "AWSCredentialsProvider = " + credentialName1 + ", " + credentialName2,
                         "workerMetricsTableName = " + testWorkerMetricsTableName,
+                        "workerMetricsBillingMode = " + testWorkerMetricsBillingMode.name(),
                         "workerMetricsReadCapacity = " + testWorkerMetricsReadCapacity,
                         "workerMetricsWriteCapacity = " + testWorkerMetricsWriteCapacity
                 },
                 '\n'));
 
         assertEquals(testWorkerMetricsTableName, config.getWorkerMetricsTableName());
+        assertEquals(testWorkerMetricsBillingMode, config.getWorkerMetricsBillingMode());
         assertEquals(testWorkerMetricsReadCapacity, config.getWorkerMetricsReadCapacity());
         assertEquals(testWorkerMetricsWriteCapacity, config.getWorkerMetricsWriteCapacity());
     }

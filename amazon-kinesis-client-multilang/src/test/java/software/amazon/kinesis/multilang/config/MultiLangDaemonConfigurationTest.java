@@ -29,6 +29,7 @@ import org.mockito.runners.MockitoJUnitRunner;
 import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
 import software.amazon.awssdk.services.cloudwatch.CloudWatchAsyncClient;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
+import software.amazon.awssdk.services.dynamodb.model.BillingMode;
 import software.amazon.awssdk.services.kinesis.KinesisAsyncClient;
 import software.amazon.kinesis.common.ConfigsBuilder;
 import software.amazon.kinesis.coordinator.CoordinatorConfig;
@@ -193,9 +194,12 @@ public class MultiLangDaemonConfigurationTest {
 
     @Test
     public void testWorkerMetricsTableConfigBean() {
+        final BillingMode testWorkerMetricsTableBillingMode = BillingMode.PROVISIONED;
+
         MultiLangDaemonConfiguration configuration = baseConfiguration();
 
         configuration.setWorkerMetricsTableName("testTable");
+        configuration.setWorkerMetricsBillingMode(testWorkerMetricsTableBillingMode);
         configuration.setWorkerMetricsReadCapacity(123);
         configuration.setWorkerMetricsWriteCapacity(123);
 
@@ -208,15 +212,19 @@ public class MultiLangDaemonConfigurationTest {
                 workerUtilizationConfig.workerMetricsTableConfig();
 
         assertEquals(workerMetricsConfig.tableName(), "testTable");
+        assertEquals(workerMetricsConfig.billingMode(), testWorkerMetricsTableBillingMode);
         assertEquals(workerMetricsConfig.readCapacity(), 123);
         assertEquals(workerMetricsConfig.writeCapacity(), 123);
     }
 
     @Test
     public void testCoordinatorStateTableConfigBean() {
+        final BillingMode testWorkerMetricsTableBillingMode = BillingMode.PAY_PER_REQUEST;
+
         MultiLangDaemonConfiguration configuration = baseConfiguration();
 
         configuration.setCoordinatorStateTableName("testTable");
+        configuration.setCoordinatorStateBillingMode(testWorkerMetricsTableBillingMode);
         configuration.setCoordinatorStateReadCapacity(123);
         configuration.setCoordinatorStateWriteCapacity(123);
 
@@ -226,6 +234,7 @@ public class MultiLangDaemonConfigurationTest {
         CoordinatorConfig.CoordinatorStateTableConfig coordinatorStateConfig =
                 coordinatorConfig.coordinatorStateConfig();
         assertEquals(coordinatorStateConfig.tableName(), "testTable");
+        assertEquals(coordinatorStateConfig.billingMode(), testWorkerMetricsTableBillingMode);
         assertEquals(coordinatorStateConfig.readCapacity(), 123);
         assertEquals(coordinatorStateConfig.writeCapacity(), 123);
     }
