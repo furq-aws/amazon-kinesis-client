@@ -156,6 +156,9 @@ public class MultiLangDaemonConfiguration {
     @ConfigurationSettable(configurationClass = CoordinatorConfig.class)
     private long schedulerInitializationBackoffTimeMillis;
 
+    @ConfigurationSettable(configurationClass = CoordinatorConfig.class)
+    private CoordinatorConfig.ClientVersionConfig clientVersionConfig;
+
     @ConfigurationSettable(configurationClass = LifecycleConfig.class)
     private long taskBackoffTimeMillis;
 
@@ -188,6 +191,9 @@ public class MultiLangDaemonConfiguration {
 
     @Delegate(types = PollingConfigBean.PollingConfigBeanDelegate.class)
     private final PollingConfigBean pollingConfig = new PollingConfigBean();
+
+    @Delegate(types = GracefulLeaseHandoffConfigBean.GracefulLeaseHandoffConfigBeanDelegate.class)
+    private final GracefulLeaseHandoffConfigBean gracefulLeaseHandoffConfigBean = new GracefulLeaseHandoffConfigBean();
 
     @Delegate(types = WorkerUtilizationAwareAssignmentConfigBean.WorkerUtilizationAwareAssignmentConfigBeanDelegate.class)
     private final WorkerUtilizationAwareAssignmentConfigBean workerUtilizationAwareAssignmentConfigBean = new WorkerUtilizationAwareAssignmentConfigBean();
@@ -258,6 +264,17 @@ public class MultiLangDaemonConfiguration {
                     }
                 },
                 InitialPositionInStream.class);
+
+        convertUtilsBean.register(
+                new Converter() {
+                    @Override
+                    public <T> T convert(Class<T> type, Object value) {
+                        return type.cast(
+                                // TODO: toUpperCase after enum refactor from _2/3x to _2/3X
+                                CoordinatorConfig.ClientVersionConfig.valueOf(value.toString()));
+                    }
+                },
+                CoordinatorConfig.ClientVersionConfig.class);
 
         convertUtilsBean.register(
                 new Converter() {
@@ -387,6 +404,9 @@ public class MultiLangDaemonConfiguration {
     }
 
     private void handleLeaseManagementConfig(LeaseManagementConfig leaseManagementConfig) {
+        ConfigurationSettableUtils.resolveFields(
+                this.gracefulLeaseHandoffConfigBean, leaseManagementConfig.gracefulLeaseHandoffConfig());
+
         LeaseManagementConfig.WorkerUtilizationAwareAssignmentConfig workerConfig =
                 handleWorkerUtilizationAwareAssignmentConfig();
         leaseManagementConfig.workerUtilizationAwareAssignmentConfig(workerConfig);

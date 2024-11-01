@@ -29,7 +29,6 @@ import java.util.function.Function;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import lombok.Builder;
 import lombok.Data;
-import lombok.Getter;
 import lombok.NonNull;
 import lombok.experimental.Accessors;
 import org.apache.commons.lang3.Validate;
@@ -381,8 +380,8 @@ public class LeaseManagementConfig {
      * to shut down and an option to enable or disable graceful lease handoff.
      * </p>
      */
+    @Data
     @Builder
-    @Getter
     @Accessors(fluent = true)
     public static class GracefulLeaseHandoffConfig {
         /**

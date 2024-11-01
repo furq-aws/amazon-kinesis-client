@@ -20,6 +20,7 @@ import java.net.URI;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.NoSuchElementException;
 import java.util.Set;
 
 import com.amazonaws.auth.AWSCredentials;
@@ -33,6 +34,7 @@ import org.junit.runner.RunWith;
 import org.mockito.runners.MockitoJUnitRunner;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
 import software.amazon.kinesis.common.InitialPositionInStream;
+import software.amazon.kinesis.coordinator.CoordinatorConfig;
 import software.amazon.kinesis.metrics.MetricsLevel;
 
 import static org.hamcrest.CoreMatchers.equalTo;
@@ -40,6 +42,7 @@ import static org.hamcrest.CoreMatchers.nullValue;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -69,6 +72,8 @@ public class KinesisClientLibConfiguratorTest {
         assertEquals(config.getWorkerIdentifier(), "123");
         assertThat(config.getMaxGetRecordsThreadPool(), nullValue());
         assertThat(config.getRetryGetRecordsInSeconds(), nullValue());
+        assertNull(config.getGracefulLeaseHandoffTimeoutMillis());
+        assertNull(config.getIsGracefulLeaseHandoffEnabled());
     }
 
     @Test
@@ -145,6 +150,54 @@ public class KinesisClientLibConfiguratorTest {
             Throwable rootCause = ExceptionUtils.getRootCause(e);
             assertTrue(rootCause instanceof IllegalArgumentException);
         }
+    }
+
+    @Test
+    public void testGracefulLeaseHandoffConfig() {
+        final Long testGracefulLeaseHandoffTimeoutMillis = 12345L;
+        final boolean testGracefulLeaseHandoffEnabled = true;
+
+        final MultiLangDaemonConfiguration config = getConfiguration(StringUtils.join(
+                new String[] {
+                        "applicationName = dummyApplicationName",
+                        "streamName = dummyStreamName",
+                        "AWSCredentialsProvider = " + credentialName1 + ", " + credentialName2,
+                        "gracefulLeaseHandoffTimeoutMillis = " + testGracefulLeaseHandoffTimeoutMillis,
+                        "isGracefulLeaseHandoffEnabled = " + testGracefulLeaseHandoffEnabled
+                },
+                '\n'));
+
+        assertEquals(testGracefulLeaseHandoffTimeoutMillis, config.getGracefulLeaseHandoffTimeoutMillis());
+        assertEquals(testGracefulLeaseHandoffEnabled, config.getIsGracefulLeaseHandoffEnabled());
+    }
+
+    @Test
+    public void testClientVersionConfig() {
+        final CoordinatorConfig.ClientVersionConfig testClientVersionConfig = Arrays.stream(
+                CoordinatorConfig.ClientVersionConfig.values()).findAny().orElseThrow(NoSuchElementException::new);
+
+        final MultiLangDaemonConfiguration config = getConfiguration(StringUtils.join(
+                new String[] {
+                        "applicationName = dummyApplicationName",
+                        "streamName = dummyStreamName",
+                        "AWSCredentialsProvider = " + credentialName1 + ", " + credentialName2,
+                        "clientVersionConfig = " + testClientVersionConfig.name()
+                },
+                '\n'));
+
+        assertEquals(testClientVersionConfig, config.getClientVersionConfig());
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testInvalidClientVersionConfig() {
+        getConfiguration(StringUtils.join(
+                new String[] {
+                        "applicationName = dummyApplicationName",
+                        "streamName = dummyStreamName",
+                        "AWSCredentialsProvider = " + credentialName1 + ", " + credentialName2,
+                        "clientVersionConfig = " + "invalid_client_version_config"
+                },
+                '\n'));
     }
 
     @Test

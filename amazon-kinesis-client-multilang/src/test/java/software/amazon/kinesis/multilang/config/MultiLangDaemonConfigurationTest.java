@@ -24,9 +24,14 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
-import software.amazon.kinesis.leases.Lease;
+import software.amazon.awssdk.services.cloudwatch.CloudWatchAsyncClient;
+import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
+import software.amazon.awssdk.services.kinesis.KinesisAsyncClient;
+import software.amazon.kinesis.common.ConfigsBuilder;
+import software.amazon.kinesis.coordinator.CoordinatorConfig;
 import software.amazon.kinesis.leases.LeaseManagementConfig;
 import software.amazon.kinesis.processor.ShardRecordProcessorFactory;
 import software.amazon.kinesis.retrieval.fanout.FanOutConfig;
@@ -43,6 +48,8 @@ import static org.junit.Assert.assertTrue;
 public class MultiLangDaemonConfigurationTest {
 
     private static final String AWS_REGION_PROPERTY_NAME = "aws.region";
+    private static final String DUMMY_APPLICATION_NAME = "dummyApplicationName";
+    private static final String DUMMY_STREAM_NAME = "dummyStreamName";
 
     private BeanUtilsBean utilsBean;
     private ConvertUtilsBean convertUtilsBean;
@@ -73,8 +80,8 @@ public class MultiLangDaemonConfigurationTest {
 
     public MultiLangDaemonConfiguration baseConfiguration() {
         MultiLangDaemonConfiguration configuration = new MultiLangDaemonConfiguration(utilsBean, convertUtilsBean);
-        configuration.setApplicationName("Test");
-        configuration.setStreamName("Test");
+        configuration.setApplicationName(DUMMY_APPLICATION_NAME);
+        configuration.setStreamName(DUMMY_STREAM_NAME);
         configuration.getKinesisCredentialsProvider().set("class", DefaultCredentialsProvider.class.getName());
 
         return configuration;
@@ -111,6 +118,45 @@ public class MultiLangDaemonConfigurationTest {
                 configuration.resolvedConfiguration(shardRecordProcessorFactory);
 
         assertTrue(resolvedConfiguration.leaseManagementConfig.leaseTableDeletionProtectionEnabled());
+    }
+
+    @Test
+    public void testGracefulLeaseHandoffConfig() {
+        final LeaseManagementConfig.GracefulLeaseHandoffConfig defaultGracefulLeaseHandoffConfig =
+                getTestConfigsBuilder().leaseManagementConfig().gracefulLeaseHandoffConfig();
+
+        final long testGracefulLeaseHandoffTimeoutMillis =
+                defaultGracefulLeaseHandoffConfig.gracefulLeaseHandoffTimeoutMillis() + 12345;
+        final boolean testGracefulLeaseHandoffEnabled =
+                !defaultGracefulLeaseHandoffConfig.isGracefulLeaseHandoffEnabled();
+
+        final MultiLangDaemonConfiguration configuration = baseConfiguration();
+        configuration.setGracefulLeaseHandoffTimeoutMillis(testGracefulLeaseHandoffTimeoutMillis);
+        configuration.setIsGracefulLeaseHandoffEnabled(testGracefulLeaseHandoffEnabled);
+
+        final MultiLangDaemonConfiguration.ResolvedConfiguration resolvedConfiguration =
+                configuration.resolvedConfiguration(shardRecordProcessorFactory);
+
+        final LeaseManagementConfig.GracefulLeaseHandoffConfig gracefulLeaseHandoffConfig =
+                resolvedConfiguration.leaseManagementConfig.gracefulLeaseHandoffConfig();
+
+        assertEquals(testGracefulLeaseHandoffTimeoutMillis,
+                gracefulLeaseHandoffConfig.gracefulLeaseHandoffTimeoutMillis());
+        assertEquals(testGracefulLeaseHandoffEnabled, gracefulLeaseHandoffConfig.isGracefulLeaseHandoffEnabled());
+    }
+
+    @Test
+    public void testGracefulLeaseHandoffUsesDefaults() {
+        final MultiLangDaemonConfiguration.ResolvedConfiguration resolvedConfiguration =
+                baseConfiguration().resolvedConfiguration(shardRecordProcessorFactory);
+
+        final LeaseManagementConfig.GracefulLeaseHandoffConfig gracefulLeaseHandoffConfig =
+                resolvedConfiguration.leaseManagementConfig.gracefulLeaseHandoffConfig();
+
+        final LeaseManagementConfig.GracefulLeaseHandoffConfig defaultGracefulLeaseHandoffConfig =
+                getTestConfigsBuilder().leaseManagementConfig().gracefulLeaseHandoffConfig();
+
+        assertEquals(defaultGracefulLeaseHandoffConfig, gracefulLeaseHandoffConfig);
     }
 
     @Test
@@ -318,5 +364,38 @@ public class MultiLangDaemonConfigurationTest {
                 (FanOutConfig) resolvedConfiguration.getRetrievalConfig().retrievalSpecificConfig();
 
         assertThat(fanOutConfig.consumerArn(), equalTo(consumerArn));
+    }
+
+    @Test
+    public void testClientVersionConfig() {
+        final CoordinatorConfig.ClientVersionConfig testClientVersionConfig =
+                CoordinatorConfig.ClientVersionConfig.CLIENT_VERSION_CONFIG_COMPATIBLE_WITH_2x;
+
+        final MultiLangDaemonConfiguration configuration = baseConfiguration();
+        configuration.setClientVersionConfig(testClientVersionConfig);
+
+        final MultiLangDaemonConfiguration.ResolvedConfiguration resolvedConfiguration =
+                configuration.resolvedConfiguration(shardRecordProcessorFactory);
+
+        final CoordinatorConfig coordinatorConfig = resolvedConfiguration.coordinatorConfig;
+
+        assertEquals(testClientVersionConfig, coordinatorConfig.clientVersionConfig());
+    }
+
+    @Test
+    public void testClientVersionConfigUsesDefault() {
+        final MultiLangDaemonConfiguration.ResolvedConfiguration resolvedConfiguration =
+                baseConfiguration().resolvedConfiguration(shardRecordProcessorFactory);
+
+        final CoordinatorConfig coordinatorConfig = resolvedConfiguration.coordinatorConfig;
+
+        assertEquals(getTestConfigsBuilder().coordinatorConfig().clientVersionConfig(),
+                coordinatorConfig.clientVersionConfig());
+    }
+
+    private ConfigsBuilder getTestConfigsBuilder() {
+        return new ConfigsBuilder(DUMMY_STREAM_NAME, DUMMY_APPLICATION_NAME, Mockito.mock(KinesisAsyncClient.class),
+                Mockito.mock(DynamoDbAsyncClient.class), Mockito.mock(CloudWatchAsyncClient.class),
+                "dummyWorkerIdentifier", shardRecordProcessorFactory);
     }
 }
