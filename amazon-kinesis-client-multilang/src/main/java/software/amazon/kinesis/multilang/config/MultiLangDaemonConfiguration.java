@@ -17,6 +17,7 @@ package software.amazon.kinesis.multilang.config;
 
 import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
@@ -56,6 +57,7 @@ import software.amazon.kinesis.leases.ShardPrioritization;
 import software.amazon.kinesis.lifecycle.LifecycleConfig;
 import software.amazon.kinesis.metrics.MetricsConfig;
 import software.amazon.kinesis.metrics.MetricsLevel;
+import software.amazon.kinesis.multilang.config.converter.DurationConverter;
 import software.amazon.kinesis.multilang.config.credentials.V2CredentialWrapper;
 import software.amazon.kinesis.processor.ProcessorConfig;
 import software.amazon.kinesis.processor.ShardRecordProcessorFactory;
@@ -315,6 +317,8 @@ public class MultiLangDaemonConfiguration {
                     }
                 },
                 Region.class);
+
+        convertUtilsBean.register(new DurationConverter(), Duration.class);
 
         ArrayConverter arrayConverter = new ArrayConverter(String[].class, new StringConverter());
         arrayConverter.setDelimiter(',');

@@ -15,6 +15,8 @@
 
 package software.amazon.kinesis.multilang.config;
 
+import java.time.Duration;
+
 import lombok.Getter;
 import lombok.Setter;
 import software.amazon.kinesis.leases.LeaseManagementConfig.WorkerUtilizationAwareAssignmentConfig;
@@ -54,6 +56,8 @@ public class WorkerUtilizationAwareAssignmentConfigBean {
         double getWorkerMetricsEMAAlpha();
         void setWorkerMetricsEMAAlpha(double value);
 
+        void setStaleWorkerMetricsEntryCleanupDuration(Duration value);
+        Duration getStaleWorkerMetricsEntryCleanupDuration();
     }
 
     @ConfigurationSettable(configurationClass = WorkerUtilizationAwareAssignmentConfig.class)
@@ -85,4 +89,7 @@ public class WorkerUtilizationAwareAssignmentConfigBean {
 
     @ConfigurationSettable(configurationClass = WorkerUtilizationAwareAssignmentConfig.class)
     private double workerMetricsEMAAlpha;
+
+    @ConfigurationSettable(configurationClass = WorkerUtilizationAwareAssignmentConfig.class)
+    private Duration staleWorkerMetricsEntryCleanupDuration;
 }
