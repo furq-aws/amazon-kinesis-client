@@ -549,7 +549,7 @@ public class LeaseManagementConfig {
         private int dampeningPercentage = 60;
         /**
          * Percentage value used to trigger reBalance. If fleet has workers which are have metrics value more or less
-         * than 20% of fleet level average then reBalance is triggered.
+         * than 10% of fleet level average then reBalance is triggered.
          * Leases are taken from workers with metrics value more than fleet level average. The load to take from these
          * workers is determined by evaluating how far they are with respect to fleet level average.
          */
