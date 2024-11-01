@@ -316,16 +316,16 @@ public class MultiLangDaemonConfigurationTest {
         assertEquals(defaultCoordinatorStateTableConfig, resolvedCoordinatorStateTableConfig);
     }
 
-    //    @Test
-    //    public void testSetLeaseTablePitrEnabledToTrue() {
-    //        MultiLangDaemonConfiguration configuration = baseConfiguration();
-    //        configuration.setLeaseTablePitrEnabled(true);
-    //
-    //        MultiLangDaemonConfiguration.ResolvedConfiguration resolvedConfiguration =
-    //                configuration.resolvedConfiguration(shardRecordProcessorFactory);
-    //
-    //        assertTrue(resolvedConfiguration.leaseManagementConfig.leaseTablePitrEnabled());
-    //    }
+        @Test
+        public void testSetLeaseTablePitrEnabledToTrue() {
+            MultiLangDaemonConfiguration configuration = baseConfiguration();
+            configuration.setLeaseTablePitrEnabled(true);
+
+            MultiLangDaemonConfiguration.ResolvedConfiguration resolvedConfiguration =
+                    configuration.resolvedConfiguration(shardRecordProcessorFactory);
+
+            assertTrue(resolvedConfiguration.leaseManagementConfig.leaseTablePitrEnabled());
+        }
 
     @Test
     public void testSetLeaseTableDeletionProtectionEnabledToFalse() {
@@ -338,16 +338,16 @@ public class MultiLangDaemonConfigurationTest {
         assertFalse(resolvedConfiguration.leaseManagementConfig.leaseTableDeletionProtectionEnabled());
     }
 
-    //    @Test
-    //    public void testSetLeaseTablePitrEnabledToFalse() {
-    //        MultiLangDaemonConfiguration configuration = baseConfiguration();
-    //        configuration.setLeaseTablePitrEnabled(false);
-    //
-    //        MultiLangDaemonConfiguration.ResolvedConfiguration resolvedConfiguration =
-    //                configuration.resolvedConfiguration(shardRecordProcessorFactory);
-    //
-    //        assertFalse(resolvedConfiguration.leaseManagementConfig.leaseTablePitrEnabled());
-    //    }
+        @Test
+        public void testSetLeaseTablePitrEnabledToFalse() {
+            MultiLangDaemonConfiguration configuration = baseConfiguration();
+            configuration.setLeaseTablePitrEnabled(false);
+
+            MultiLangDaemonConfiguration.ResolvedConfiguration resolvedConfiguration =
+                    configuration.resolvedConfiguration(shardRecordProcessorFactory);
+
+            assertFalse(resolvedConfiguration.leaseManagementConfig.leaseTablePitrEnabled());
+        }
 
     @Test
     public void testDefaultRetrievalConfig() {
