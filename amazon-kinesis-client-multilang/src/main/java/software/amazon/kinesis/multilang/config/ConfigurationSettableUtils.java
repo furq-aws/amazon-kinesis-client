@@ -62,7 +62,9 @@ public class ConfigurationSettableUtils {
                         throw new RuntimeException(e);
                     }
 
-                    if (value != null && !value.equals(Defaults.defaultValue(field.getType()))) {
+                    if (value != null
+                            && (!value.equals(Defaults.defaultValue(field.getType()))
+                            || field.getType() == boolean.class)) {
                         Method setter = null;
                         if (b.convertToOptional()) {
                             value = Optional.of(value);
