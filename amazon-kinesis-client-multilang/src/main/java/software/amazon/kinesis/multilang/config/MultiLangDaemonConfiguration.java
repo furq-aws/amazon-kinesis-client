@@ -273,8 +273,7 @@ public class MultiLangDaemonConfiguration {
                     @Override
                     public <T> T convert(Class<T> type, Object value) {
                         return type.cast(
-                                // TODO: toUpperCase after enum refactor from _2/3x to _2/3X
-                                CoordinatorConfig.ClientVersionConfig.valueOf(value.toString()));
+                                CoordinatorConfig.ClientVersionConfig.valueOf(value.toString().toUpperCase()));
                     }
                 },
                 CoordinatorConfig.ClientVersionConfig.class);

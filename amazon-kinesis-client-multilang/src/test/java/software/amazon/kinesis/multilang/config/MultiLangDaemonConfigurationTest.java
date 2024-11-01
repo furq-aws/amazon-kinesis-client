@@ -389,7 +389,7 @@ public class MultiLangDaemonConfigurationTest {
     @Test
     public void testClientVersionConfig() {
         final CoordinatorConfig.ClientVersionConfig testClientVersionConfig =
-                CoordinatorConfig.ClientVersionConfig.CLIENT_VERSION_CONFIG_COMPATIBLE_WITH_2x;
+                CoordinatorConfig.ClientVersionConfig.CLIENT_VERSION_CONFIG_COMPATIBLE_WITH_2X;
 
         final MultiLangDaemonConfiguration configuration = baseConfiguration();
         configuration.setClientVersionConfig(testClientVersionConfig);
