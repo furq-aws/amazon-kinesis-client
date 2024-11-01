@@ -189,9 +189,12 @@ public class MultiLangDaemonConfiguration {
     @Delegate(types = PollingConfigBean.PollingConfigBeanDelegate.class)
     private final PollingConfigBean pollingConfig = new PollingConfigBean();
 
-    // TODO: temp
     @Delegate(types = WorkerUtilizationAwareAssignmentConfigBean.WorkerUtilizationAwareAssignmentConfigBeanDelegate.class)
-    private final WorkerUtilizationAwareAssignmentConfigBean workerUtilizationAwareAssignmentConfig = new WorkerUtilizationAwareAssignmentConfigBean();
+    private final WorkerUtilizationAwareAssignmentConfigBean workerUtilizationAwareAssignmentConfigBean = new WorkerUtilizationAwareAssignmentConfigBean();
+
+    @Delegate(types = WorkerMetricsTableConfigBean.WorkerMetricsTableConfigBeanDelegate.class)
+    private final WorkerMetricsTableConfigBean workerMetricsTableConfigBean = new WorkerMetricsTableConfigBean();
+
 
     private boolean validateSequenceNumberBeforeCheckpointing;
 
@@ -374,9 +377,19 @@ public class MultiLangDaemonConfiguration {
                 retrievalMode.builder(this).build(configsBuilder.kinesisClient(), this));
     }
 
-    // TODO: temp
-    private void handleLeaseManagementConfig(LeaseManagementConfig leaseManagementConfig){
-        leaseManagementConfig.workerUtilizationAwareAssignmentConfig(this.workerUtilizationAwareAssignmentConfig.create());
+    private LeaseManagementConfig.WorkerUtilizationAwareAssignmentConfig handleWorkerUtilizationAwareAssignmentConfig() {
+        LeaseManagementConfig.WorkerUtilizationAwareAssignmentConfig config =
+                this.workerUtilizationAwareAssignmentConfigBean.create();
+        config.workerMetricsTableConfig(
+                this.workerMetricsTableConfigBean.create(this.applicationName)
+        );
+        return config;
+    }
+
+    private void handleLeaseManagementConfig(LeaseManagementConfig leaseManagementConfig) {
+        LeaseManagementConfig.WorkerUtilizationAwareAssignmentConfig workerConfig =
+                handleWorkerUtilizationAwareAssignmentConfig();
+        leaseManagementConfig.workerUtilizationAwareAssignmentConfig(workerConfig);
     }
 
     private Object adjustKinesisHttpConfiguration(Object builderObj) {
@@ -458,11 +471,6 @@ public class MultiLangDaemonConfiguration {
                 retrievalConfig);
 
         handleRetrievalConfig(retrievalConfig, configsBuilder);
-        // TODO: temp
-//        handleCoodinatorConfig(coordinatorConfig, configsBuilder);
-//        LeaseManagementConfig.WorkerUtilizationAwareAssignmentConfig workerUtilizationAwareAssignmentConfig =
-//                this.workerUtilizationAwareAssignmentConfig.create();
-//        workerUtilizationAwareAssignmentConfig.workerMetricsTableConfig(this.workerMetricsTableConfig.create());
         handleLeaseManagementConfig(leaseManagementConfig);
 
         resolveFields(configObjects, null, new HashSet<>(Arrays.asList(ConfigsBuilder.class, PollingConfig.class)));

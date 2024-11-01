@@ -52,6 +52,22 @@ public class ConfigurationSettableUtilsTest {
         assertThat(actual, equalTo(expected));
     }
 
+    //TODO: Added this test to demonstrate the bug in resolveFields.
+    // Bug is that the following conditional stops because the defaultval of a boolean is false
+    // if (value != null && !value.equals(Defaults.defaultValue(field.getType()))) {
+    // Need to fix the behavior and this test will pass.
+    @Test
+    public void testBoolean() {
+        ConfigResult expected = ConfigResult.builder().bool(false).build();
+
+        ConfigObject configObject = ConfigObject.builder()
+                                    .bool(expected.bool)
+                                    .build();
+        ConfigResult actual = resolve(configObject);
+
+        assertThat(actual, equalTo(expected));
+    }
+
     @Test
     public void testHeapValuesSet() {
         ConfigResult expected =
@@ -146,7 +162,8 @@ public class ConfigurationSettableUtilsTest {
         private long rawLong;
         private Long boxedLong;
         private ComplexValue complexValue;
-
+        @Builder.Default
+        private boolean bool = true;
         private Optional<String> optionalString;
         private Optional<Integer> optionalInteger;
         private Optional<Long> optionalLong;
@@ -174,6 +191,9 @@ public class ConfigurationSettableUtilsTest {
 
         @ConfigurationSettable(configurationClass = ConfigResult.class)
         private int rawInt;
+
+        @ConfigurationSettable(configurationClass = ConfigResult.class)
+        private boolean bool;
 
         @ConfigurationSettable(configurationClass = ConfigResult.class)
         private Integer boxedInt;

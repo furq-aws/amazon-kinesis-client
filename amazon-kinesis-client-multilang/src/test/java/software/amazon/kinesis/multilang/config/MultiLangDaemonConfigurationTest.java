@@ -26,6 +26,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
+import software.amazon.kinesis.leases.Lease;
 import software.amazon.kinesis.leases.LeaseManagementConfig;
 import software.amazon.kinesis.processor.ShardRecordProcessorFactory;
 import software.amazon.kinesis.retrieval.fanout.FanOutConfig;
@@ -113,16 +114,54 @@ public class MultiLangDaemonConfigurationTest {
     }
 
     @Test
-    public void testSetInMemoryWorkerMetricsCaptureFrequencyMillis() {
-        final long testVal = 100;
+    public void testWorkerUtilizationAwareAssignmentConfig() {
         MultiLangDaemonConfiguration configuration = baseConfiguration();
-        configuration.setInMemoryWorkerMetricsCaptureFrequencyMillis(testVal);
+
+        configuration.setInMemoryWorkerMetricsCaptureFrequencyMillis(123);
+        configuration.setWorkerMetricsReporterFreqInMillis(123);
+        configuration.setNoOfPersistedMetricsPerWorkerMetrics(123);
+        configuration.setDisableWorkerMetrics(true);
+        configuration.setMaxThroughputPerHostKBps(123);
+        configuration.setDampeningPercentage(12);
+        configuration.setReBalanceThresholdPercentage(12);
+        configuration.setAllowThroughputOvershoot(false);
+        configuration.setVarianceBalancingFrequency(12);
+        configuration.setWorkerMetricsEMAAlpha(.123);
 
         MultiLangDaemonConfiguration.ResolvedConfiguration resolvedConfiguration =
                 configuration.resolvedConfiguration(shardRecordProcessorFactory);
         LeaseManagementConfig leaseManagementConfig = resolvedConfiguration.leaseManagementConfig;
         LeaseManagementConfig.WorkerUtilizationAwareAssignmentConfig config = leaseManagementConfig.workerUtilizationAwareAssignmentConfig();
-        assertEquals(config.inMemoryWorkerMetricsCaptureFrequencyMillis(), testVal);
+
+        assertEquals(config.inMemoryWorkerMetricsCaptureFrequencyMillis(), 123);
+        assertEquals(config.workerMetricsReporterFreqInMillis(), 123);
+        assertEquals(config.noOfPersistedMetricsPerWorkerMetrics(), 123);
+        assertTrue(config.disableWorkerMetrics());
+        assertEquals(config.maxThroughputPerHostKBps(), 123, .25);
+        assertEquals(config.dampeningPercentage(), 12);
+        assertEquals(config.reBalanceThresholdPercentage(), 12);
+        assertFalse(config.allowThroughputOvershoot());
+        assertEquals(config.varianceBalancingFrequency(), 12);
+        assertEquals(config.workerMetricsEMAAlpha(), .123, .25);
+    }
+
+    @Test
+    public void testWorkerMetricsTableConfigBean() {
+        MultiLangDaemonConfiguration configuration = baseConfiguration();
+
+        configuration.setWorkerMetricsTableName("testTable");
+        configuration.setReadCapacity(123);
+        configuration.setWriteCapacity(123);
+
+        MultiLangDaemonConfiguration.ResolvedConfiguration resolvedConfiguration =
+                configuration.resolvedConfiguration(shardRecordProcessorFactory);
+        LeaseManagementConfig leaseManagementConfig = resolvedConfiguration.leaseManagementConfig;
+        LeaseManagementConfig.WorkerUtilizationAwareAssignmentConfig workerUtilizationConfig = leaseManagementConfig.workerUtilizationAwareAssignmentConfig();
+        LeaseManagementConfig.WorkerMetricsTableConfig workerMetricsConfig = workerUtilizationConfig.workerMetricsTableConfig();
+
+        assertEquals(workerMetricsConfig.tableName(), "testTable");
+        assertEquals(workerMetricsConfig.readCapacity(), 123);
+        assertEquals(workerMetricsConfig.writeCapacity(), 123);
     }
 
 //    @Test

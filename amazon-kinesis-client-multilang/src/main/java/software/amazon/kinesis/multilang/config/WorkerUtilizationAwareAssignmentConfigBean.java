@@ -15,11 +15,8 @@
 
 package software.amazon.kinesis.multilang.config;
 
-import java.time.Duration;
-
 import lombok.Getter;
 import lombok.Setter;
-//import software.amazon.awssdk.services.kinesis.KinesisAsyncClient;
 import software.amazon.kinesis.leases.LeaseManagementConfig.WorkerUtilizationAwareAssignmentConfig;
 
 @Getter
@@ -27,18 +24,72 @@ import software.amazon.kinesis.leases.LeaseManagementConfig.WorkerUtilizationAwa
 public class WorkerUtilizationAwareAssignmentConfigBean {
 
     interface WorkerUtilizationAwareAssignmentConfigBeanDelegate {
-        long inMemoryWorkerMetricsCaptureFrequencyMillis = Duration.ofSeconds(1L).toMillis();
-
+        long getInMemoryWorkerMetricsCaptureFrequencyMillis();
         void setInMemoryWorkerMetricsCaptureFrequencyMillis(long value);
+
+        long getWorkerMetricsReporterFreqInMillis();
+        void setWorkerMetricsReporterFreqInMillis(long value);
+
+        int getNoOfPersistedMetricsPerWorkerMetrics();
+        void setNoOfPersistedMetricsPerWorkerMetrics(int value);
+
+        boolean isDisableWorkerMetrics();
+        void setDisableWorkerMetrics(boolean value);
+
+        double getMaxThroughputPerHostKBps();
+        void setMaxThroughputPerHostKBps(double value);
+
+        int getDampeningPercentage();
+        void setDampeningPercentage(int value);
+
+        int getReBalanceThresholdPercentage();
+        void setReBalanceThresholdPercentage(int value);
+
+        boolean isAllowThroughputOvershoot();
+        void setAllowThroughputOvershoot(boolean value);
+
+        int getVarianceBalancingFrequency();
+        void setVarianceBalancingFrequency(int value);
+
+        double getWorkerMetricsEMAAlpha();
+        void setWorkerMetricsEMAAlpha(double value);
 
     }
 
-    @ConfigurationSettable(configurationClass = WorkerUtilizationAwareAssignmentConfig.class, convertToOptional = true)
+    @ConfigurationSettable(configurationClass = WorkerUtilizationAwareAssignmentConfig.class)
     private long inMemoryWorkerMetricsCaptureFrequencyMillis;
 
+    @ConfigurationSettable(configurationClass = WorkerUtilizationAwareAssignmentConfig.class)
+    private long workerMetricsReporterFreqInMillis;
+
+    @ConfigurationSettable(configurationClass = WorkerUtilizationAwareAssignmentConfig.class)
+    private int noOfPersistedMetricsPerWorkerMetrics;
+
+    @ConfigurationSettable(configurationClass = WorkerUtilizationAwareAssignmentConfig.class)
+    private boolean disableWorkerMetrics;
+
+    @ConfigurationSettable(configurationClass = WorkerUtilizationAwareAssignmentConfig.class)
+    private double maxThroughputPerHostKBps;
+
+    @ConfigurationSettable(configurationClass = WorkerUtilizationAwareAssignmentConfig.class)
+    private int dampeningPercentage;
+
+    @ConfigurationSettable(configurationClass = WorkerUtilizationAwareAssignmentConfig.class)
+    private int reBalanceThresholdPercentage;
+
+    @ConfigurationSettable(configurationClass = WorkerUtilizationAwareAssignmentConfig.class)
+    private boolean allowThroughputOvershoot;
+
+    @ConfigurationSettable(configurationClass = WorkerUtilizationAwareAssignmentConfig.class)
+    private int varianceBalancingFrequency;
+
+    @ConfigurationSettable(configurationClass = WorkerUtilizationAwareAssignmentConfig.class)
+    private double workerMetricsEMAAlpha;
+
+
     public WorkerUtilizationAwareAssignmentConfig create() {
-        WorkerUtilizationAwareAssignmentConfig conf = new WorkerUtilizationAwareAssignmentConfig();
-        conf.inMemoryWorkerMetricsCaptureFrequencyMillis(this.inMemoryWorkerMetricsCaptureFrequencyMillis);
-        return conf;
+        return ConfigurationSettableUtils.resolveFields(
+                this, new WorkerUtilizationAwareAssignmentConfig()
+        );
     }
 }
