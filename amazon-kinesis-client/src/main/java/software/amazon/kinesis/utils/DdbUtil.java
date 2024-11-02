@@ -40,7 +40,7 @@ public final class DdbUtil {
 
         if (tableConfig.billingMode() == BillingMode.PROVISIONED) {
             log.info(
-                    "Creating worker metric stats table {} in provisioned mode with {}wcu and {}rcu",
+                    "Creating table {} in provisioned mode with {}wcu and {}rcu",
                     tableConfig.tableName(),
                     tableConfig.writeCapacity(),
                     tableConfig.readCapacity());
