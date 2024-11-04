@@ -47,10 +47,10 @@ config = Config(
 
 # TODO: validate where these values came from. None of the originals seem to work.
 class KclClientVersion(Enum):
-    VERSION_2X = "CLIENT_VERSION_2x"
-    UPGRADE_FROM_2X = "CLIENT_VERSION_UPGRADE_FROM_2x"
-    VERSION_3X_WITH_ROLLBACK = "CLIENT_VERSION_3x_WITH_ROLLBACK"
-    VERSION_3X = "CLIENT_VERSION_3x"
+    VERSION_2X = "CLIENT_VERSION_2X"
+    UPGRADE_FROM_2X = "CLIENT_VERSION_UPGRADE_FROM_2X"
+    VERSION_3X_WITH_ROLLBACK = "CLIENT_VERSION_3X_WITH_ROLLBACK"
+    VERSION_3X = "CLIENT_VERSION_3X"
 
     def __str__(self):
         return self.value
