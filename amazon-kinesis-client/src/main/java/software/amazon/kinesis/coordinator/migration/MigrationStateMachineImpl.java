@@ -199,7 +199,7 @@ public class MigrationStateMachineImpl implements MigrationStateMachine {
                     throw e;
                 }
                 log.info(
-                        "Transitioning from {} to {} failed, retrying after a minute",
+                        "Transitioning from {} to {} failed, retrying after 1 second",
                         currentMigrationClientVersionState.clientVersion(),
                         nextMigrationClientVersionState.clientVersion(),
                         e);
