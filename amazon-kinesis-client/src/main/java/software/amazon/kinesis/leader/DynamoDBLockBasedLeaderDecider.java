@@ -28,6 +28,7 @@ import com.google.common.annotations.VisibleForTesting;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import software.amazon.awssdk.services.cloudwatch.model.StandardUnit;
+import software.amazon.kinesis.annotations.KinesisClientInternalApi;
 import software.amazon.kinesis.coordinator.CoordinatorStateDAO;
 import software.amazon.kinesis.coordinator.LeaderDecider;
 import software.amazon.kinesis.metrics.MetricsFactory;
@@ -43,6 +44,7 @@ import static software.amazon.kinesis.coordinator.CoordinatorState.LEADER_HASH_K
  */
 @RequiredArgsConstructor
 @Slf4j
+@KinesisClientInternalApi
 public class DynamoDBLockBasedLeaderDecider implements LeaderDecider {
     private static final Long DEFAULT_LEASE_DURATION_MILLIS =
             Duration.ofMinutes(2).toMillis();

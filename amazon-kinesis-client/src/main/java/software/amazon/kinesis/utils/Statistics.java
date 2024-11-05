@@ -19,6 +19,9 @@ import java.util.AbstractMap;
 import java.util.List;
 import java.util.Map;
 
+import software.amazon.kinesis.annotations.KinesisClientInternalApi;
+
+@KinesisClientInternalApi
 public class Statistics {
 
     /**

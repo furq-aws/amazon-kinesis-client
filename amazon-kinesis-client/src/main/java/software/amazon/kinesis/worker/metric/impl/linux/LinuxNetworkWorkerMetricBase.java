@@ -25,6 +25,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableMap;
 import lombok.extern.slf4j.Slf4j;
+import software.amazon.kinesis.annotations.KinesisClientInternalApi;
 import software.amazon.kinesis.worker.metric.OperatingRange;
 import software.amazon.kinesis.worker.metric.WorkerMetric;
 import software.amazon.kinesis.worker.metric.WorkerMetricType;
@@ -40,6 +41,7 @@ import software.amazon.kinesis.worker.metric.WorkerMetricType;
  * In case the stat file is not present or any other exception occurs, this throws IllegalArgumentException.
  */
 @Slf4j
+@KinesisClientInternalApi
 public abstract class LinuxNetworkWorkerMetricBase implements WorkerMetric {
 
     protected static final String DEFAULT_NETWORK_STAT_FILE = "/proc/net/dev";

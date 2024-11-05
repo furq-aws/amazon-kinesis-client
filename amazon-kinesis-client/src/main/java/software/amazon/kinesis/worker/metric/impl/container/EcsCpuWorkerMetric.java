@@ -27,6 +27,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import software.amazon.kinesis.annotations.KinesisClientInternalApi;
 import software.amazon.kinesis.worker.metric.OperatingRange;
 import software.amazon.kinesis.worker.metric.WorkerMetric;
 import software.amazon.kinesis.worker.metric.WorkerMetricType;
@@ -44,6 +45,7 @@ import software.amazon.kinesis.worker.metric.WorkerMetricType;
  */
 @Slf4j
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
+@KinesisClientInternalApi
 public class EcsCpuWorkerMetric implements WorkerMetric {
 
     private static final WorkerMetricType CPU_WORKER_METRICS_TYPE = WorkerMetricType.CPU;

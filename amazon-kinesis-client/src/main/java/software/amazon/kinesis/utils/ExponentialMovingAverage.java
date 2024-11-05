@@ -17,6 +17,7 @@ package software.amazon.kinesis.utils;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import software.amazon.kinesis.annotations.KinesisClientInternalApi;
 
 /**
  * Uses the formula mentioned below for simple ExponentialMovingAverage
@@ -26,6 +27,7 @@ import lombok.RequiredArgsConstructor;
  * while values of alpha closer to 0 have a greater smoothing effect and are less responsive to recent changes.
  */
 @RequiredArgsConstructor
+@KinesisClientInternalApi
 public class ExponentialMovingAverage {
 
     private final double alpha;

@@ -29,6 +29,7 @@ import software.amazon.awssdk.services.dynamodb.model.AttributeAction;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValueUpdate;
 import software.amazon.awssdk.services.dynamodb.model.ExpectedAttributeValue;
+import software.amazon.kinesis.annotations.KinesisClientInternalApi;
 import software.amazon.kinesis.common.StackTraceUtils;
 import software.amazon.kinesis.coordinator.CoordinatorState;
 
@@ -39,6 +40,7 @@ import software.amazon.kinesis.coordinator.CoordinatorState;
 @Getter
 @ToString(callSuper = true)
 @Slf4j
+@KinesisClientInternalApi
 public class MigrationState extends CoordinatorState {
     /**
      * Key value for the item in the CoordinatorState table

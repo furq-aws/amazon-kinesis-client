@@ -36,6 +36,7 @@ import software.amazon.awssdk.services.dynamodb.model.AttributeDefinition;
 import software.amazon.awssdk.services.dynamodb.model.KeySchemaElement;
 import software.amazon.awssdk.services.dynamodb.model.KeyType;
 import software.amazon.awssdk.services.dynamodb.model.ScalarAttributeType;
+import software.amazon.kinesis.annotations.KinesisClientInternalApi;
 import software.amazon.kinesis.utils.ExponentialMovingAverage;
 import software.amazon.kinesis.worker.metric.WorkerMetricType;
 
@@ -58,6 +59,7 @@ import static java.util.Objects.isNull;
 @NoArgsConstructor
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Slf4j
+@KinesisClientInternalApi
 public class WorkerMetricStats {
 
     static final String KEY_LAST_UPDATE_TIME = "lut";

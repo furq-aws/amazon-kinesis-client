@@ -21,6 +21,7 @@ import java.util.concurrent.TimeUnit;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import software.amazon.kinesis.annotations.KinesisClientInternalApi;
 import software.amazon.kinesis.worker.metric.OperatingRange;
 import software.amazon.kinesis.worker.metric.WorkerMetric;
 import software.amazon.kinesis.worker.metric.WorkerMetricType;
@@ -44,6 +45,7 @@ import static software.amazon.kinesis.utils.Cgroup.readSingleLineFile;
  */
 @Slf4j
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
+@KinesisClientInternalApi
 public class Cgroupv1CpuWorkerMetric implements WorkerMetric {
 
     private static final Object LOCK_OBJECT = new Object();

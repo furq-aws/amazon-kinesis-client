@@ -58,6 +58,7 @@ import software.amazon.awssdk.services.dynamodb.model.TableStatus;
 import software.amazon.awssdk.services.dynamodb.model.UpdateItemRequest;
 import software.amazon.awssdk.services.dynamodb.waiters.DynamoDbAsyncWaiter;
 import software.amazon.awssdk.utils.CollectionUtils;
+import software.amazon.kinesis.annotations.KinesisClientInternalApi;
 import software.amazon.kinesis.common.FutureUtils;
 import software.amazon.kinesis.coordinator.CoordinatorConfig.CoordinatorStateTableConfig;
 import software.amazon.kinesis.coordinator.migration.MigrationState;
@@ -76,6 +77,7 @@ import static software.amazon.kinesis.coordinator.CoordinatorState.COORDINATOR_S
  * the CoordinatorState DDB table.
  */
 @Slf4j
+@KinesisClientInternalApi
 public class CoordinatorStateDAO {
     private final DynamoDbAsyncClient dynamoDbAsyncClient;
     private final DynamoDbClient dynamoDbSyncClient;

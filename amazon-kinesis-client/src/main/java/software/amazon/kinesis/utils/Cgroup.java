@@ -20,8 +20,10 @@ import java.io.File;
 import java.io.FileReader;
 
 import lombok.extern.slf4j.Slf4j;
+import software.amazon.kinesis.annotations.KinesisClientInternalApi;
 
 @Slf4j
+@KinesisClientInternalApi
 public class Cgroup {
 
     public static String readSingleLineFile(String path) {

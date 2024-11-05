@@ -30,11 +30,13 @@ import software.amazon.awssdk.services.dynamodb.model.KeySchemaElement;
 import software.amazon.awssdk.services.dynamodb.model.ProvisionedThroughput;
 import software.amazon.awssdk.services.dynamodb.model.UpdateContinuousBackupsRequest;
 import software.amazon.awssdk.services.dynamodb.model.UpdateContinuousBackupsResponse;
+import software.amazon.kinesis.annotations.KinesisClientInternalApi;
 import software.amazon.kinesis.common.DdbTableConfig;
 
 import static java.util.Objects.nonNull;
 
 @Slf4j
+@KinesisClientInternalApi
 public final class DdbUtil {
 
     @NonNull

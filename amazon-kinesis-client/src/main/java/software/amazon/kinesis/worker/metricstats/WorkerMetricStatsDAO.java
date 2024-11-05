@@ -42,6 +42,7 @@ import software.amazon.awssdk.services.dynamodb.model.ResourceNotFoundException;
 import software.amazon.awssdk.services.dynamodb.model.TableDescription;
 import software.amazon.awssdk.services.dynamodb.model.TableStatus;
 import software.amazon.awssdk.services.dynamodb.waiters.DynamoDbAsyncWaiter;
+import software.amazon.kinesis.annotations.KinesisClientInternalApi;
 import software.amazon.kinesis.leases.LeaseManagementConfig.WorkerMetricsTableConfig;
 import software.amazon.kinesis.leases.exceptions.DependencyException;
 import software.amazon.kinesis.utils.DdbUtil;
@@ -52,6 +53,7 @@ import static software.amazon.kinesis.worker.metricstats.WorkerMetricStats.KEY_L
 import static software.amazon.kinesis.worker.metricstats.WorkerMetricStats.KEY_WORKER_ID;
 
 @Slf4j
+@KinesisClientInternalApi
 public class WorkerMetricStatsDAO {
     private final DynamoDbEnhancedAsyncClient dynamoDbEnhancedAsyncClient;
     private final DynamoDbAsyncTable<WorkerMetricStats> table;

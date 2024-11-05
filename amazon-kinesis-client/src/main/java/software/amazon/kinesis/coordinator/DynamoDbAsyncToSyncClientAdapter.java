@@ -46,12 +46,14 @@ import software.amazon.awssdk.services.dynamodb.model.UpdateItemResponse;
 import software.amazon.awssdk.services.dynamodb.paginators.BatchGetItemIterable;
 import software.amazon.awssdk.services.dynamodb.paginators.QueryIterable;
 import software.amazon.awssdk.services.dynamodb.paginators.ScanIterable;
+import software.amazon.kinesis.annotations.KinesisClientInternalApi;
 
 /**
  * DDB Lock client depends on DynamoDbClient and KCL only has DynamoDbAsyncClient configured.
  * This wrapper delegates APIs from sync client to async client internally so that it can
  * be used with the DDB Lock client.
  */
+@KinesisClientInternalApi
 public class DynamoDbAsyncToSyncClientAdapter implements DynamoDbClient {
     private final DynamoDbAsyncClient asyncClient;
 

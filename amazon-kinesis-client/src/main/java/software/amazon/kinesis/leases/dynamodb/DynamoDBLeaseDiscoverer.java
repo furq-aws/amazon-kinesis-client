@@ -24,6 +24,7 @@ import java.util.stream.Collectors;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import software.amazon.kinesis.annotations.KinesisClientInternalApi;
 import software.amazon.kinesis.leases.Lease;
 import software.amazon.kinesis.leases.LeaseDiscoverer;
 import software.amazon.kinesis.leases.LeaseRefresher;
@@ -46,6 +47,7 @@ import static java.util.Objects.isNull;
  */
 @Slf4j
 @RequiredArgsConstructor
+@KinesisClientInternalApi
 public class DynamoDBLeaseDiscoverer implements LeaseDiscoverer {
 
     private final LeaseRefresher leaseRefresher;

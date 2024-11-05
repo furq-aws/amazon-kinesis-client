@@ -17,12 +17,14 @@ package software.amazon.kinesis.worker.metric.impl.linux;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Stopwatch;
+import software.amazon.kinesis.annotations.KinesisClientInternalApi;
 import software.amazon.kinesis.worker.metric.OperatingRange;
 import software.amazon.kinesis.worker.metric.WorkerMetricType;
 
 /**
  * Ref java doc for {@link LinuxNetworkWorkerMetricBase}
  */
+@KinesisClientInternalApi
 public class LinuxNetworkOutWorkerMetric extends LinuxNetworkWorkerMetricBase {
     private static final WorkerMetricType NETWORK_OUT_WORKER_METRICS_TYPE = WorkerMetricType.NETWORK_OUT;
 

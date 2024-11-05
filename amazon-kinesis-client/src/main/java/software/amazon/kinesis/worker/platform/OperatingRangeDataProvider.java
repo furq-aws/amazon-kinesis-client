@@ -17,11 +17,14 @@ package software.amazon.kinesis.worker.platform;
 
 import java.io.File;
 
+import software.amazon.kinesis.annotations.KinesisClientInternalApi;
+
 import static software.amazon.kinesis.worker.platform.EcsResource.ECS_METADATA_KEY_V4;
 
 /**
  * Enum representing the different operating range metadata providers.
  */
+@KinesisClientInternalApi
 public enum OperatingRangeDataProvider {
     LINUX_EKS_CGROUP_V1 {
         @Override

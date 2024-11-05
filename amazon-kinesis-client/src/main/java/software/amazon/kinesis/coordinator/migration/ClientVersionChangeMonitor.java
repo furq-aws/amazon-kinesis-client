@@ -24,6 +24,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import software.amazon.awssdk.annotations.ThreadSafe;
 import software.amazon.awssdk.services.cloudwatch.model.StandardUnit;
+import software.amazon.kinesis.annotations.KinesisClientInternalApi;
 import software.amazon.kinesis.coordinator.CoordinatorStateDAO;
 import software.amazon.kinesis.leases.exceptions.DependencyException;
 import software.amazon.kinesis.leases.exceptions.InvalidStateException;
@@ -49,6 +50,7 @@ import static software.amazon.kinesis.coordinator.migration.MigrationStateMachin
 @Slf4j
 @RequiredArgsConstructor
 @ThreadSafe
+@KinesisClientInternalApi
 public class ClientVersionChangeMonitor implements Runnable {
 
     /**

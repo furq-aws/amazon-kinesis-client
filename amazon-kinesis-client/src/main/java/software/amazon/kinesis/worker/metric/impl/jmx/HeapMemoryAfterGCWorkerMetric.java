@@ -24,6 +24,7 @@ import javax.management.ObjectName;
 import javax.management.openmbean.CompositeDataSupport;
 
 import lombok.RequiredArgsConstructor;
+import software.amazon.kinesis.annotations.KinesisClientInternalApi;
 import software.amazon.kinesis.worker.metric.OperatingRange;
 import software.amazon.kinesis.worker.metric.WorkerMetric;
 import software.amazon.kinesis.worker.metric.WorkerMetricType;
@@ -36,6 +37,7 @@ import software.amazon.kinesis.worker.metric.WorkerMetricType;
  *
  */
 @RequiredArgsConstructor
+@KinesisClientInternalApi
 public class HeapMemoryAfterGCWorkerMetric implements WorkerMetric {
 
     private static final WorkerMetricType MEMORY_WORKER_METRICS_TYPE = WorkerMetricType.MEMORY;

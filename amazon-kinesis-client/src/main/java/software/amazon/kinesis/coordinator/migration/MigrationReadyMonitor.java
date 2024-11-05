@@ -31,6 +31,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import software.amazon.awssdk.annotations.ThreadSafe;
 import software.amazon.awssdk.services.cloudwatch.model.StandardUnit;
+import software.amazon.kinesis.annotations.KinesisClientInternalApi;
 import software.amazon.kinesis.coordinator.LeaderDecider;
 import software.amazon.kinesis.leases.Lease;
 import software.amazon.kinesis.leases.LeaseRefresher;
@@ -55,6 +56,7 @@ import static software.amazon.kinesis.coordinator.migration.MigrationStateMachin
  */
 @Slf4j
 @ThreadSafe
+@KinesisClientInternalApi
 public class MigrationReadyMonitor implements Runnable {
     private static final long MONITOR_INTERVAL_MILLIS = Duration.ofMinutes(1).toMillis();
     private static final long LOG_INTERVAL_NANOS = Duration.ofMinutes(5).toNanos();
