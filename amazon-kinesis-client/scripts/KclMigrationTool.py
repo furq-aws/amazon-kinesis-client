@@ -37,20 +37,17 @@ GSI_NAME = 'LeaseOwnerToLeaseKeyIndex'
 GSI_DELETION_WAIT_TIME_SECONDS = 120
 
 config = Config(
-    # TODO: parameterize
-    region_name = 'us-east-1',
     retries = {
         'max_attempts': 10,
         'mode': 'standard'
     }
 )
 
-# TODO: validate where these values came from. None of the originals seem to work.
 class KclClientVersion(Enum):
-    VERSION_2X = "CLIENT_VERSION_2X"
-    UPGRADE_FROM_2X = "CLIENT_VERSION_UPGRADE_FROM_2X"
-    VERSION_3X_WITH_ROLLBACK = "CLIENT_VERSION_3X_WITH_ROLLBACK"
-    VERSION_3X = "CLIENT_VERSION_3X"
+    VERSION_2X = "CLIENT_VERSION_2x"
+    UPGRADE_FROM_2X = "CLIENT_VERSION_UPGRADE_FROM_2x"
+    VERSION_3X_WITH_ROLLBACK = "CLIENT_VERSION_3x_WITH_ROLLBACK"
+    VERSION_3X = "CLIENT_VERSION_3x"
 
     def __str__(self):
         return self.value
@@ -73,7 +70,7 @@ def is_valid_version(version, mode):
             print("Your KCL application already runs in a mode compatible with KCL 2.x. You can deploy the code with the previous KCL version if you still experience an issue.")
             return True
         if version in [KclClientVersion.UPGRADE_FROM_2X.value,
-                         KclClientVersion.VERSION_3X_WITH_ROLLBACK.value]:
+                       KclClientVersion.VERSION_3X_WITH_ROLLBACK.value]:
             return True
         if version == KclClientVersion.VERSION_3X.value:
             print("Cannot roll back the KCL application."
@@ -87,7 +84,7 @@ def is_valid_version(version, mode):
         if version == KclClientVersion.VERSION_2X.value:
             return True
         if version in [KclClientVersion.UPGRADE_FROM_2X.value,
-                         KclClientVersion.VERSION_3X_WITH_ROLLBACK.value]:
+                       KclClientVersion.VERSION_3X_WITH_ROLLBACK.value]:
             print("Cannot roll-forward application. It is not in a rolled back state.")
             return False
         if version == KclClientVersion.VERSION_3X.value:
@@ -568,22 +565,22 @@ def process_table_names(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description=
-    """
-    KCL Migration Tool
-    This tool facilitates the migration and rollback processes for Amazon KCLv3 applications.
-
-    Before running this tool:
-    1. Ensure you have the necessary AWS permissions configured to access and modify the following:
-        - KCL application DynamoDB tables (lease table and coordinator state table)
-
-    2. Verify that your AWS credentials are properly set up in your environment or AWS config file.
-
-    3. Confirm that you have the correct KCL application name and lease table name (if configured in KCL).
-
-    Usage:
-    This tool supports two main operations: rollforward (upgrade) and rollback.
-    For detailed usage instructions, use the -h or --help option.
-    """,
+        """
+        KCL Migration Tool
+        This tool facilitates the migration and rollback processes for Amazon KCLv3 applications.
+    
+        Before running this tool:
+        1. Ensure you have the necessary AWS permissions configured to access and modify the following:
+            - KCL application DynamoDB tables (lease table and coordinator state table)
+    
+        2. Verify that your AWS credentials are properly set up in your environment or AWS config file.
+    
+        3. Confirm that you have the correct KCL application name and lease table name (if configured in KCL).
+    
+        Usage:
+        This tool supports two main operations: rollforward (upgrade) and rollback.
+        For detailed usage instructions, use the -h or --help option.
+        """,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--mode", choices=['rollback', 'rollforward'], required=True,
                         help="Mode of operation: rollback or rollforward")
@@ -604,7 +601,9 @@ if __name__ == "__main__":
                              "(defaults to applicationName-WorkerMetricStats)."
                              " If worker metrics table name was specified for the application "
                              "as part of the KCL configurations, the same name must be passed here.")
-
+    parser.add_argument("--region", required=True,
+                        help="AWS Region where your KCL application exists")
     args = parser.parse_args()
     validate_args(args)
+    config.region_name = args.region
     run_kcl_migration(*process_table_names(args))
