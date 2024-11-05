@@ -58,6 +58,8 @@ import software.amazon.kinesis.lifecycle.LifecycleConfig;
 import software.amazon.kinesis.metrics.MetricsConfig;
 import software.amazon.kinesis.metrics.MetricsLevel;
 import software.amazon.kinesis.multilang.config.converter.DurationConverter;
+import software.amazon.kinesis.multilang.config.converter.TagConverter;
+import software.amazon.kinesis.multilang.config.converter.TagConverter.TagCollection;
 import software.amazon.kinesis.multilang.config.credentials.V2CredentialWrapper;
 import software.amazon.kinesis.processor.ProcessorConfig;
 import software.amazon.kinesis.processor.ShardRecordProcessorFactory;
@@ -321,6 +323,7 @@ public class MultiLangDaemonConfiguration {
                 Region.class);
 
         convertUtilsBean.register(new DurationConverter(), Duration.class);
+        convertUtilsBean.register(new TagConverter(), TagCollection.class);
 
         ArrayConverter arrayConverter = new ArrayConverter(String[].class, new StringConverter());
         arrayConverter.setDelimiter(',');

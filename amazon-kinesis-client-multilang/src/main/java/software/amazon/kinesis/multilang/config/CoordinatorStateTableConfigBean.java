@@ -19,6 +19,7 @@ import lombok.Getter;
 import lombok.Setter;
 import software.amazon.awssdk.services.dynamodb.model.BillingMode;
 import software.amazon.kinesis.coordinator.CoordinatorConfig.CoordinatorStateTableConfig;
+import software.amazon.kinesis.multilang.config.converter.TagConverter.TagCollection;
 
 @Getter
 @Setter
@@ -40,6 +41,18 @@ public class CoordinatorStateTableConfigBean {
         long getCoordinatorStateWriteCapacity();
 
         void setCoordinatorStateWriteCapacity(long value);
+
+        Boolean getCoordinatorStatePointInTimeRecoveryEnabled();
+
+        void setCoordinatorStatePointInTimeRecoveryEnabled(Boolean value);
+
+        Boolean getCoordinatorStateDeletionProtectionEnabled();
+
+        void setCoordinatorStateDeletionProtectionEnabled(Boolean value);
+
+        TagCollection getCoordinatorStateTags();
+
+        void setCoordinatorStateTags(TagCollection value);
     }
 
     @ConfigurationSettable(configurationClass = CoordinatorStateTableConfig.class, methodName = "tableName")
@@ -53,4 +66,17 @@ public class CoordinatorStateTableConfigBean {
 
     @ConfigurationSettable(configurationClass = CoordinatorStateTableConfig.class, methodName = "writeCapacity")
     private long coordinatorStateWriteCapacity;
+
+    @ConfigurationSettable(
+            configurationClass = CoordinatorStateTableConfig.class,
+            methodName = "pointInTimeRecoveryEnabled")
+    private Boolean coordinatorStatePointInTimeRecoveryEnabled;
+
+    @ConfigurationSettable(
+            configurationClass = CoordinatorStateTableConfig.class,
+            methodName = "deletionProtectionEnabled")
+    private Boolean coordinatorStateDeletionProtectionEnabled;
+
+    @ConfigurationSettable(configurationClass = CoordinatorStateTableConfig.class, methodName = "tags")
+    private TagCollection coordinatorStateTags;
 }

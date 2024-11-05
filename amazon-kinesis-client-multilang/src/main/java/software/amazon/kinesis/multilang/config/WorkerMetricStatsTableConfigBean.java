@@ -19,6 +19,7 @@ import lombok.Getter;
 import lombok.Setter;
 import software.amazon.awssdk.services.dynamodb.model.BillingMode;
 import software.amazon.kinesis.leases.LeaseManagementConfig.WorkerMetricsTableConfig;
+import software.amazon.kinesis.multilang.config.converter.TagConverter.TagCollection;
 
 @Getter
 @Setter
@@ -40,6 +41,18 @@ public class WorkerMetricStatsTableConfigBean {
         long getWorkerMetricsWriteCapacity();
 
         void setWorkerMetricsWriteCapacity(long value);
+
+        Boolean getWorkerMetricsPointInTimeRecoveryEnabled();
+
+        void setWorkerMetricsPointInTimeRecoveryEnabled(Boolean value);
+
+        Boolean getWorkerMetricsDeletionProtectionEnabled();
+
+        void setWorkerMetricsDeletionProtectionEnabled(Boolean value);
+
+        TagCollection getWorkerMetricsTags();
+
+        void setWorkerMetricsTags(TagCollection value);
     }
 
     @ConfigurationSettable(configurationClass = WorkerMetricsTableConfig.class, methodName = "tableName")
@@ -53,4 +66,17 @@ public class WorkerMetricStatsTableConfigBean {
 
     @ConfigurationSettable(configurationClass = WorkerMetricsTableConfig.class, methodName = "writeCapacity")
     private long workerMetricsWriteCapacity;
+
+    @ConfigurationSettable(
+            configurationClass = WorkerMetricsTableConfig.class,
+            methodName = "pointInTimeRecoveryEnabled")
+    private Boolean workerMetricsPointInTimeRecoveryEnabled;
+
+    @ConfigurationSettable(
+            configurationClass = WorkerMetricsTableConfig.class,
+            methodName = "deletionProtectionEnabled")
+    private Boolean workerMetricsDeletionProtectionEnabled;
+
+    @ConfigurationSettable(configurationClass = WorkerMetricsTableConfig.class, methodName = "tags")
+    private TagCollection workerMetricsTags;
 }

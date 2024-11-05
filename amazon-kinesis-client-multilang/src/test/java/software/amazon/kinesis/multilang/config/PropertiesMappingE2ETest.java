@@ -2,9 +2,12 @@ package software.amazon.kinesis.multilang.config;
 
 import java.io.IOException;
 import java.time.Duration;
+import java.util.Arrays;
+import java.util.Collections;
 
 import org.junit.jupiter.api.Test;
 import software.amazon.awssdk.services.dynamodb.model.BillingMode;
+import software.amazon.awssdk.services.dynamodb.model.Tag;
 import software.amazon.kinesis.coordinator.CoordinatorConfig.ClientVersionConfig;
 import software.amazon.kinesis.multilang.MultiLangDaemonConfig;
 import software.amazon.kinesis.multilang.config.MultiLangDaemonConfiguration.ResolvedConfiguration;
@@ -41,6 +44,14 @@ public class PropertiesMappingE2ETest {
                 kclV3Config.coordinatorConfig.coordinatorStateTableConfig().readCapacity());
         assertEquals(
                 500, kclV3Config.coordinatorConfig.coordinatorStateTableConfig().writeCapacity());
+        assertTrue(kclV3Config.coordinatorConfig.coordinatorStateTableConfig().pointInTimeRecoveryEnabled());
+        assertTrue(kclV3Config.coordinatorConfig.coordinatorStateTableConfig().deletionProtectionEnabled());
+        assertEquals(
+                Arrays.asList(
+                        Tag.builder().key("csTagK1").value("csTagV1").build(),
+                        Tag.builder().key("csTagK2").value("csTagV2").build(),
+                        Tag.builder().key("csTagK3").value("csTagV3").build()),
+                kclV3Config.coordinatorConfig.coordinatorStateTableConfig().tags());
 
         assertEquals(
                 10000L,
@@ -139,6 +150,25 @@ public class PropertiesMappingE2ETest {
                         .workerUtilizationAwareAssignmentConfig()
                         .workerMetricsTableConfig()
                         .writeCapacity());
+        assertTrue(kclV3Config
+                .leaseManagementConfig
+                .workerUtilizationAwareAssignmentConfig()
+                .workerMetricsTableConfig()
+                .pointInTimeRecoveryEnabled());
+        assertTrue(kclV3Config
+                .leaseManagementConfig
+                .workerUtilizationAwareAssignmentConfig()
+                .workerMetricsTableConfig()
+                .deletionProtectionEnabled());
+        assertEquals(
+                Arrays.asList(
+                        Tag.builder().key("wmTagK1").value("wmTagV1").build(),
+                        Tag.builder().key("wmTagK2").value("wmTagV2").build()),
+                kclV3Config
+                        .leaseManagementConfig
+                        .workerUtilizationAwareAssignmentConfig()
+                        .workerMetricsTableConfig()
+                        .tags());
     }
 
     @Test
@@ -156,6 +186,11 @@ public class PropertiesMappingE2ETest {
         assertEquals(
                 BillingMode.PAY_PER_REQUEST,
                 kclV3Config.coordinatorConfig.coordinatorStateTableConfig().billingMode());
+        assertFalse(kclV3Config.coordinatorConfig.coordinatorStateTableConfig().pointInTimeRecoveryEnabled());
+        assertFalse(kclV3Config.coordinatorConfig.coordinatorStateTableConfig().deletionProtectionEnabled());
+        assertEquals(
+                Collections.emptyList(),
+                kclV3Config.coordinatorConfig.coordinatorStateTableConfig().tags());
 
         assertEquals(
                 30_000L,
@@ -240,6 +275,23 @@ public class PropertiesMappingE2ETest {
                         .workerUtilizationAwareAssignmentConfig()
                         .workerMetricsTableConfig()
                         .billingMode());
+        assertFalse(kclV3Config
+                .leaseManagementConfig
+                .workerUtilizationAwareAssignmentConfig()
+                .workerMetricsTableConfig()
+                .pointInTimeRecoveryEnabled());
+        assertFalse(kclV3Config
+                .leaseManagementConfig
+                .workerUtilizationAwareAssignmentConfig()
+                .workerMetricsTableConfig()
+                .deletionProtectionEnabled());
+        assertEquals(
+                Collections.emptyList(),
+                kclV3Config
+                        .leaseManagementConfig
+                        .workerUtilizationAwareAssignmentConfig()
+                        .workerMetricsTableConfig()
+                        .tags());
     }
 
     private static class TestRecordProcessorFactory implements ShardRecordProcessorFactory {
