@@ -1,22 +1,18 @@
 package software.amazon.kinesis.leader;
 
 import java.time.Duration;
-import java.time.Instant;
-import java.util.AbstractMap;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.amazonaws.services.dynamodbv2.AcquireLockOptions;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBLockClient;
-import com.amazonaws.services.dynamodbv2.GetLockOptions;
 import com.amazonaws.services.dynamodbv2.LockItem;
 import com.amazonaws.services.dynamodbv2.model.LockCurrentlyUnavailableException;
 import com.google.common.annotations.VisibleForTesting;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import software.amazon.awssdk.services.cloudwatch.model.StandardUnit;
-import software.amazon.awssdk.services.dynamodb.model.ResourceNotFoundException;
 import software.amazon.kinesis.coordinator.CoordinatorStateDAO;
 import software.amazon.kinesis.coordinator.LeaderDecider;
 import software.amazon.kinesis.metrics.MetricsFactory;
@@ -24,7 +20,6 @@ import software.amazon.kinesis.metrics.MetricsLevel;
 import software.amazon.kinesis.metrics.MetricsScope;
 import software.amazon.kinesis.metrics.MetricsUtil;
 
-import static java.util.Objects.isNull;
 import static software.amazon.kinesis.coordinator.CoordinatorState.LEADER_HASH_KEY;
 
 /**
@@ -49,16 +44,6 @@ public class DynamoDBLockBasedLeaderDecider implements LeaderDecider {
     private long lastCheckTimeInMillis = 0L;
     private boolean lastIsLeaderResult = false;
     private final AtomicBoolean isShutdown = new AtomicBoolean(false);
-
-    private long lastIsAnyLeaderElectedDDBReadTimeMillis = 0L;
-    private boolean lastIsAnyLeaderElectedResult = false;
-    /**
-     * Key value pair of LockItem to the time when it was first discovered.
-     * If a new LockItem fetched from ddb has different recordVersionNumber than the one in-memory,
-     * its considered as new LockItem, and the time when it was fetched is stored in memory to identify lockItem
-     * expiry. This is used only in the context of isAnyLeaderElected method.
-     */
-    private AbstractMap.SimpleEntry<LockItem, Long> lastIsAnyLeaderCheckLockItemToFirstEncounterTime = null;
 
     @VisibleForTesting
     static DynamoDBLockBasedLeaderDecider create(
@@ -191,80 +176,5 @@ public class DynamoDBLockBasedLeaderDecider implements LeaderDecider {
         } catch (final Exception e) {
             log.error("Failed to complete releaseLeadershipIfHeld call.", e);
         }
-    }
-
-    /**
-     * Returns if any ACTIVE leader exists that is elected by the current implementation which can be outside the
-     * scope of this worker. That is leader elected by this implementation in any worker in fleet.
-     * DynamoDBLockClient does not provide an interface which can tell if an active lock exists or not, thus
-     * we need to put custom implementation.
-     * The implementation performs DDB get every heartbeatPeriodMillis to have low RCU consumption, which means that
-     * the leader could have been elected from the last time the check happened and before check happens again.
-     * The information returned from this method has eventual consistency (up to heartbeatPeriodMillis interval).
-     *
-     * @return true, if any leader is elected else false.
-     */
-    @Override
-    public synchronized boolean isAnyLeaderElected() {
-        // Avoid going to ddb for every call and do it once every heartbeatPeriod to have low RCU usage.
-        if (Duration.between(
-                                Instant.ofEpochMilli(lastIsAnyLeaderElectedDDBReadTimeMillis),
-                                Instant.ofEpochMilli(System.currentTimeMillis()))
-                        .toMillis()
-                > heartbeatPeriodMillis) {
-            final MetricsScope metricsScope = MetricsUtil.createMetricsWithOperation(
-                    metricsFactory, this.getClass().getSimpleName() + ":isAnyLeaderElected");
-            final long startTime = System.currentTimeMillis();
-            try {
-                lastIsAnyLeaderElectedDDBReadTimeMillis = System.currentTimeMillis();
-                final Optional<LockItem> lockItem = dynamoDBLockClient.getLockFromDynamoDB(
-                        GetLockOptions.builder(LEADER_HASH_KEY).build());
-
-                if (!lockItem.isPresent()) {
-                    // There is no LockItem in the ddb table, that means no one is holding lock.
-                    lastIsAnyLeaderElectedResult = false;
-                    log.info("LockItem present : {}", false);
-                } else {
-                    final LockItem ddbLockItem = lockItem.get();
-                    if (isNull(lastIsAnyLeaderCheckLockItemToFirstEncounterTime)
-                            || !ddbLockItem
-                                    .getRecordVersionNumber()
-                                    .equals(lastIsAnyLeaderCheckLockItemToFirstEncounterTime
-                                            .getKey()
-                                            .getRecordVersionNumber())) {
-                        // This is the first isAnyLeaderElected call, so we can't evaluate if the LockItem has expired
-                        // or not yet so consider LOCK as ACTIVE.
-                        // OR LockItem in ddb and in-memory LockItem have different RecordVersionNumber
-                        // and thus the LOCK is still ACTIVE
-                        lastIsAnyLeaderElectedResult = true;
-                        lastIsAnyLeaderCheckLockItemToFirstEncounterTime =
-                                new AbstractMap.SimpleEntry<>(ddbLockItem, lastIsAnyLeaderElectedDDBReadTimeMillis);
-                        log.info(
-                                "LockItem present : {}, and this is either first call OR lockItem has had "
-                                        + "a heartbeat",
-                                true);
-                    } else {
-                        // There is no change in the ddb lock item, so if the last update time is more than
-                        // lease duration, the lock is expired else it is still ACTIVE,
-                        lastIsAnyLeaderElectedResult = lastIsAnyLeaderCheckLockItemToFirstEncounterTime.getValue()
-                                        + ddbLockItem.getLeaseDuration()
-                                > lastIsAnyLeaderElectedDDBReadTimeMillis;
-                        log.info("LockItem present : {}, and lease expiry: {}", true, lastIsAnyLeaderElectedResult);
-                    }
-                }
-            } catch (final ResourceNotFoundException exception) {
-                log.info("Lock table does not exists...");
-                // If the table itself doesn't exist, there is no elected leader.
-                lastIsAnyLeaderElectedResult = false;
-            } finally {
-                metricsScope.addData(
-                        "Latency",
-                        System.currentTimeMillis() - startTime,
-                        StandardUnit.MILLISECONDS,
-                        MetricsLevel.DETAILED);
-                MetricsUtil.endScope(metricsScope);
-            }
-        }
-        return lastIsAnyLeaderElectedResult;
     }
 }

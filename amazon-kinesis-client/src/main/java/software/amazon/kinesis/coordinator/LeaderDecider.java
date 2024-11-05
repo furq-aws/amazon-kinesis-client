@@ -47,15 +47,6 @@ public interface LeaderDecider {
     }
 
     /**
-     * Returns if any ACTIVE leader exists that is elected by the current implementation.
-     * Note: Some implementation (like DeterministicShuffleShardSyncLeaderDecider) will always have a leader and will
-     * return true always.
-     */
-    default boolean isAnyLeaderElected() {
-        return true;
-    }
-
-    /**
      * If the current worker is the leader, then releases the leadership else does nothing.
      * This might not be relevant for some implementations, for e.g. DeterministicShuffleShardSyncLeaderDecider does
      * not have mechanism to release leadership.

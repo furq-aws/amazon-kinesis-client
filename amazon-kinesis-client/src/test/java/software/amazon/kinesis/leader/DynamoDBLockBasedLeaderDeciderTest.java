@@ -15,7 +15,6 @@ import org.junit.jupiter.api.Test;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
-import software.amazon.awssdk.services.dynamodb.model.DeleteTableRequest;
 import software.amazon.awssdk.services.dynamodb.model.GetItemRequest;
 import software.amazon.awssdk.services.dynamodb.model.GetItemResponse;
 import software.amazon.awssdk.services.dynamodb.model.PutItemRequest;
@@ -108,51 +107,6 @@ class DynamoDBLockBasedLeaderDeciderTest {
         Thread.sleep(200);
         // another worker is able to take the lock now.
         assertTrue(decider.isLeader(workerId), workerId + " did not get the expired lock");
-    }
-
-    @Test
-    void isAnyLeaderElected_sanity() throws InterruptedException {
-        final String workerId = getWorkerId(1);
-        final DynamoDBLockBasedLeaderDecider decider = workerIdToLeaderDeciderMap.get(workerId);
-
-        assertFalse(decider.isAnyLeaderElected(), "isAnyLeaderElected returns true when no leader lock is present");
-
-        // perform leaderElection
-        decider.isLeader(workerId);
-        Thread.sleep(120);
-
-        assertTrue(decider.isAnyLeaderElected(), "isAnyLeaderElected returns false when leader lock is present");
-
-        Thread.sleep(120);
-        // heartbeat is happening on the leader validate that on different identifying different RevisionNumber,
-        // lock is considered ACTIVE
-        assertTrue(decider.isAnyLeaderElected(), "isAnyLeaderElected returns false when leader lock is present");
-    }
-
-    @Test
-    void isAnyLeaderElected_staleLock_validateExpectedBehavior() throws InterruptedException {
-        final String workerId = getWorkerId(1);
-        final DynamoDBLockBasedLeaderDecider decider = workerIdToLeaderDeciderMap.get(workerId);
-
-        createRandomStaleLockEntry();
-
-        assertTrue(decider.isAnyLeaderElected(), "isAnyLeaderElected returns false when leader lock is present");
-
-        // sleep for more than lease duration
-        Thread.sleep(205);
-
-        // lock has become stale as it passed lease duration without any heartbeat
-        assertFalse(decider.isAnyLeaderElected(), "isAnyLeaderElected returns true when leader lock is stale");
-    }
-
-    @Test
-    void isAnyLeaderElected_withoutTable_assertFalse() {
-        final String workerId = getWorkerId(1);
-        final DynamoDBLockBasedLeaderDecider decider = workerIdToLeaderDeciderMap.get(workerId);
-
-        dynamoDBSyncClient.deleteTable(
-                DeleteTableRequest.builder().tableName(TEST_LOCK_TABLE_NAME).build());
-        assertFalse(decider.isAnyLeaderElected(), "isAnyLeaderElected returns true when table don't exists");
     }
 
     private void createRandomStaleLockEntry() {

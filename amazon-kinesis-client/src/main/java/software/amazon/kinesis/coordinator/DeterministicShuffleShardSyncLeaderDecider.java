@@ -18,6 +18,7 @@ import java.time.Instant;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.ScheduledExecutorService;
@@ -51,7 +52,7 @@ import software.amazon.kinesis.metrics.MetricsUtil;
  * This ensures redundancy for shard-sync during host failures.
  */
 @Slf4j
-public class DeterministicShuffleShardSyncLeaderDecider implements LeaderDecider {
+class DeterministicShuffleShardSyncLeaderDecider implements LeaderDecider {
     // Fixed seed so that the shuffle order is preserved across workers
     static final int DETERMINISTIC_SHUFFLE_SEED = 1947;
 
@@ -73,7 +74,7 @@ public class DeterministicShuffleShardSyncLeaderDecider implements LeaderDecider
      * @param leaderElectionThreadPool    Thread-pool to be used for leaderElection.
      * @param numPeriodicShardSyncWorkers Number of leaders that will be elected to perform periodic shard syncs.
      */
-    public DeterministicShuffleShardSyncLeaderDecider(
+    DeterministicShuffleShardSyncLeaderDecider(
             LeaseRefresher leaseRefresher,
             ScheduledExecutorService leaderElectionThreadPool,
             int numPeriodicShardSyncWorkers,
@@ -116,7 +117,7 @@ public class DeterministicShuffleShardSyncLeaderDecider implements LeaderDecider
             List<Lease> leases = leaseRefresher.listLeases();
             List<String> uniqueHosts = leases.stream()
                     .map(Lease::leaseOwner)
-                    .filter(owner -> owner != null)
+                    .filter(Objects::nonNull)
                     .distinct()
                     .sorted()
                     .collect(Collectors.toList());

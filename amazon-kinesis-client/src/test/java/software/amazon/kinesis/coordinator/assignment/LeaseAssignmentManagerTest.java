@@ -68,7 +68,7 @@ class LeaseAssignmentManagerTest {
             LeaseManagementConfig.GracefulLeaseHandoffConfig.builder()
                     .isGracefulLeaseHandoffEnabled(false)
                     .build();
-    // TODO : Use DynamoDBLockBasedLeaderDecider with LocalDDBClient when other CR is merged.
+    // TODO : Use DynamoDBLockBasedLeaderDecider with LocalDDBClient.
     private LeaderDecider mockLeaderDecider;
     private ScheduledExecutorService scheduledExecutorService;
     private ScheduledFuture<Void> scheduledFuture;
