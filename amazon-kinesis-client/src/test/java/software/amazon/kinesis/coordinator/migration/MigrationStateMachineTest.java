@@ -15,9 +15,11 @@
 package software.amazon.kinesis.coordinator.migration;
 
 import java.time.Duration;
+import java.util.HashMap;
 import java.util.Random;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Assertions;
@@ -39,11 +41,9 @@ import software.amazon.kinesis.metrics.MetricsFactory;
 import software.amazon.kinesis.metrics.NullMetricsFactory;
 import software.amazon.kinesis.worker.metricstats.WorkerMetricStatsDAO;
 
-import static org.mockito.ArgumentMatchers.anyObject;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyLong;
-import static org.mockito.Matchers.anyMap;
-import static org.mockito.Matchers.eq;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.timeout;
@@ -123,7 +123,7 @@ public class MigrationStateMachineTest {
         // After initialization, state machine should start to monitor for upgrade readiness
         final ArgumentCaptor<Runnable> runnableCaptor = ArgumentCaptor.forClass(Runnable.class);
         verify(mockMigrationStateMachineThreadPool, times(2))
-                .scheduleWithFixedDelay(runnableCaptor.capture(), anyLong(), anyLong(), anyObject());
+                .scheduleWithFixedDelay(runnableCaptor.capture(), anyLong(), anyLong(), any(TimeUnit.class));
 
         initiateAndTestFlip(runnableCaptor);
     }
@@ -135,14 +135,14 @@ public class MigrationStateMachineTest {
         // After initialization, state machine should start to monitor for upgrade readiness
         ArgumentCaptor<Runnable> runnableCaptor = ArgumentCaptor.forClass(Runnable.class);
         verify(mockMigrationStateMachineThreadPool, times(2))
-                .scheduleWithFixedDelay(runnableCaptor.capture(), anyLong(), anyLong(), anyObject());
+                .scheduleWithFixedDelay(runnableCaptor.capture(), anyLong(), anyLong(), any(TimeUnit.class));
 
         initiateAndTestFlip(runnableCaptor);
 
         // A new version monitor must be created after flip
         runnableCaptor = ArgumentCaptor.forClass(Runnable.class);
         verify(mockMigrationStateMachineThreadPool, timeout(100).times(1))
-                .scheduleWithFixedDelay(runnableCaptor.capture(), anyLong(), anyLong(), anyObject());
+                .scheduleWithFixedDelay(runnableCaptor.capture(), anyLong(), anyLong(), any(TimeUnit.class));
 
         final Runnable rollbackMonitorRunnable = runnableCaptor.getValue();
         initiateAndTestRollBack(rollbackMonitorRunnable);
@@ -155,13 +155,13 @@ public class MigrationStateMachineTest {
         // After initialization, state machine should start to monitor for upgrade readiness
         ArgumentCaptor<Runnable> runnableCaptor = ArgumentCaptor.forClass(Runnable.class);
         verify(mockMigrationStateMachineThreadPool, times(2))
-                .scheduleWithFixedDelay(runnableCaptor.capture(), anyLong(), anyLong(), anyObject());
+                .scheduleWithFixedDelay(runnableCaptor.capture(), anyLong(), anyLong(), any(TimeUnit.class));
         initiateAndTestFlip(runnableCaptor);
 
         // A new version monitor must be created after flip
         runnableCaptor = ArgumentCaptor.forClass(Runnable.class);
         verify(mockMigrationStateMachineThreadPool, times(1))
-                .scheduleWithFixedDelay(runnableCaptor.capture(), anyLong(), anyLong(), anyObject());
+                .scheduleWithFixedDelay(runnableCaptor.capture(), anyLong(), anyLong(), any(TimeUnit.class));
 
         final Runnable rollbackMonitorRunnable = runnableCaptor.getValue();
         initiateAndTestRollBack(rollbackMonitorRunnable);
@@ -169,7 +169,7 @@ public class MigrationStateMachineTest {
         // A new version monitor must be created after rollback
         runnableCaptor = ArgumentCaptor.forClass(Runnable.class);
         verify(mockMigrationStateMachineThreadPool, times(1))
-                .scheduleWithFixedDelay(runnableCaptor.capture(), anyLong(), anyLong(), anyObject());
+                .scheduleWithFixedDelay(runnableCaptor.capture(), anyLong(), anyLong(), any(TimeUnit.class));
 
         final Runnable rollforwardMonitorRunnable = runnableCaptor.getValue();
         initiateAndTestRollForward(rollforwardMonitorRunnable);
@@ -182,7 +182,7 @@ public class MigrationStateMachineTest {
         // After initialization, state machine should start to monitor for upgrade readiness
         ArgumentCaptor<Runnable> runnableCaptor = ArgumentCaptor.forClass(Runnable.class);
         verify(mockMigrationStateMachineThreadPool, times(2))
-                .scheduleWithFixedDelay(runnableCaptor.capture(), anyLong(), anyLong(), anyObject());
+                .scheduleWithFixedDelay(runnableCaptor.capture(), anyLong(), anyLong(), any(TimeUnit.class));
 
         initiateAndTestRollbackBeforeFlip(runnableCaptor);
     }
@@ -194,14 +194,14 @@ public class MigrationStateMachineTest {
         // After initialization, state machine should start to monitor for upgrade readiness
         ArgumentCaptor<Runnable> runnableCaptor = ArgumentCaptor.forClass(Runnable.class);
         verify(mockMigrationStateMachineThreadPool, times(2))
-                .scheduleWithFixedDelay(runnableCaptor.capture(), anyLong(), anyLong(), anyObject());
+                .scheduleWithFixedDelay(runnableCaptor.capture(), anyLong(), anyLong(), any(TimeUnit.class));
 
         initiateAndTestFlip(runnableCaptor);
 
         // A new version monitor must be created after flip
         runnableCaptor = ArgumentCaptor.forClass(Runnable.class);
         verify(mockMigrationStateMachineThreadPool, timeout(100).times(1))
-                .scheduleWithFixedDelay(runnableCaptor.capture(), anyLong(), anyLong(), anyObject());
+                .scheduleWithFixedDelay(runnableCaptor.capture(), anyLong(), anyLong(), any(TimeUnit.class));
 
         final Runnable successfulUpgradeMonitor = runnableCaptor.getValue();
 
@@ -234,7 +234,7 @@ public class MigrationStateMachineTest {
         // when clientVersion change monitor tried to read the value from DDB.
 
         final ArgumentCaptor<MigrationState> stateCaptor = ArgumentCaptor.forClass(MigrationState.class);
-        when(mockCoordinatorStateDAO.updateCoordinatorStateWithExpectation(stateCaptor.capture(), anyMap()))
+        when(mockCoordinatorStateDAO.updateCoordinatorStateWithExpectation(stateCaptor.capture(), any(HashMap.class)))
                 .thenReturn(true);
         when(mockCoordinatorStateDAO.getCoordinatorState(MIGRATION_HASH_KEY))
                 .thenAnswer(invocation -> stateCaptor.getValue());

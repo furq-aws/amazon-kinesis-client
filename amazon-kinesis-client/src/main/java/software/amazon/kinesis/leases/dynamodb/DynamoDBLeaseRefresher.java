@@ -999,7 +999,6 @@ public class DynamoDBLeaseRefresher implements LeaseRefresher {
         // see assignLease()
         expectedAttributeValueMap.putAll(serializer.getDynamoExistentExpectation(lease.leaseKey()));
 
-        // TODO: Add condition check on shardEnd. Don't graceful shut down a shardEnd shard
         final UpdateItemRequest request = UpdateItemRequest.builder()
                 .tableName(table)
                 .key(serializer.getDynamoHashKey(lease))

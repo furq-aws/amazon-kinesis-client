@@ -1,3 +1,17 @@
+/*
+ * Copyright 2024 Amazon.com, Inc. or its affiliates.
+ * Licensed under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package software.amazon.kinesis.coordinator;
 
 import java.util.Arrays;
@@ -35,11 +49,10 @@ import software.amazon.kinesis.worker.metricstats.WorkerMetricStatsManager;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.anyObject;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyBoolean;
-import static org.mockito.Matchers.anyLong;
-import static org.mockito.Matchers.eq;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.RETURNS_MOCKS;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -87,7 +100,8 @@ public class DynamicMigrationComponentsInitializerTest {
     @BeforeEach
     public void setup() {
         workerUtilizationAwareAssignmentConfig.workerMetricsTableConfig(new WorkerMetricsTableConfig(APPLICATION_NAME));
-        when(mockLamCreator.apply(any(), anyObject())).thenReturn(mockLam);
+        when(mockLamCreator.apply(any(ScheduledExecutorService.class), any(LeaderDecider.class)))
+                .thenReturn(mockLam);
         when(mockAdaptiveLeaderDeciderCreator.get()).thenReturn(mockMigrationAdaptiveLeaderDecider);
         when(mockDdbLockBasedLeaderDeciderCreator.get()).thenReturn(mockDdbLockLeaderDecider);
         when(mockDeterministicLeaderDeciderCreator.get()).thenReturn(mockDeterministicLeaderDecider);
@@ -193,15 +207,14 @@ public class DynamicMigrationComponentsInitializerTest {
             verify(mockWorkerMetricsDAO).initialize();
             verify(mockWorkerMetricsScheduler).scheduleAtFixedRate(any(), anyLong(), anyLong(), any());
             verify(mockLeaseRefresher).createLeaseOwnerToLeaseKeyIndexIfNotExists();
-            verify(mockLeaseRefresher, never()).waitUntilLeaseOwnerToLeaseKeyIndexExists(anyLong(), anyLong());
         } else {
             migrationInitializer.initializeClientVersionFor2x(ClientVersion.CLIENT_VERSION_INIT);
             verify(mockWorkerMetricsDAO, never()).initialize();
             verify(mockWorkerMetricsScheduler, never()).scheduleAtFixedRate(any(), anyLong(), anyLong(), any());
             verify(mockLeaseRefresher, never()).createLeaseOwnerToLeaseKeyIndexIfNotExists();
-            verify(mockLeaseRefresher, never()).waitUntilLeaseOwnerToLeaseKeyIndexExists(anyLong(), anyLong());
         }
 
+        verify(mockLeaseRefresher, never()).waitUntilLeaseOwnerToLeaseKeyIndexExists(anyLong(), anyLong());
         verify(mockMigrationAdaptiveLeaderDecider).updateLeaderDecider(mockDeterministicLeaderDecider);
         verify(mockLam, never()).start();
     }
@@ -229,6 +242,9 @@ public class DynamicMigrationComponentsInitializerTest {
         migrationInitializer.initialize(ClientVersion.CLIENT_VERSION_3X);
         // test initialization from state machine
 
+        when(mockLeaseRefresher.waitUntilLeaseOwnerToLeaseKeyIndexExists(anyLong(), anyLong()))
+                .thenReturn(false);
+
         assertThrows(
                 DependencyException.class,
                 () -> migrationInitializer.initializeClientVersionFor3x(ClientVersion.CLIENT_VERSION_INIT));
@@ -238,6 +254,9 @@ public class DynamicMigrationComponentsInitializerTest {
     public void initializationDoesNotFail_WhenGsiIsNotActiveIn3_XWithRollback() throws DependencyException {
         migrationInitializer.initialize(ClientVersion.CLIENT_VERSION_3X_WITH_ROLLBACK);
         // test initialization from state machine
+
+        when(mockLeaseRefresher.waitUntilLeaseOwnerToLeaseKeyIndexExists(anyLong(), anyLong()))
+                .thenReturn(false);
 
         assertDoesNotThrow(
                 () -> migrationInitializer.initializeClientVersionFor3xWithRollback(ClientVersion.CLIENT_VERSION_INIT));
@@ -275,8 +294,10 @@ public class DynamicMigrationComponentsInitializerTest {
         migrationInitializer.initializeClientVersionForUpgradeFrom2x(ClientVersion.CLIENT_VERSION_2X);
 
         // verify
-        verify(mockWorkerMetricsScheduler)
+        verify(mockWorkerMetricsDAO).initialize(); // Worker metrics table must be recreated
+        verify(mockWorkerMetricsScheduler) // Worker metrics reporting is started
                 .scheduleAtFixedRate(any(Runnable.class), anyLong(), anyLong(), any(TimeUnit.class));
+        // GSI is recreated but does not wait for active status
         verify(mockLeaseRefresher).createLeaseOwnerToLeaseKeyIndexIfNotExists();
         verify(mockLeaseRefresher, never()).waitUntilLeaseTableExists(anyLong(), anyLong());
     }
