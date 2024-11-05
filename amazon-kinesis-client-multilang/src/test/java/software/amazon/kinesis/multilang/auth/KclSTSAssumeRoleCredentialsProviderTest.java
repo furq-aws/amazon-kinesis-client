@@ -20,7 +20,7 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 
-public class KclSTSAssumeRoleSessionCredentialsProviderTest {
+public class KclSTSAssumeRoleCredentialsProviderTest {
 
     private static final String ARN = "arn";
     private static final String SESSION_NAME = "sessionName";
