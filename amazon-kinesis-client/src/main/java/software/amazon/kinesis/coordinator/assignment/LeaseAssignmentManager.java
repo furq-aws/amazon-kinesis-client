@@ -215,8 +215,9 @@ public final class LeaseAssignmentManager {
             // If a worker has died, the lease will be expired and assigned in next iteration.
             final List<Lease> expiredOrUnAssignedLeases = inMemoryStorageView.getLeaseList().stream()
                     .filter(lease -> lease.isExpired(
-                            TimeUnit.MILLISECONDS.toNanos(leaseDurationMillis),
-                            inMemoryStorageView.getLeaseTableScanTime()))
+                                    TimeUnit.MILLISECONDS.toNanos(leaseDurationMillis),
+                                    inMemoryStorageView.getLeaseTableScanTime())
+                            || Objects.isNull(lease.actualOwner()))
                     // marking them for direct reassignment.
                     .map(l -> l.isExpiredOrUnassigned(true))
                     .collect(Collectors.toList());
