@@ -61,8 +61,8 @@ class LeaseAssignmentManagerTest {
     private static final String TEST_TAKE_WORKER_ID = "workerIdTake";
     private static final String TEST_YIELD_WORKER_ID = "workerIdYield";
 
-    private String LEASE_TABLE_NAME;
-    private String WORKER_METRICS_TABLE_NAME;
+    private String leaseTableName;
+    private String workerMetricsTableName;
     private LeaseManagementConfig.GracefulLeaseHandoffConfig gracefulLeaseHandoffConfig =
             LeaseManagementConfig.GracefulLeaseHandoffConfig.builder()
                     .isGracefulLeaseHandoffEnabled(false)
@@ -79,12 +79,12 @@ class LeaseAssignmentManagerTest {
     @BeforeEach
     void setup() throws ProvisionedThroughputException, DependencyException {
         final String uuid = UUID.randomUUID().toString().substring(1, 5);
-        LEASE_TABLE_NAME = "leaseTable" + uuid;
-        WORKER_METRICS_TABLE_NAME = "workerMetrics" + uuid;
+        leaseTableName = "leaseTable" + uuid;
+        workerMetricsTableName = "workerMetrics" + uuid;
 
         dynamoDbAsyncClient = DynamoDBEmbedded.create().dynamoDbAsyncClient();
         leaseRefresher = new DynamoDBLeaseRefresher(
-                LEASE_TABLE_NAME,
+                leaseTableName,
                 dynamoDbAsyncClient,
                 new DynamoDBLeaseSerializer(),
                 true,
@@ -95,7 +95,7 @@ class LeaseAssignmentManagerTest {
                 LeaseManagementConfig.DEFAULT_LEASE_TABLE_PITR_ENABLED,
                 DefaultSdkAutoConstructList.getInstance());
         final WorkerMetricsTableConfig config = new WorkerMetricsTableConfig("applicationName");
-        config.tableName(WORKER_METRICS_TABLE_NAME);
+        config.tableName(workerMetricsTableName);
         workerMetricsDAO = new WorkerMetricStatsDAO(dynamoDbAsyncClient, config, 10000L);
         workerMetricsDAO.initialize();
         mockLeaderDecider = Mockito.mock(LeaderDecider.class);
@@ -1122,7 +1122,7 @@ class LeaseAssignmentManagerTest {
 
     private void createAndPutBadWorkerMetricsEntryInTable(final String workerId) {
         final PutItemRequest putItemRequest = PutItemRequest.builder()
-                .tableName(WORKER_METRICS_TABLE_NAME)
+                .tableName(workerMetricsTableName)
                 .item(ImmutableMap.of(
                         "wid", AttributeValue.builder().s(workerId).build()))
                 .build();
@@ -1132,7 +1132,7 @@ class LeaseAssignmentManagerTest {
 
     private void createAndPutBadLeaseEntryInTable(final String leaseKey) {
         final PutItemRequest putItemRequest = PutItemRequest.builder()
-                .tableName(LEASE_TABLE_NAME)
+                .tableName(leaseTableName)
                 .item(ImmutableMap.of(
                         "leaseKey", AttributeValue.builder().s(leaseKey).build()))
                 .build();
@@ -1274,7 +1274,7 @@ class LeaseAssignmentManagerTest {
     private void writeToWorkerMetricsTables(final WorkerMetricStats workerMetrics) {
         dynamoDbAsyncClient
                 .putItem(PutItemRequest.builder()
-                        .tableName(WORKER_METRICS_TABLE_NAME)
+                        .tableName(workerMetricsTableName)
                         .item(TableSchema.fromBean(WorkerMetricStats.class).itemToMap(workerMetrics, false))
                         .build())
                 .join();
