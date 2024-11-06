@@ -4,6 +4,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -60,8 +61,8 @@ class LeaseAssignmentManagerTest {
     private static final String TEST_TAKE_WORKER_ID = "workerIdTake";
     private static final String TEST_YIELD_WORKER_ID = "workerIdYield";
 
-    private static final String LEASE_TABLE_NAME = "leaseTable";
-    private static final String WORKER_METRICS_TABLE_NAME = "workerMetrics";
+    private String LEASE_TABLE_NAME;
+    private String WORKER_METRICS_TABLE_NAME;
     private LeaseManagementConfig.GracefulLeaseHandoffConfig gracefulLeaseHandoffConfig =
             LeaseManagementConfig.GracefulLeaseHandoffConfig.builder()
                     .isGracefulLeaseHandoffEnabled(false)
@@ -77,6 +78,10 @@ class LeaseAssignmentManagerTest {
 
     @BeforeEach
     void setup() throws ProvisionedThroughputException, DependencyException {
+        final String uuid = UUID.randomUUID().toString().substring(1, 5);
+        LEASE_TABLE_NAME = "leaseTable" + uuid;
+        WORKER_METRICS_TABLE_NAME = "workerMetrics" + uuid;
+
         dynamoDbAsyncClient = DynamoDBEmbedded.create().dynamoDbAsyncClient();
         leaseRefresher = new DynamoDBLeaseRefresher(
                 LEASE_TABLE_NAME,
