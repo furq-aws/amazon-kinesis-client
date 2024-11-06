@@ -117,7 +117,7 @@ public class ClientVersionChangeMonitor implements Runnable {
                 log.debug("Monitor has been cancelled, not running...");
                 return;
             }
-
+            emitMetrics();
             final MigrationState migrationState =
                     (MigrationState) coordinatorStateDAO.getCoordinatorState(MIGRATION_HASH_KEY);
             if (migrationState != null) {
@@ -129,7 +129,6 @@ public class ClientVersionChangeMonitor implements Runnable {
                     scheduledFuture.cancel(false);
                     scheduledFuture = null;
                 } else {
-                    emitMetrics();
                     log.debug("No change detected {}", this);
                 }
             }
