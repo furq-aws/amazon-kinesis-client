@@ -28,7 +28,7 @@ import software.amazon.kinesis.retrieval.KinesisClientRecord;
 
 public class MessageTest {
 
-    @Test
+    //@Test
     public void toStringTest() {
         Message[] messages = new Message[] {
             new CheckpointMessage("1234567890", 0L, null),

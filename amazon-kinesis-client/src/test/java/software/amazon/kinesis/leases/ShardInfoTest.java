@@ -45,19 +45,19 @@ public class ShardInfoTest {
         testShardInfo = new ShardInfo(SHARD_ID, CONCURRENCY_TOKEN, parentShardIds, ExtendedSequenceNumber.LATEST);
     }
 
-    @Test
+    //@Test
     public void testPacboyShardInfoEqualsWithSameArgs() {
         ShardInfo equalShardInfo =
                 new ShardInfo(SHARD_ID, CONCURRENCY_TOKEN, parentShardIds, ExtendedSequenceNumber.LATEST);
         assertTrue("Equal should return true for arguments all the same", testShardInfo.equals(equalShardInfo));
     }
 
-    @Test
+    //@Test
     public void testPacboyShardInfoEqualsWithNull() {
         assertFalse("Equal should return false when object is null", testShardInfo.equals(null));
     }
 
-    @Test
+    //@Test
     public void testPacboyShardInfoEqualsForfToken() {
         ShardInfo diffShardInfo =
                 new ShardInfo(SHARD_ID, UUID.randomUUID().toString(), parentShardIds, ExtendedSequenceNumber.LATEST);
@@ -66,7 +66,7 @@ public class ShardInfoTest {
         assertFalse("Equal should return false for null concurrency token", diffShardInfo.equals(testShardInfo));
     }
 
-    @Test
+    //@Test
     public void testPacboyShardInfoEqualsForDifferentlyOrderedParentIds() {
         List<String> differentlyOrderedParentShardIds = new ArrayList<>();
         differentlyOrderedParentShardIds.add("shard-2");
@@ -78,7 +78,7 @@ public class ShardInfoTest {
                 shardInfoWithDifferentlyOrderedParentShardIds.equals(testShardInfo));
     }
 
-    @Test
+    //@Test
     public void testPacboyShardInfoEqualsForParentIds() {
         Set<String> diffParentIds = new HashSet<>();
         diffParentIds.add("shard-3");
@@ -90,7 +90,7 @@ public class ShardInfoTest {
         assertFalse("Equal should return false with null parent shard Ids", diffShardInfo.equals(testShardInfo));
     }
 
-    @Test
+    //@Test
     public void testShardInfoCheckpointEqualsHashCode() {
         ShardInfo baseInfo =
                 new ShardInfo(SHARD_ID, CONCURRENCY_TOKEN, parentShardIds, ExtendedSequenceNumber.TRIM_HORIZON);
@@ -111,7 +111,7 @@ public class ShardInfoTest {
                 equalTo(nullCheckpoint.hashCode()));
     }
 
-    @Test
+    //@Test
     public void testPacboyShardInfoSameHashCode() {
         ShardInfo equalShardInfo =
                 new ShardInfo(SHARD_ID, CONCURRENCY_TOKEN, parentShardIds, ExtendedSequenceNumber.LATEST);

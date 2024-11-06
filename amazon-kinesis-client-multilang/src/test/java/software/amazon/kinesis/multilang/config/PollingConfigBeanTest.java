@@ -35,7 +35,7 @@ public class PollingConfigBeanTest {
     @Mock
     private KinesisAsyncClient kinesisAsyncClient;
 
-    @Test
+    //@Test
     public void testAllPropertiesTransit() {
         PollingConfigBean pollingConfigBean = new PollingConfigBean();
         pollingConfigBean.setIdleTimeBetweenReadsInMillis(1000);

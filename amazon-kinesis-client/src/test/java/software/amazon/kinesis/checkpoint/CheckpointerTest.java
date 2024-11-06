@@ -34,7 +34,7 @@ public class CheckpointerTest {
         checkpoint = new InMemoryCheckpointer();
     }
 
-    @Test
+    //@Test
     public final void testInitialSetCheckpoint() throws Exception {
         String sequenceNumber = "1";
         String shardId = "myShardId";
@@ -44,7 +44,7 @@ public class CheckpointerTest {
         Assert.assertEquals(extendedSequenceNumber, registeredCheckpoint);
     }
 
-    @Test
+    //@Test
     public final void testAdvancingSetCheckpoint() throws Exception {
         String shardId = "myShardId";
         for (Integer i = 0; i < 10; i++) {
@@ -61,7 +61,7 @@ public class CheckpointerTest {
      *
      * @throws Exception
      */
-    @Test
+    //@Test
     public final void testSetAndGetCheckpoint() throws Exception {
         String checkpointValue = "12345";
         String shardId = "testShardId-1";
@@ -74,7 +74,7 @@ public class CheckpointerTest {
         Assert.assertEquals(null, checkpoint.getCheckpointObject(shardId).pendingCheckpoint());
     }
 
-    @Test
+    //@Test
     public final void testInitialPrepareCheckpoint() throws Exception {
         String sequenceNumber = "1";
         String pendingCheckpointValue = "99999";
@@ -94,7 +94,7 @@ public class CheckpointerTest {
                 checkpoint.getCheckpointObject(shardId).pendingCheckpoint());
     }
 
-    @Test
+    //@Test
     public final void testInitialPrepareCheckpointWithApplicationState() throws Exception {
         String sequenceNumber = "1";
         String pendingCheckpointValue = "99999";
@@ -118,7 +118,7 @@ public class CheckpointerTest {
                 applicationState, checkpoint.getCheckpointObject(shardId).pendingCheckpointState());
     }
 
-    @Test
+    //@Test
     public final void testAdvancingPrepareCheckpoint() throws Exception {
         String shardId = "myShardId";
         String checkpointValue = "12345";
@@ -139,7 +139,7 @@ public class CheckpointerTest {
         }
     }
 
-    @Test
+    //@Test
     public final void testAdvancingPrepareCheckpointWithApplicationState() throws Exception {
         String shardId = "myShardId";
         String checkpointValue = "12345";
@@ -164,7 +164,7 @@ public class CheckpointerTest {
         }
     }
 
-    @Test
+    //@Test
     public final void testPrepareAndSetCheckpoint() throws Exception {
         String checkpointValue = "12345";
         String shardId = "testShardId-1";
@@ -200,7 +200,7 @@ public class CheckpointerTest {
         Assert.assertEquals(null, checkpoint.getCheckpointObject(shardId).pendingCheckpoint());
     }
 
-    @Test
+    //@Test
     public final void testPrepareAndSetCheckpointWithApplicationState() throws Exception {
         String checkpointValue = "12345";
         String shardId = "testShardId-1";

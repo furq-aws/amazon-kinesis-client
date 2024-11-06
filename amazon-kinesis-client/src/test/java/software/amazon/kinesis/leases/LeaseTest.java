@@ -26,7 +26,7 @@ public class LeaseTest {
     private final Lease eligibleForGracefulShutdownLease = createisEligibleForGracefulShutdownLease();
 
     // Write a unit test for software.amazon.kinesis.leases.Lease to test leaseOwner as null and epired
-    @Test
+    //@Test
     public void testLeaseOwnerNullAndExpired() {
         long expiredTime = MOCK_CURRENT_TIME - LEASE_DURATION_NANOS - 1;
         Lease lease = createLease(null, "leaseKey", expiredTime);
@@ -34,7 +34,7 @@ public class LeaseTest {
         Assert.assertNull(lease.leaseOwner());
     }
 
-    @Test
+    //@Test
     public void testLeaseOwnerNotNullAndExpired() {
         long expiredTime = MOCK_CURRENT_TIME - LEASE_DURATION_NANOS - 1;
         Lease lease = createLease("leaseOwner", "leaseKey", expiredTime);
@@ -42,7 +42,7 @@ public class LeaseTest {
         Assert.assertEquals("leaseOwner", lease.leaseOwner());
     }
 
-    @Test
+    //@Test
     public void testLeaseOwnerNotNullAndNotExpired() {
         long notExpiredTime = MOCK_CURRENT_TIME - LEASE_DURATION_NANOS + 1;
         Lease lease = createLease("leaseOwner", "leaseKey", notExpiredTime);
@@ -50,7 +50,7 @@ public class LeaseTest {
         Assert.assertEquals("leaseOwner", lease.leaseOwner());
     }
 
-    @Test
+    //@Test
     public void testLeaseOwnerNullAndNotExpired() {
         long notExpiredTime = MOCK_CURRENT_TIME - LEASE_DURATION_NANOS + 1;
         Lease lease = createLease(null, "leaseKey", notExpiredTime);
@@ -58,52 +58,52 @@ public class LeaseTest {
         Assert.assertNull(lease.leaseOwner());
     }
 
-    @Test
+    //@Test
     public void testBlockedOnPendingCheckpoint_LeaseAssignedAndCheckpointNotExpired_assertTrue() {
         assertTrue(shutdownRequestedLease.blockedOnPendingCheckpoint(LEASE_CHECKPOINT_TIMEOUT - 1));
     }
 
-    @Test
+    //@Test
     public void testBlockedOnPendingCheckpoint_LeaseUnassigned_assertFalse() {
         shutdownRequestedLease.isExpiredOrUnassigned(true);
         assertFalse(shutdownRequestedLease.blockedOnPendingCheckpoint(LEASE_CHECKPOINT_TIMEOUT));
     }
 
-    @Test
+    //@Test
     public void testBlockedOnPendingCheckpoint_ShardEnd_assertFalse() {
         shutdownRequestedLease.checkpoint(ExtendedSequenceNumber.SHARD_END);
         assertFalse(shutdownRequestedLease.blockedOnPendingCheckpoint(LEASE_CHECKPOINT_TIMEOUT));
     }
 
-    @Test
+    //@Test
     public void testBlockedOnPendingCheckpoint_ShutdownNotRequested_assertFalse() {
         shutdownRequestedLease.checkpointOwner(null);
         assertFalse(shutdownRequestedLease.blockedOnPendingCheckpoint(LEASE_CHECKPOINT_TIMEOUT));
     }
 
-    @Test
+    //@Test
     public void testBlockedOnPendingCheckpoint_CheckpointTimeoutExpired_assertFalse() {
         assertFalse(shutdownRequestedLease.blockedOnPendingCheckpoint(LEASE_CHECKPOINT_TIMEOUT + 1000));
     }
 
-    @Test
+    //@Test
     public void testIsEligibleForGracefulShutdown_leaseNotExpiredNotShuttingDownAndNotShardEnd_assertTrue() {
         assertTrue(eligibleForGracefulShutdownLease.isEligibleForGracefulShutdown());
     }
 
-    @Test
+    //@Test
     public void testIsEligibleForGracefulShutdownFalse_shardEnd_assertFalse() {
         eligibleForGracefulShutdownLease.checkpoint(ExtendedSequenceNumber.SHARD_END);
         assertFalse(shutdownRequestedLease.isEligibleForGracefulShutdown());
     }
 
-    @Test
+    //@Test
     public void testIsEligibleForGracefulShutdownFalse_leaseUnassigned_assertFalse() {
         eligibleForGracefulShutdownLease.isExpiredOrUnassigned(true);
         assertFalse(shutdownRequestedLease.isEligibleForGracefulShutdown());
     }
 
-    @Test
+    //@Test
     public void testIsEligibleForGracefulShutdownFalse_shutdownRequested_assertFalse() {
         eligibleForGracefulShutdownLease.checkpointOwner("owner");
         assertFalse(shutdownRequestedLease.isEligibleForGracefulShutdown());

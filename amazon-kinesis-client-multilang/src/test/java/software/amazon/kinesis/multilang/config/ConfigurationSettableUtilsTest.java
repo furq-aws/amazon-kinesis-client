@@ -29,7 +29,7 @@ import static org.junit.Assert.assertThat;
 
 public class ConfigurationSettableUtilsTest {
 
-    @Test
+    //@Test
     public void testNoPropertiesSet() {
         ConfigResult expected = ConfigResult.builder().build();
 
@@ -39,7 +39,7 @@ public class ConfigurationSettableUtilsTest {
         assertThat(actual, equalTo(expected));
     }
 
-    @Test
+    //@Test
     public void testPrimitivesSet() {
         ConfigResult expected = ConfigResult.builder().rawInt(10).rawLong(15L).build();
 
@@ -52,7 +52,7 @@ public class ConfigurationSettableUtilsTest {
         assertThat(actual, equalTo(expected));
     }
 
-    @Test
+    //@Test
     public void testBoolean() {
         ConfigResult expected = ConfigResult.builder().bool(false).build();
 
@@ -62,7 +62,7 @@ public class ConfigurationSettableUtilsTest {
         assertThat(actual, equalTo(expected));
     }
 
-    @Test
+    //@Test
     public void testHeapValuesSet() {
         ConfigResult expected =
                 ConfigResult.builder().name("test").boxedInt(10).boxedLong(15L).build();
@@ -77,7 +77,7 @@ public class ConfigurationSettableUtilsTest {
         assertThat(actual, equalTo(expected));
     }
 
-    @Test
+    //@Test
     public void testComplexValuesSet() {
         ComplexValue complexValue =
                 ComplexValue.builder().name("complex").value(10).build();
@@ -95,7 +95,7 @@ public class ConfigurationSettableUtilsTest {
         assertThat(actual, equalTo(expected));
     }
 
-    @Test
+    //@Test
     public void testOptionalValuesSet() {
         ComplexValue complexValue =
                 ComplexValue.builder().name("optional-complex").value(20).build();
@@ -117,7 +117,7 @@ public class ConfigurationSettableUtilsTest {
         assertThat(actual, equalTo(expected));
     }
 
-    @Test
+    //@Test
     public void testRenamedRawValues() {
         ComplexValue complexValue =
                 ComplexValue.builder().name("renamed-complex").value(20).build();

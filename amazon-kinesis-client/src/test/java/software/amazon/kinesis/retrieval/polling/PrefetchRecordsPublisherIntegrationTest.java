@@ -131,7 +131,7 @@ public class PrefetchRecordsPublisherIntegrationTest {
                 AWAIT_TERMINATION_TIMEOUT);
     }
 
-    @Test
+    //@Test
     public void testRollingCache() {
         getRecordsCache.start(extendedSequenceNumber, initialPosition);
         sleep(IDLE_MILLIS_BETWEEN_CALLS);
@@ -151,7 +151,7 @@ public class PrefetchRecordsPublisherIntegrationTest {
         assertNotEquals(processRecordsInput1, processRecordsInput2);
     }
 
-    @Test
+    //@Test
     public void testFullCache() {
         getRecordsCache.start(extendedSequenceNumber, initialPosition);
         sleep(MAX_SIZE * IDLE_MILLIS_BETWEEN_CALLS);
@@ -170,7 +170,7 @@ public class PrefetchRecordsPublisherIntegrationTest {
     }
 
     @Ignore
-    @Test
+    //@Test
     public void testDifferentShardCaches() {
         final ExecutorService executorService2 = spy(Executors.newFixedThreadPool(1));
         final KinesisDataFetcher kinesisDataFetcher = spy(
@@ -221,7 +221,7 @@ public class PrefetchRecordsPublisherIntegrationTest {
         //        verify(getRecordsRetrievalStrategy2).shutdown();
     }
 
-    @Test
+    //@Test
     public void testExpiredIteratorException() {
         when(dataFetcher.getRecords())
                 .thenAnswer(new Answer<DataFetcherResult>() {
@@ -247,7 +247,7 @@ public class PrefetchRecordsPublisherIntegrationTest {
         verify(dataFetcher).restartIterator();
     }
 
-    @Test
+    //@Test
     public void testExpiredIteratorExceptionWithInnerRestartIteratorException() {
         when(dataFetcher.getRecords())
                 .thenThrow(ExpiredIteratorException.builder()

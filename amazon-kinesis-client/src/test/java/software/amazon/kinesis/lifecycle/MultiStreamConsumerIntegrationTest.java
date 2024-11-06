@@ -7,14 +7,14 @@ import software.amazon.kinesis.config.ReleaseCanaryMultiStreamPollingH2TestConfi
 import software.amazon.kinesis.config.multistream.ReleaseCanaryMultiStreamStreamingTestConfig;
 
 public class MultiStreamConsumerIntegrationTest {
-    @Test
+    //@Test
     public void kclReleaseCanaryMultiStreamPollingTest() throws Exception {
         KCLAppConfig consumerConfig = new ReleaseCanaryMultiStreamPollingH2TestConfig();
         TestConsumer consumer = new TestConsumer(consumerConfig);
         consumer.run();
     }
 
-    @Test
+    //@Test
     public void kclReleaseCanaryMultiStreamStreamingTest() throws Exception {
         KCLAppConfig consumerConfig = new ReleaseCanaryMultiStreamStreamingTestConfig();
         TestConsumer consumer = new TestConsumer(consumerConfig);

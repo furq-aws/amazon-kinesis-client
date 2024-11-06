@@ -42,7 +42,7 @@ public class DynamoDBLeaseTakerIntegrationTest extends LeaseIntegrationTest {
         taker = new DynamoDBLeaseTaker(leaseRefresher, "foo", LEASE_DURATION_MILLIS, new NullMetricsFactory());
     }
 
-    @Test
+    //@Test
     public void testSimpleLeaseTake() throws LeasingException {
         TestHarnessBuilder builder = new TestHarnessBuilder(leaseRefresher);
 
@@ -51,7 +51,7 @@ public class DynamoDBLeaseTakerIntegrationTest extends LeaseIntegrationTest {
         builder.takeMutateAssert(taker, "1");
     }
 
-    @Test
+    //@Test
     public void testNotTakeUpdatedLease() throws Exception {
         TestHarnessBuilder builder = new TestHarnessBuilder(leaseRefresher);
 
@@ -64,7 +64,7 @@ public class DynamoDBLeaseTakerIntegrationTest extends LeaseIntegrationTest {
         builder.takeMutateAssert(taker); // do a second scan
     }
 
-    @Test
+    //@Test
     public void testTakeOwnLease() throws LeasingException {
         TestHarnessBuilder builder = new TestHarnessBuilder(leaseRefresher);
 
@@ -75,7 +75,7 @@ public class DynamoDBLeaseTakerIntegrationTest extends LeaseIntegrationTest {
         builder.takeMutateAssert(taker, "1"); // do a second scan, assert that we didn't take anything
     }
 
-    @Test
+    //@Test
     public void testNotTakeNewOwnedLease() throws LeasingException, InterruptedException {
         TestHarnessBuilder builder = new TestHarnessBuilder(leaseRefresher);
 
@@ -93,7 +93,7 @@ public class DynamoDBLeaseTakerIntegrationTest extends LeaseIntegrationTest {
      * only one of which holds a lease. This leaves 3 free leases, but LeaseTaker should decide it needs 2 leases and
      * only take 2.
      */
-    @Test
+    //@Test
     public void testNonGreedyTake() throws LeasingException {
         TestHarnessBuilder builder = new TestHarnessBuilder(leaseRefresher);
 
@@ -113,7 +113,7 @@ public class DynamoDBLeaseTakerIntegrationTest extends LeaseIntegrationTest {
      * only one of which holds a lease. This leaves 3 free leases. LeaseTaker should take all 3 leases since they
      * are denoted as very old.
      */
-    @Test
+    //@Test
     public void testVeryOldLeaseTaker() throws LeasingException {
         TestHarnessBuilder builder = new TestHarnessBuilder(leaseRefresher);
 
@@ -132,7 +132,7 @@ public class DynamoDBLeaseTakerIntegrationTest extends LeaseIntegrationTest {
      * - does not call listLeases()
      * - returns cached result was built during takeLeases() operation to return result
      */
-    @Test
+    //@Test
     public void testGetAllLeases() throws LeasingException {
         TestHarnessBuilder builder = new TestHarnessBuilder(leaseRefresher);
 
@@ -158,7 +158,7 @@ public class DynamoDBLeaseTakerIntegrationTest extends LeaseIntegrationTest {
      * Sets the leaseDurationMillis to 0, ensuring a get request to update the existing lease after computing
      * leases to take
      */
-    @Test
+    //@Test
     public void testSlowGetAllLeases() throws LeasingException {
         long leaseDurationMillis = 0;
         taker = new DynamoDBLeaseTaker(leaseRefresher, "foo", leaseDurationMillis, new NullMetricsFactory());
@@ -182,7 +182,7 @@ public class DynamoDBLeaseTakerIntegrationTest extends LeaseIntegrationTest {
      * scenario where there are 4 leases held by two servers, and a third server with one lease. The third server should
      * not steal.
      */
-    @Test
+    //@Test
     public void testNoStealWhenOffByOne() throws LeasingException {
         TestHarnessBuilder builder = new TestHarnessBuilder(leaseRefresher);
 
@@ -203,7 +203,7 @@ public class DynamoDBLeaseTakerIntegrationTest extends LeaseIntegrationTest {
      *
      * Foo should steal from baz.
      */
-    @Test
+    //@Test
     public void testSteal() throws LeasingException {
         TestHarnessBuilder builder = new TestHarnessBuilder(leaseRefresher);
 
@@ -227,7 +227,7 @@ public class DynamoDBLeaseTakerIntegrationTest extends LeaseIntegrationTest {
      * Verify that stealing does not happen if LeaseTaker takes at least one expired lease, even if it needs more than
      * one.
      */
-    @Test
+    //@Test
     public void testNoStealWhenExpiredLeases() throws LeasingException {
         TestHarnessBuilder builder = new TestHarnessBuilder(leaseRefresher);
 

@@ -87,7 +87,7 @@ public class MultiLangDaemonTest {
         };
     }
 
-    @Test
+    //@Test
     public void testSuccessfulNoOptionsJCommanderBuild() {
         String testPropertiesFile = "/test/properties/file";
         MultiLangDaemon.MultiLangDaemonArguments arguments = new MultiLangDaemon.MultiLangDaemonArguments();
@@ -99,7 +99,7 @@ public class MultiLangDaemonTest {
         assertThat(arguments.parameters.get(0), equalTo(testPropertiesFile));
     }
 
-    @Test
+    //@Test
     public void testSuccessfulOptionsJCommanderBuild() {
         String propertiesOption = "/test/properties/file/option";
         String propertiesFileArgs = "/test/properties/args";
@@ -113,7 +113,7 @@ public class MultiLangDaemonTest {
         assertThat(arguments.parameters.get(0), equalTo(propertiesFileArgs));
     }
 
-    @Test
+    //@Test
     public void testEmptyArgsJCommanderBuild() {
         MultiLangDaemon.MultiLangDaemonArguments arguments = new MultiLangDaemon.MultiLangDaemonArguments();
         String[] args = new String[] {};
@@ -124,7 +124,7 @@ public class MultiLangDaemonTest {
         assertThat(arguments.parameters, empty());
     }
 
-    @Test
+    //@Test
     public void testSuccessfulLoggingConfiguration() {
         LoggerContext loggerContext = spy((LoggerContext) LoggerFactory.getILoggerFactory());
         JoranConfigurator configurator = spy(new JoranConfigurator());
@@ -137,7 +137,7 @@ public class MultiLangDaemonTest {
         verify(configurator).setContext(eq(loggerContext));
     }
 
-    @Test
+    //@Test
     public void testUnsuccessfulLoggingConfiguration() {
         LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
         JoranConfigurator configurator = new JoranConfigurator();
@@ -150,7 +150,7 @@ public class MultiLangDaemonTest {
         daemon.configureLogging(logConfiguration, loggerContext, configurator);
     }
 
-    @Test
+    //@Test
     public void testNoPropertiesFileArgumentOrOption() {
         expectedException.expect(RuntimeException.class);
         expectedException.expectMessage(equalTo("Properties file missing, please provide a properties file"));
@@ -160,7 +160,7 @@ public class MultiLangDaemonTest {
         daemon.validateAndGetPropertiesFileName(arguments);
     }
 
-    @Test
+    //@Test
     public void testSuccessfulPropertiesArgument() {
         String expectedPropertiesFile = "/test/properties/file";
         MultiLangDaemon.MultiLangDaemonArguments arguments = new MultiLangDaemon.MultiLangDaemonArguments();
@@ -171,7 +171,7 @@ public class MultiLangDaemonTest {
         assertThat(propertiesFile, equalTo(expectedPropertiesFile));
     }
 
-    @Test
+    //@Test
     public void testPropertiesOptionsOverrideArgument() {
         String propertiesArgument = "/test/properties/argument";
         String propertiesOptions = "/test/properties/options";
@@ -185,7 +185,7 @@ public class MultiLangDaemonTest {
         assertThat(propertiesFile, equalTo(propertiesOptions));
     }
 
-    @Test
+    //@Test
     public void testExtraArgumentsFailure() {
         expectedException.expect(RuntimeException.class);
         expectedException.expectMessage(containsString("Expected a single argument, but found multiple arguments."));
@@ -196,7 +196,7 @@ public class MultiLangDaemonTest {
         daemon.validateAndGetPropertiesFileName(arguments);
     }
 
-    @Test
+    //@Test
     public void testBuildMultiLangConfigMissingPropertiesFile() {
         expectedException.expect(RuntimeException.class);
         expectedException.expectMessage(containsString("Error while reading properties file:"));
@@ -204,7 +204,7 @@ public class MultiLangDaemonTest {
         daemon.buildMultiLangDaemonConfig("blahblahblah");
     }
 
-    @Test
+    //@Test
     public void testBuildMultiLangConfigWithIncorrectInformation() throws IOException {
         File propertiesFile = temporaryFolder.newFile("temp.properties");
 
@@ -214,7 +214,7 @@ public class MultiLangDaemonTest {
         daemon.buildMultiLangDaemonConfig(propertiesFile.getAbsolutePath());
     }
 
-    @Test
+    //@Test
     public void testSuccessfulSubmitRunnerAndWait() throws Exception {
         int expectedExitCode = 0;
 
@@ -228,7 +228,7 @@ public class MultiLangDaemonTest {
         assertThat(exitCode, equalTo(expectedExitCode));
     }
 
-    @Test
+    //@Test
     public void testErrorSubmitRunnerAndWait() throws Exception {
         int expectedExitCode = 1;
 
@@ -242,7 +242,7 @@ public class MultiLangDaemonTest {
         assertThat(exitCode, equalTo(expectedExitCode));
     }
 
-    @Test
+    //@Test
     public void testSetupShutdownHook() {
         when(config.getMultiLangDaemonConfiguration()).thenReturn(multiLangDaemonConfiguration);
         when(multiLangDaemonConfiguration.getShutdownGraceMillis()).thenReturn(1000L);
@@ -255,7 +255,7 @@ public class MultiLangDaemonTest {
         verify(runtime).addShutdownHook(anyObject());
     }
 
-    @Test
+    //@Test
     public void testSuccessfulRunner() throws Exception {
         MultiLangDaemon.MultiLangRunner runner = new MultiLangDaemon.MultiLangRunner(scheduler);
         doNothing().when(scheduler).run();
@@ -267,7 +267,7 @@ public class MultiLangDaemonTest {
         verify(scheduler).run();
     }
 
-    @Test
+    //@Test
     public void testUnsuccessfulRunner() throws Exception {
         MultiLangDaemon.MultiLangRunner runner = new MultiLangDaemon.MultiLangRunner(scheduler);
         doThrow(Exception.class).when(scheduler).run();

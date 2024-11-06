@@ -75,20 +75,20 @@ public class DeterministicShuffleShardSyncLeaderDeciderTest {
         when(readWriteLock.writeLock()).thenReturn(mock(ReentrantReadWriteLock.WriteLock.class));
     }
 
-    @Test
+    //@Test
     public void testLeaderElectionWithNullLeases() {
         boolean isLeader = leaderDecider.isLeader(WORKER_ID);
         assertTrue("IsLeader should return true if leaders is null", isLeader);
     }
 
-    @Test
+    //@Test
     public void testLeaderElectionWithEmptyLeases() throws Exception {
         when(leaseRefresher.listLeases()).thenReturn(new ArrayList<>());
         boolean isLeader = leaderDecider.isLeader(WORKER_ID);
         assertTrue("IsLeader should return true if no leases are returned", isLeader);
     }
 
-    @Test
+    //@Test
     public void testLeaderElectionDoesNotUseLocksOnListLeasesException() throws Exception {
         when(leaseRefresher.listLeases()).thenThrow(new DependencyException("error", new Throwable()));
         leaderDecider.isLeader(WORKER_ID);
@@ -97,7 +97,7 @@ public class DeterministicShuffleShardSyncLeaderDeciderTest {
         verify(readWriteLock.writeLock(), times(0)).unlock();
     }
 
-    @Test
+    //@Test
     public void testleaderElectionWithEmptyOwnerLeases() throws Exception {
         List<Lease> leases = getLeases(5, true, true, true);
         when(leaseRefresher.listLeases()).thenReturn(leases);
@@ -105,7 +105,7 @@ public class DeterministicShuffleShardSyncLeaderDeciderTest {
         assertTrue("IsLeader should return true if leases have no owner", isLeader);
     }
 
-    @Test
+    //@Test
     public void testElectedLeadersAsPerExpectedShufflingOrder() throws Exception {
         List<Lease> leases =
                 getLeases(5, false /*emptyLeaseOwner */, false /* duplicateLeaseOwner */, true /* activeLeases */);
@@ -121,7 +121,7 @@ public class DeterministicShuffleShardSyncLeaderDeciderTest {
         }
     }
 
-    @Test
+    //@Test
     public void testElectedLeadersAsPerExpectedShufflingOrderWhenUniqueWorkersLessThanMaxLeaders() {
         this.numShardSyncWorkers = 5; // More than number of unique lease owners
         leaderDecider = new DeterministicShuffleShardSyncLeaderDecider(

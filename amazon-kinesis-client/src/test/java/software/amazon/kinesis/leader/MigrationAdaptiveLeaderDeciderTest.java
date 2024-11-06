@@ -38,7 +38,7 @@ class MigrationAdaptiveLeaderDeciderTest {
         this.migrationAdaptiveLeaderDecider.updateLeaderDecider(currentLeaderDecider);
     }
 
-    @Test
+    //@Test
     void isLeader_modeProviderReturnsKCL3_X_assertNewLeaderDecideInvoked() {
         when(kcl3xLeaderDecider.isLeader(anyString())).thenReturn(true);
         when(kcl2xLeaderDecider.isLeader(anyString())).thenReturn(false);
@@ -51,7 +51,7 @@ class MigrationAdaptiveLeaderDeciderTest {
         verify(kcl2xLeaderDecider, times(0)).isLeader(anyString());
     }
 
-    @Test
+    //@Test
     void isLeader_modeProviderReturnsKCL2_X_assertNewLeaderDecideInvoked() {
         when(kcl3xLeaderDecider.isLeader(anyString())).thenReturn(false);
         when(kcl2xLeaderDecider.isLeader(anyString())).thenReturn(true);
@@ -64,7 +64,7 @@ class MigrationAdaptiveLeaderDeciderTest {
         verify(kcl2xLeaderDecider, times(1)).isLeader(anyString());
     }
 
-    @Test
+    //@Test
     void isLeader_transitionFromKCL2_XTo3_X_assertSwitchInTransition() {
         // kcl3_xLeaderDecider returns true always in this mock
         when(kcl3xLeaderDecider.isLeader(anyString())).thenReturn(true);

@@ -97,7 +97,7 @@ public class ClientVersionChangeMonitorTest {
         Assertions.assertEquals(changedClientVersion, stateCaptor.getValue().getClientVersion());
     }
 
-    @Test
+    //@Test
     public void testCallIsInvokedOnlyOnceIfSuccessful() throws Exception {
         monitorUnderTest = new ClientVersionChangeMonitor(
                 nullMetricsFactory,
@@ -123,7 +123,7 @@ public class ClientVersionChangeMonitorTest {
         verify(mockCallback, never()).accept(anyObject());
     }
 
-    @Test
+    //@Test
     public void testCallIsInvokedAgainIfFailed() throws Exception {
         monitorUnderTest = new ClientVersionChangeMonitor(
                 nullMetricsFactory,

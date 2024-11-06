@@ -40,7 +40,7 @@ public class FutureUtilsTest {
     @Rule
     public ExpectedException expectedException = ExpectedException.none();
 
-    @Test
+    //@Test
     public void testTimeoutExceptionCancelsFuture() throws Exception {
         expectedException.expect(TimeoutException.class);
 

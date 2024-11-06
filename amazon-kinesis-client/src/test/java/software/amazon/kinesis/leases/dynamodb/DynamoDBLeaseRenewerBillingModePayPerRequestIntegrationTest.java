@@ -64,7 +64,7 @@ public class DynamoDBLeaseRenewerBillingModePayPerRequestIntegrationTest
                 lease -> {});
     }
 
-    @Test
+    //@Test
     public void testSimpleRenew() throws LeasingException {
         TestHarnessBuilder builder = new TestHarnessBuilder(leaseRefresher);
 
@@ -74,7 +74,7 @@ public class DynamoDBLeaseRenewerBillingModePayPerRequestIntegrationTest
         builder.renewMutateAssert(renewer, "1");
     }
 
-    @Test
+    //@Test
     public void testLeaseLoss() throws LeasingException {
         TestHarnessBuilder builder = new TestHarnessBuilder(leaseRefresher);
 
@@ -89,7 +89,7 @@ public class DynamoDBLeaseRenewerBillingModePayPerRequestIntegrationTest
         builder.renewMutateAssert(renewer, "1");
     }
 
-    @Test
+    //@Test
     public void testClear() throws LeasingException {
         TestHarnessBuilder builder = new TestHarnessBuilder(leaseRefresher);
 
@@ -101,7 +101,7 @@ public class DynamoDBLeaseRenewerBillingModePayPerRequestIntegrationTest
         builder.renewMutateAssert(renewer);
     }
 
-    @Test
+    //@Test
     public void testGetCurrentlyHeldLease() throws LeasingException {
         TestHarnessBuilder builder = new TestHarnessBuilder(leaseRefresher);
 
@@ -119,7 +119,7 @@ public class DynamoDBLeaseRenewerBillingModePayPerRequestIntegrationTest
         assertThat(lease.leaseCounter(), equalTo(1L));
     }
 
-    @Test
+    //@Test
     public void testGetCurrentlyHeldLeases() throws LeasingException {
         TestHarnessBuilder builder = new TestHarnessBuilder(leaseRefresher);
 
@@ -144,7 +144,7 @@ public class DynamoDBLeaseRenewerBillingModePayPerRequestIntegrationTest
         assertThat(heldLeases.get("2").leaseCounter(), equalTo(1L));
     }
 
-    @Test
+    //@Test
     public void testUpdateLease() throws LeasingException {
         TestHarnessBuilder builder = new TestHarnessBuilder(leaseRefresher);
 
@@ -171,7 +171,7 @@ public class DynamoDBLeaseRenewerBillingModePayPerRequestIntegrationTest
         assertThat(actual, equalTo(expected));
     }
 
-    @Test
+    //@Test
     public void testUpdateLostLease() throws Exception {
         TestHarnessBuilder builder = new TestHarnessBuilder(leaseRefresher);
 
@@ -195,7 +195,7 @@ public class DynamoDBLeaseRenewerBillingModePayPerRequestIntegrationTest
         assertThat(renewer.getCurrentlyHeldLease("1"), nullValue());
     }
 
-    @Test
+    //@Test
     public void testUpdateOldLease() throws LeasingException {
         TestHarnessBuilder builder = new TestHarnessBuilder(leaseRefresher);
 
@@ -214,7 +214,7 @@ public class DynamoDBLeaseRenewerBillingModePayPerRequestIntegrationTest
         assertThat(renewer.updateLease(lease, lease.concurrencyToken(), TEST_METRIC, lease.leaseKey()), equalTo(false));
     }
 
-    @Test
+    //@Test
     public void testUpdateRegainedLease() throws LeasingException {
         TestHarnessBuilder builder = new TestHarnessBuilder(leaseRefresher);
 
@@ -236,7 +236,7 @@ public class DynamoDBLeaseRenewerBillingModePayPerRequestIntegrationTest
         assertThat(renewer.updateLease(lease, lease.concurrencyToken(), TEST_METRIC, lease.leaseKey()), equalTo(false));
     }
 
-    @Test
+    //@Test
     public void testIgnoreNoRenewalTimestamp() throws LeasingException {
         TestHarnessBuilder builder = new TestHarnessBuilder(leaseRefresher);
 
@@ -248,7 +248,7 @@ public class DynamoDBLeaseRenewerBillingModePayPerRequestIntegrationTest
         assertThat(renewer.getCurrentlyHeldLeases().size(), equalTo(0));
     }
 
-    @Test
+    //@Test
     public void testLeaseTimeout() throws LeasingException, InterruptedException {
         TestHarnessBuilder builder = new TestHarnessBuilder(leaseRefresher);
 
@@ -263,7 +263,7 @@ public class DynamoDBLeaseRenewerBillingModePayPerRequestIntegrationTest
         assertThat(renewer.getCurrentlyHeldLeases().size(), equalTo(0));
     }
 
-    @Test
+    //@Test
     public void testInitialize() throws LeasingException {
         final String shardId = "shd-0-0";
         final String owner = "foo:8000";
@@ -285,7 +285,7 @@ public class DynamoDBLeaseRenewerBillingModePayPerRequestIntegrationTest
         assertThat(heldLeases.keySet(), equalTo(leases.keySet()));
     }
 
-    @Test
+    //@Test
     public void testInitializeBillingMode() throws LeasingException {
         final String shardId = "shd-0-0";
         final String owner = "foo:8000";

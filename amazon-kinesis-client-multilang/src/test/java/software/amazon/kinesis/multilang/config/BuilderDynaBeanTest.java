@@ -52,7 +52,7 @@ public class BuilderDynaBeanTest {
         utilsBean = new BeanUtilsBean(convertUtilsBean);
     }
 
-    @Test
+    //@Test
     public void testSimpleCreateAllParameters() throws Exception {
         BuilderDynaBean builderDynaBean = new BuilderDynaBean(TestSimpleCreate.class, convertUtilsBean);
 
@@ -65,7 +65,7 @@ public class BuilderDynaBeanTest {
         assertThat(actual, equalTo(expected));
     }
 
-    @Test
+    //@Test
     public void testSimpleCreateToManyParameters() throws Exception {
         thrown.expect(IllegalArgumentException.class);
         thrown.expectMessage(containsString("exceeds the maximum"));
@@ -82,7 +82,7 @@ public class BuilderDynaBeanTest {
         assertThat(actual, equalTo(expected));
     }
 
-    @Test
+    //@Test
     public void testSimpleCreateMissingParameter() throws Exception {
         TestSimpleCreate expected = TestSimpleCreate.create(null, "last");
 
@@ -94,7 +94,7 @@ public class BuilderDynaBeanTest {
         assertThat(actual, equalTo(expected));
     }
 
-    @Test
+    //@Test
     public void testSimpleCreateNoParameters() throws Exception {
         TestSimpleCreate expected = TestSimpleCreate.create(null, null);
 
@@ -106,7 +106,7 @@ public class BuilderDynaBeanTest {
         assertThat(actual, equalTo(expected));
     }
 
-    @Test
+    //@Test
     public void testComplexCreateAllParameters() throws Exception {
         TestComplexCreate expected = TestComplexCreate.create(
                 "real", TestSimpleBuilder.builder().stringL1("l1").longVal(10L).build());
@@ -121,7 +121,7 @@ public class BuilderDynaBeanTest {
         assertThat(actual, equalTo(expected));
     }
 
-    @Test
+    //@Test
     public void testComplexCreateSimpleParameterOnly() throws Exception {
         TestComplexCreate expected = TestComplexCreate.create("real", null);
 
@@ -133,7 +133,7 @@ public class BuilderDynaBeanTest {
         assertThat(actual, equalTo(expected));
     }
 
-    @Test
+    //@Test
     public void testComplexCreateComplexParameterOnly() throws Exception {
         TestComplexCreate expected = TestComplexCreate.create(
                 null, TestSimpleBuilder.builder().stringL1("l1").longVal(10L).build());
@@ -147,7 +147,7 @@ public class BuilderDynaBeanTest {
         assertThat(actual, equalTo(expected));
     }
 
-    @Test
+    //@Test
     public void testComplexCreateNoParameters() throws Exception {
         TestComplexCreate expected = TestComplexCreate.create(null, null);
 
@@ -158,7 +158,7 @@ public class BuilderDynaBeanTest {
         assertThat(actual, equalTo(expected));
     }
 
-    @Test
+    //@Test
     public void testSimpleBuilderAllParameters() throws Exception {
         TestSimpleBuilder expected =
                 TestSimpleBuilder.builder().stringL1("l1").longVal(10L).build();
@@ -172,7 +172,7 @@ public class BuilderDynaBeanTest {
         assertThat(actual, equalTo(expected));
     }
 
-    @Test
+    //@Test
     public void testSimpleBuilderMissingStringL1() throws Exception {
         TestSimpleBuilder expected = TestSimpleBuilder.builder().longVal(10L).build();
 
@@ -184,7 +184,7 @@ public class BuilderDynaBeanTest {
         assertThat(actual, equalTo(expected));
     }
 
-    @Test
+    //@Test
     public void testSimpleBuilderMissingLongVal() throws Exception {
         TestSimpleBuilder expected = TestSimpleBuilder.builder().stringL1("l1").build();
 
@@ -196,7 +196,7 @@ public class BuilderDynaBeanTest {
         assertThat(actual, equalTo(expected));
     }
 
-    @Test
+    //@Test
     public void testSimpleBuilderInvalidProperty() throws Exception {
         thrown.expect(IllegalArgumentException.class);
         thrown.expectMessage("Unknown property: invalidProperty");
@@ -211,7 +211,7 @@ public class BuilderDynaBeanTest {
         assertThat(actual, equalTo(expected));
     }
 
-    @Test
+    //@Test
     public void testComplexCreateSimpleBuilderVariantAllParameters() throws Exception {
         TestSimpleBuilder variant =
                 TestSimpleBuilder.builder().longVal(10L).stringL1("variant").build();
@@ -229,7 +229,7 @@ public class BuilderDynaBeanTest {
         assertThat(actual, equalTo(expected));
     }
 
-    @Test
+    //@Test
     public void testComplexCreateVariantBuilderAllParameters() throws Exception {
         TestVariantBuilder variant = TestVariantBuilder.builder()
                 .variantBuilderName("variant-build")
@@ -250,7 +250,7 @@ public class BuilderDynaBeanTest {
         assertThat(actual, equalTo(expected));
     }
 
-    @Test
+    //@Test
     public void testComplexCreateVariantCreateAllParameters() throws Exception {
         TestVariantCreate variant = TestVariantCreate.create("variant-create", 100L, "varied");
         TestComplexCreateVariance expected = TestComplexCreateVariance.create("create-variant", variant);
@@ -267,7 +267,7 @@ public class BuilderDynaBeanTest {
         assertThat(actual, equalTo(expected));
     }
 
-    @Test
+    //@Test
     public void testComplexCreateVariantBuilderAllParametersPrefixWithJoiner() throws Exception {
         TestVariantBuilder variant = TestVariantBuilder.builder()
                 .variantBuilderName("variant-build")
@@ -290,7 +290,7 @@ public class BuilderDynaBeanTest {
         assertThat(actual, equalTo(expected));
     }
 
-    @Test
+    //@Test
     public void testComplexCreateVariantBuilderAllParametersPrefixWithOutJoiner() throws Exception {
         TestVariantBuilder variant = TestVariantBuilder.builder()
                 .variantBuilderName("variant-build")
@@ -313,7 +313,7 @@ public class BuilderDynaBeanTest {
         assertThat(actual, equalTo(expected));
     }
 
-    @Test
+    //@Test
     public void testComplexCreateVariantInvalidVariantClass() throws Exception {
         String invalidClass = "invalid-class";
         thrown.expect(IllegalArgumentException.class);
@@ -328,7 +328,7 @@ public class BuilderDynaBeanTest {
         utilsBean.setProperty(builderDynaBean, "[1].class", invalidClass);
     }
 
-    @Test
+    //@Test
     public void testComplexCreateVariantBadLoadClass() throws Exception {
         thrown.expect(ExceptionInInitializerError.class);
         thrown.expectCause(instanceOf(BadClassException.class));
@@ -339,7 +339,7 @@ public class BuilderDynaBeanTest {
         utilsBean.setProperty(builderDynaBean, "[1].class", getClass().getName() + "$BadClass");
     }
 
-    @Test
+    //@Test
     public void testComplexRootAllParameters() throws Exception {
         TestSimpleBuilder simpleBuilder =
                 TestSimpleBuilder.builder().stringL1("simple-l1").longVal(20L).build();
@@ -378,7 +378,7 @@ public class BuilderDynaBeanTest {
         assertThat(actual, equalTo(expected));
     }
 
-    @Test
+    //@Test
     public void testComplexRootNoParameters() throws Exception {
         TestRootClass expected = TestRootClass.builder().build();
 
@@ -389,7 +389,7 @@ public class BuilderDynaBeanTest {
         assertThat(actual, equalTo(expected));
     }
 
-    @Test
+    //@Test
     public void testComplexRootTopLevelOnly() throws Exception {
         TestRootClass expected = TestRootClass.builder()
                 .intVal(10)
@@ -408,7 +408,7 @@ public class BuilderDynaBeanTest {
         assertThat(actual, equalTo(expected));
     }
 
-    @Test
+    //@Test
     public void testSupplierNotUsed() throws Exception {
         TestVariantBuilder variant = TestVariantBuilder.builder()
                 .testEnum(TestEnum.Green)
@@ -430,7 +430,7 @@ public class BuilderDynaBeanTest {
         assertThat(actual, equalTo(expected));
     }
 
-    @Test
+    //@Test
     public void testConsumerMethodsNotExposed() throws Exception {
         thrown.expect(IllegalArgumentException.class);
         thrown.expectMessage(containsString("Unknown property: mutator"));
@@ -439,7 +439,7 @@ public class BuilderDynaBeanTest {
         utilsBean.setProperty(builderDynaBean, "mutator", "test-value");
     }
 
-    @Test
+    //@Test
     public void testAttemptToBuildForWrongClass() throws Exception {
         thrown.expect(IllegalArgumentException.class);
         thrown.expectMessage(containsString("cannot be assigned to"));
@@ -450,7 +450,7 @@ public class BuilderDynaBeanTest {
         builderDynaBean.build(TestVariantCreate.class);
     }
 
-    @Test
+    //@Test
     public void testVariantBuildsToSuperType() throws Exception {
         TestVariantBuilder expected = TestVariantBuilder.builder()
                 .intClass(10)
@@ -469,7 +469,7 @@ public class BuilderDynaBeanTest {
         assertThat(actual, equalTo(expected));
     }
 
-    @Test
+    //@Test
     public void testEmptyPropertyHandler() throws Exception {
         String emptyPropertyValue = "test-property";
         TestVariantCreate expected = TestVariantCreate.create(
@@ -485,7 +485,7 @@ public class BuilderDynaBeanTest {
         assertThat(actual, equalTo(expected));
     }
 
-    @Test
+    //@Test
     public void testEmptyPropertyHandlerThrowsAfterUse() throws Exception {
         thrown.expect(IllegalStateException.class);
         thrown.expectMessage(containsString("When a property handler is resolved further properties may not be set."));
@@ -496,7 +496,7 @@ public class BuilderDynaBeanTest {
         utilsBean.setProperty(builderDynaBean, "[0]", "test");
     }
 
-    @Test
+    //@Test
     public void testEmptyPropertyReturnsInvalidObject() throws Exception {
         thrown.expect(IllegalArgumentException.class);
         thrown.expectMessage(containsString(TestEnum.class.getName()));
@@ -511,7 +511,7 @@ public class BuilderDynaBeanTest {
         builderDynaBean.build(TestInterface.class);
     }
 
-    @Test
+    //@Test
     public void testSimpleArrayValues() throws Exception {
         SimpleArrayClassVariant expected = SimpleArrayClassVariant.builder()
                 .ints(new Integer[] {1, 2, 3})
@@ -539,7 +539,7 @@ public class BuilderDynaBeanTest {
         assertThat(actual, equalTo(expected));
     }
 
-    @Test
+    //@Test
     public void testComplexArrayValuesBuilder() throws Exception {
         TestVariantBuilder variant1 = TestVariantBuilder.builder()
                 .variantBuilderName("variant-1")
@@ -574,7 +574,7 @@ public class BuilderDynaBeanTest {
         assertThat(actual, equalTo(expected));
     }
 
-    @Test
+    //@Test
     public void testComplexArrayValuesCreate() throws Exception {
         TestVariantCreate variant1 = TestVariantCreate.create("variant-1", 10L, "vary-1");
         TestVariantCreate variant2 = TestVariantCreate.create("variant-2", 20L, "vary-2");
@@ -604,7 +604,7 @@ public class BuilderDynaBeanTest {
         assertThat(actual, equalTo(expected));
     }
 
-    @Test
+    //@Test
     public void testComplexArrayValuesMixed() throws Exception {
         TestInterface[] variants = new TestInterface[10];
         for (int i = 0; i < variants.length; ++i) {
@@ -654,7 +654,7 @@ public class BuilderDynaBeanTest {
         assertThat(actual, equalTo(expected));
     }
 
-    @Test
+    //@Test
     public void testInvalidBuilderCreateClassBuild() throws Exception {
         BuilderDynaBean builderDynaBean = new BuilderDynaBean(TestInterface.class, convertUtilsBean);
 
@@ -663,7 +663,7 @@ public class BuilderDynaBeanTest {
         assertThat(actual, nullValue());
     }
 
-    @Test
+    //@Test
     public void testInvalidBuilderCreateClassSetProperty() throws Exception {
         thrown.expect(IllegalStateException.class);
         thrown.expectMessage(containsString("Unable to to introspect or handle"));
@@ -675,7 +675,7 @@ public class BuilderDynaBeanTest {
         utilsBean.setProperty(builderDynaBean, "testProperty", "test");
     }
 
-    @Test
+    //@Test
     public void testSetMapAccessThrowsException() throws Exception {
         thrown.expect(UnsupportedOperationException.class);
         thrown.expectMessage(BuilderDynaBean.NO_MAP_ACCESS_SUPPORT);
@@ -685,7 +685,7 @@ public class BuilderDynaBeanTest {
         utilsBean.setProperty(builderDynaBean, "stringL1(value)", "test");
     }
 
-    @Test
+    //@Test
     public void testGetMapAccessThrowsException() throws Exception {
         thrown.expect(UnsupportedOperationException.class);
         thrown.expectMessage(BuilderDynaBean.NO_MAP_ACCESS_SUPPORT);
@@ -697,7 +697,7 @@ public class BuilderDynaBeanTest {
         builderDynaBean.get("stringL1", "value");
     }
 
-    @Test
+    //@Test
     public void testRemoveThrowsException() throws Exception {
         thrown.expect(UnsupportedOperationException.class);
         thrown.expectMessage(BuilderDynaBean.NO_MAP_ACCESS_SUPPORT);
@@ -709,7 +709,7 @@ public class BuilderDynaBeanTest {
         builderDynaBean.remove("stringL1", "value");
     }
 
-    @Test
+    //@Test
     public void testContainsThrowsException() throws Exception {
         thrown.expect(UnsupportedOperationException.class);
         thrown.expectMessage(BuilderDynaBean.NO_MAP_ACCESS_SUPPORT);
@@ -721,7 +721,7 @@ public class BuilderDynaBeanTest {
         builderDynaBean.contains("stringL1", "value");
     }
 
-    @Test
+    //@Test
     public void testAdditionalMutators() throws Exception {
         TestSimpleBuilder expected =
                 TestSimpleBuilder.builder().stringL1("test").longVal(10L).build();

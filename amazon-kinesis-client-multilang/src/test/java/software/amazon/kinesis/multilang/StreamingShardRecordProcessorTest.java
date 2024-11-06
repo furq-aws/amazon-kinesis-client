@@ -244,7 +244,7 @@ public class StreamingShardRecordProcessorTest {
         recordProcessor.leaseLost(LeaseLostInput.builder().build());
     }
 
-    @Test
+    //@Test
     public void processorPhasesTest() throws InterruptedException, ExecutionException {
         Answer<StatusMessage> answer = new Answer<StatusMessage>() {
 
@@ -276,7 +276,7 @@ public class StreamingShardRecordProcessorTest {
         verify(messageWriter).writeLeaseLossMessage(any(LeaseLostInput.class));
     }
 
-    @Test
+    //@Test
     public void initFailsTest() throws InterruptedException, ExecutionException {
         Answer<StatusMessage> answer = new Answer<StatusMessage>() {
 

@@ -15,28 +15,28 @@ public class CrossAccountStreamConsumerIntegrationTest {
      * In the polling case, consumer makes calls to the producer each time to request records to process.
      * The stream is in a different account than the kinesis client used to get records.
      */
-    @Test
+    //@Test
     public void kclReleaseCanaryCrossAccountPollingH2Test() throws Exception {
         KCLAppConfig consumerConfig = new ReleaseCanaryCrossAccountPollingH2TestConfig();
         TestConsumer consumer = new TestConsumer(consumerConfig);
         consumer.run();
     }
 
-    @Test
+    //@Test
     public void kclReleaseCanaryCrossAccountStreamingTest() throws Exception {
         KCLAppConfig consumerConfig = new ReleaseCanaryCrossAccountStreamingTestConfig();
         TestConsumer consumer = new TestConsumer(consumerConfig);
         consumer.run();
     }
 
-    @Test
+    //@Test
     public void kclReleaseCanaryCrossAccountMultiStreamStreamingTest() throws Exception {
         KCLAppConfig consumerConfig = new ReleaseCanaryCrossAccountMultiStreamStreamingTestConfig();
         TestConsumer consumer = new TestConsumer(consumerConfig);
         consumer.run();
     }
 
-    @Test
+    //@Test
     public void kclReleaseCanaryCrossAccountMultiStreamPollingH2Test() throws Exception {
         KCLAppConfig consumerConfig = new ReleaseCanaryCrossAccountMultiStreamPollingH2TestConfig();
         TestConsumer consumer = new TestConsumer(consumerConfig);

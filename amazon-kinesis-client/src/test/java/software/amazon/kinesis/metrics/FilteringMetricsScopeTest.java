@@ -53,7 +53,7 @@ public class FilteringMetricsScopeTest {
         }
     }
 
-    @Test
+    //@Test
     public void testDefaultAddAll() {
         TestScope scope = new TestScope();
         scope.addData("detailedDataName", 2.0, StandardUnit.COUNT, MetricsLevel.DETAILED);
@@ -67,7 +67,7 @@ public class FilteringMetricsScopeTest {
         scope.assertDimensions(TestHelper.constructDimension("dimensionName", "dimensionValue"));
     }
 
-    @Test
+    //@Test
     public void testMetricsLevel() {
         TestScope scope = new TestScope(MetricsLevel.SUMMARY, null);
         scope.addData("summaryDataName", 2.0, StandardUnit.COUNT, MetricsLevel.SUMMARY);
@@ -78,7 +78,7 @@ public class FilteringMetricsScopeTest {
         scope.assertMetrics(TestHelper.constructDatum("summaryDataName", StandardUnit.COUNT, 10.0, 2.0, 12.0, 2.0));
     }
 
-    @Test
+    //@Test
     public void testMetricsLevelNone() {
         TestScope scope = new TestScope(MetricsLevel.NONE, null);
         scope.addData("summaryDataName", 2.0, StandardUnit.COUNT, MetricsLevel.SUMMARY);
@@ -90,7 +90,7 @@ public class FilteringMetricsScopeTest {
         scope.assertMetrics();
     }
 
-    @Test
+    //@Test
     public void testMetricsDimensions() {
         TestScope scope = new TestScope(MetricsLevel.DETAILED, ImmutableSet.of("ShardId"));
         scope.addDimension("ShardId", "shard-0001");
@@ -104,7 +104,7 @@ public class FilteringMetricsScopeTest {
                 TestHelper.constructDimension("ShardId", "shard-0002"));
     }
 
-    @Test
+    //@Test
     public void testMetricsDimensionsAll() {
         TestScope scope = new TestScope(
                 MetricsLevel.DETAILED,

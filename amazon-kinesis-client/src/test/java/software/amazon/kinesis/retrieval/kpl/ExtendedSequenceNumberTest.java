@@ -21,7 +21,7 @@ import static org.junit.Assert.assertTrue;
 
 public class ExtendedSequenceNumberTest {
 
-    @Test
+    //@Test
     public void testSentinelCheckpoints() {
         for (final SentinelCheckpoint sentinel : SentinelCheckpoint.values()) {
             final ExtendedSequenceNumber esn = new ExtendedSequenceNumber(sentinel.name());

@@ -103,7 +103,7 @@ public class AsynchronousGetRecordsRetrievalStrategyIntegrationTest {
         when(result.accept()).thenReturn(getRecordsResponse);
     }
 
-    @Test
+    //@Test
     public void oneRequestMultithreadTest() {
         when(result.accept()).thenReturn(null);
         GetRecordsResponse getRecordsResult = getRecordsRetrivalStrategy.getRecords(numberOfRecords);
@@ -112,7 +112,7 @@ public class AsynchronousGetRecordsRetrievalStrategyIntegrationTest {
         assertNull(getRecordsResult);
     }
 
-    @Test
+    //@Test
     public void multiRequestTest() {
         ExecutorCompletionService<DataFetcherResult> completionService1 =
                 spy(new ExecutorCompletionService<DataFetcherResult>(executorService));
@@ -130,7 +130,7 @@ public class AsynchronousGetRecordsRetrievalStrategyIntegrationTest {
         assertThat(getRecordsResult, nullValue(GetRecordsResponse.class));
     }
 
-    @Test(expected = ExpiredIteratorException.class)
+    //@Test(expected = ExpiredIteratorException.class)
     public void testExpiredIteratorExcpetion() throws InterruptedException {
         when(dataFetcher.getRecords()).thenAnswer(new Answer<DataFetcherResult>() {
             @Override

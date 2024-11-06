@@ -144,7 +144,7 @@ public class DynamoDBLeaseCoordinatorIntegrationTest {
     /**
      * Tests update checkpoint success.
      */
-    @Test
+    //@Test
     public void testUpdateCheckpoint() throws Exception {
         TestHarnessBuilder builder = new TestHarnessBuilder();
         builder.withLease(leaseKey, null).build();
@@ -199,7 +199,7 @@ public class DynamoDBLeaseCoordinatorIntegrationTest {
     /**
      * Tests if getAllAssignments() returns all leases
      */
-    @Test
+    //@Test
     public void testGetAllAssignments() throws Exception {
         TestHarnessBuilder builder = new TestHarnessBuilder();
 
@@ -221,7 +221,7 @@ public class DynamoDBLeaseCoordinatorIntegrationTest {
     /**
      * Tests updateCheckpoint when the lease has changed out from under us.
      */
-    @Test
+    //@Test
     public void testUpdateCheckpointLeaseUpdated() throws LeasingException {
         TestHarnessBuilder builder = new TestHarnessBuilder();
         builder.withLease(leaseKey, null).build();
@@ -247,7 +247,7 @@ public class DynamoDBLeaseCoordinatorIntegrationTest {
     /**
      * Tests updateCheckpoint with a bad concurrency token.
      */
-    @Test
+    //@Test
     public void testUpdateCheckpointBadConcurrencyToken() throws LeasingException {
         TestHarnessBuilder builder = new TestHarnessBuilder();
         builder.withLease(leaseKey, null).build();

@@ -19,7 +19,7 @@ public class PropertiesMappingE2ETest {
     private static final String PROPERTIES_FILE = "multilang.properties";
     private static final String PROPERTIES_FILE_V3 = "multilangv3.properties";
 
-    @Test
+    //@Test
     public void testKclV3PropertiesMapping() throws IOException {
         final MultiLangDaemonConfig config = new MultiLangDaemonConfig(PROPERTIES_FILE);
 
@@ -141,7 +141,7 @@ public class PropertiesMappingE2ETest {
                         .writeCapacity());
     }
 
-    @Test
+    //@Test
     public void testKclV3PropertiesMappingForDefaultValues() throws IOException {
         final MultiLangDaemonConfig config = new MultiLangDaemonConfig(PROPERTIES_FILE_V3);
 

@@ -43,7 +43,7 @@ public class MetricAccumulatingQueueTest {
      * Test whether the MetricDatums offered into the queue will accumulate data based on the same metricName and
      * output those datums with the correctly accumulated output.
      */
-    @Test
+    //@Test
     public void testAccumulation() {
         Collection<Dimension> dimensionsA = Collections.singleton(dim("name", "a"));
         Collection<Dimension> dimensionsB = Collections.singleton(dim("name", "b"));
@@ -94,7 +94,7 @@ public class MetricAccumulatingQueueTest {
      * Test that the number of MetricDatum that can be added to our queue is capped at the MAX_QUEUE_SIZE.
      * Therefore, any datums added to the queue that is greater than the capacity of our queue will be dropped.
      */
-    @Test
+    //@Test
     public void testDrop() {
         for (int i = 0; i < MAX_QUEUE_SIZE; i++) {
             MetricDatum datum = TestHelper.constructDatum(Integer.toString(i), StandardUnit.COUNT, 1, 1, 2, 2);

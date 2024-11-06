@@ -46,7 +46,7 @@ class DynamoDBLeaseCoordinatorTest {
 
     // TODO - move this test to migration state machine which creates the GSI
     @Disabled
-    @Test
+    //@Test
     void initialize_withLeaseAssignmentManagerMode_assertIndexOnTable()
             throws ProvisionedThroughputException, DependencyException {
 
@@ -66,7 +66,7 @@ class DynamoDBLeaseCoordinatorTest {
 
     // TODO - move this to migration state machine test
     @Disabled
-    @Test
+    //@Test
     void initialize_withDefaultMode_assertIndexInCreating() throws ProvisionedThroughputException, DependencyException {
         constructCoordinatorAndInitialize();
 

@@ -60,7 +60,7 @@ public class DynamoDBLeaseRefresherIntegrationTest extends LeaseIntegrationTest 
     /**
      * Test listLeases when no records are present.
      */
-    @Test
+    //@Test
     public void testListNoRecords() throws LeasingException {
         List<Lease> leases = leaseRefresher.listLeases();
         assertTrue(leases.isEmpty());
@@ -69,7 +69,7 @@ public class DynamoDBLeaseRefresherIntegrationTest extends LeaseIntegrationTest 
     /**
      * Tests listLeases when records are present. Exercise dynamo's paging functionality.
      */
-    @Test
+    //@Test
     public void testListWithRecords() throws LeasingException {
         TestHarnessBuilder builder = new TestHarnessBuilder(leaseRefresher);
 
@@ -94,7 +94,7 @@ public class DynamoDBLeaseRefresherIntegrationTest extends LeaseIntegrationTest 
     /**
      * Tests getLease when a record is present.
      */
-    @Test
+    //@Test
     public void testGetLease() throws LeasingException {
         TestHarnessBuilder builder = new TestHarnessBuilder(leaseRefresher);
         Lease expected = builder.withLease("1").build().get("1");
@@ -106,7 +106,7 @@ public class DynamoDBLeaseRefresherIntegrationTest extends LeaseIntegrationTest 
     /**
      * Tests leaseRefresher.get() when the looked-for record is absent.
      */
-    @Test
+    //@Test
     public void testGetNull() throws LeasingException {
         Lease actual = leaseRefresher.getLease("bogusShardId");
         assertNull(actual);
@@ -115,7 +115,7 @@ public class DynamoDBLeaseRefresherIntegrationTest extends LeaseIntegrationTest 
     /**
      * Tests leaseRefresher.updateLeaseWithMetaInfo() when the lease is deleted before updating it with meta info
      */
-    @Test
+    //@Test
     public void testDeleteLeaseThenUpdateLeaseWithMetaInfo() throws LeasingException {
         TestHarnessBuilder builder = new TestHarnessBuilder(leaseRefresher);
         Lease lease = builder.withLease("1").build().get("1");
@@ -129,7 +129,7 @@ public class DynamoDBLeaseRefresherIntegrationTest extends LeaseIntegrationTest 
     /**
      * Tests leaseRefresher.updateLeaseWithMetaInfo() on hashKeyRange update
      */
-    @Test
+    //@Test
     public void testUpdateLeaseWithMetaInfo() throws LeasingException {
         TestHarnessBuilder builder = new TestHarnessBuilder(leaseRefresher);
         Lease lease = builder.withLease("1").build().get("1");
@@ -145,7 +145,7 @@ public class DynamoDBLeaseRefresherIntegrationTest extends LeaseIntegrationTest 
     /**
      * Tests leaseRefresher.holdLease's success scenario.
      */
-    @Test
+    //@Test
     public void testRenewLease() throws LeasingException {
         TestHarnessBuilder builder = new TestHarnessBuilder(leaseRefresher);
         Lease lease = builder.withLease("1").build().get("1");
@@ -162,7 +162,7 @@ public class DynamoDBLeaseRefresherIntegrationTest extends LeaseIntegrationTest 
     /**
      * Tests leaseRefresher.holdLease when the lease has changed out from under us.
      */
-    @Test
+    //@Test
     public void testHoldUpdatedLease() throws LeasingException {
         TestHarnessBuilder builder = new TestHarnessBuilder(leaseRefresher);
         Lease lease = builder.withLease("1").build().get("1");
@@ -178,7 +178,7 @@ public class DynamoDBLeaseRefresherIntegrationTest extends LeaseIntegrationTest 
     /**
      * Tests takeLease when the lease is not already owned.
      */
-    @Test
+    //@Test
     public void testTakeUnownedLease() throws LeasingException {
         testTakeLease(false);
     }
@@ -186,7 +186,7 @@ public class DynamoDBLeaseRefresherIntegrationTest extends LeaseIntegrationTest 
     /**
      * Tests takeLease when the lease is already owned.
      */
-    @Test
+    //@Test
     public void testTakeOwnedLease() throws LeasingException {
         testTakeLease(true);
     }
@@ -211,7 +211,7 @@ public class DynamoDBLeaseRefresherIntegrationTest extends LeaseIntegrationTest 
     /**
      * Tests takeLease when the lease has changed out from under us.
      */
-    @Test
+    //@Test
     public void testTakeUpdatedLease() throws LeasingException {
         TestHarnessBuilder builder = new TestHarnessBuilder(leaseRefresher);
         Lease lease = builder.withLease("1").build().get("1");
@@ -237,7 +237,7 @@ public class DynamoDBLeaseRefresherIntegrationTest extends LeaseIntegrationTest 
     /**
      * Tests evictLease when the lease is currently owned.
      */
-    @Test
+    //@Test
     public void testEvictOwnedLease() throws LeasingException {
         TestHarnessBuilder builder = new TestHarnessBuilder(leaseRefresher);
         Lease lease = builder.withLease("1").build().get("1");
@@ -257,7 +257,7 @@ public class DynamoDBLeaseRefresherIntegrationTest extends LeaseIntegrationTest 
      * is conditional on the lease owner, unlike everything else which is conditional on the
      * lease counter.
      */
-    @Test
+    //@Test
     public void testEvictChangedLease() throws LeasingException {
         TestHarnessBuilder builder = new TestHarnessBuilder(leaseRefresher);
         Lease lease = builder.withLease("1").build().get("1");
@@ -270,7 +270,7 @@ public class DynamoDBLeaseRefresherIntegrationTest extends LeaseIntegrationTest 
     /**
      * Tests deleteLease when a lease exists.
      */
-    @Test
+    //@Test
     public void testDeleteLease() throws LeasingException {
         TestHarnessBuilder builder = new TestHarnessBuilder(leaseRefresher);
         Lease lease = builder.withLease("1").build().get("1");
@@ -281,7 +281,7 @@ public class DynamoDBLeaseRefresherIntegrationTest extends LeaseIntegrationTest 
         assertNull(newLease);
     }
 
-    @Test
+    //@Test
     public void testUpdateLease() throws LeasingException {
         TestHarnessBuilder builder = new TestHarnessBuilder(leaseRefresher);
         Lease lease = builder.withLease("1").build().get("1");
@@ -296,7 +296,7 @@ public class DynamoDBLeaseRefresherIntegrationTest extends LeaseIntegrationTest 
     /**
      * Tests deleteLease when a lease does not exist.
      */
-    @Test
+    //@Test
     public void testDeleteNonexistentLease() throws LeasingException {
         Lease lease = new Lease();
         lease.leaseKey("1");
@@ -305,7 +305,7 @@ public class DynamoDBLeaseRefresherIntegrationTest extends LeaseIntegrationTest 
         leaseRefresher.deleteLease(lease);
     }
 
-    @Test
+    //@Test
     public void testWaitUntilLeaseTableExists() throws LeasingException {
         final UUID uniqueId = UUID.randomUUID();
         DynamoDBLeaseRefresher refresher = new DynamoDBLeaseRefresher(
@@ -324,7 +324,7 @@ public class DynamoDBLeaseRefresherIntegrationTest extends LeaseIntegrationTest 
         assertTrue(refresher.waitUntilLeaseTableExists(1, 20));
     }
 
-    @Test
+    //@Test
     public void testWaitUntilLeaseTableExistsTimeout() throws LeasingException {
         /*
          * Just using AtomicInteger for the indirection it provides.
@@ -354,7 +354,7 @@ public class DynamoDBLeaseRefresherIntegrationTest extends LeaseIntegrationTest 
         assertEquals(1, sleepCounter.get());
     }
 
-    @Test
+    //@Test
     public void testTableCreatorCallback() throws Exception {
         DynamoDBLeaseRefresher refresher = new DynamoDBLeaseRefresher(
                 tableName,

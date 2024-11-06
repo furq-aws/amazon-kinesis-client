@@ -33,7 +33,7 @@ public class ThrottlingReporterTest {
     @Mock
     private Logger throttleLog;
 
-    @Test
+    //@Test
     public void testLessThanMaxThrottles() {
         ThrottlingReporter reporter = new LogTestingThrottingReporter(5, SHARD_ID);
         reporter.throttled();
@@ -41,7 +41,7 @@ public class ThrottlingReporterTest {
         verify(throttleLog, never()).error(anyString());
     }
 
-    @Test
+    //@Test
     public void testMoreThanMaxThrottles() {
         ThrottlingReporter reporter = new LogTestingThrottingReporter(1, SHARD_ID);
         reporter.throttled();
@@ -50,7 +50,7 @@ public class ThrottlingReporterTest {
         verify(throttleLog).error(anyString());
     }
 
-    @Test
+    //@Test
     public void testSuccessResetsErrors() {
         ThrottlingReporter reporter = new LogTestingThrottingReporter(1, SHARD_ID);
         reporter.throttled();

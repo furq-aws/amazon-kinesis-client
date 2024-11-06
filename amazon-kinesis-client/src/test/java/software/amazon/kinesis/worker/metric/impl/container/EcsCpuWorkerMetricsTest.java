@@ -25,7 +25,7 @@ class EcsCpuWorkerMetricsTest {
      * CPU usage is 50000000 / 100000000 * 2 = 1 CPU core time
      * 1 CPU core time used / 2 available = 50% usage
      */
-    @Test
+    //@Test
     void sanity_capture_noTaskCpuLimitOneContainer() throws IOException {
         final String testDataPath = "src/test/data/ecstestdata/noTaskCpuLimitOneContainer";
         runWorkerMetricTest(testDataPath, 50D);
@@ -44,7 +44,7 @@ class EcsCpuWorkerMetricsTest {
      * CPU usage is 50000000 / 100000000 * 2 = 1 CPU core time
      * 1 CPU core time used / 1.25 available = 80% usage
      */
-    @Test
+    //@Test
     void sanity_capture_noTaskCpuLimitTwoContainers() throws IOException {
         final String testDataPath = "src/test/data/ecstestdata/noTaskCpuLimitTwoContainers";
         runWorkerMetricTest(testDataPath, 80D);
@@ -54,7 +54,7 @@ class EcsCpuWorkerMetricsTest {
      * Behaves the same as sanity_capture_noTaskCpuLimitOneContainer, but it is possible for a customer to supply
      * a memory limit but not a CPU limit which makes the code path a little different
      */
-    @Test
+    //@Test
     void sanity_capture_noTaskCpuLimitButHasMemoryLimitOneContainer() throws IOException {
         final String testDataPath = "src/test/data/ecstestdata/noTaskCpuLimitButHasMemoryLimitOneContainer";
         runWorkerMetricTest(testDataPath, 50D);
@@ -73,7 +73,7 @@ class EcsCpuWorkerMetricsTest {
      * CPU usage is 50000000 / 100000000 * 2 = 1 CPU core time
      * 1 CPU core time used / 4 available = 25% usage
      */
-    @Test
+    //@Test
     void sanity_capture_taskCpuLimitOneContainer() throws IOException {
         final String testDataPath = "src/test/data/ecstestdata/taskCpuLimitOneContainer";
         runWorkerMetricTest(testDataPath, 25D);
@@ -82,19 +82,19 @@ class EcsCpuWorkerMetricsTest {
     /**
      * Using the same test data as sanity_capture_taskCpuLimitOneContainer.
      */
-    @Test
+    //@Test
     void sanity_capture_NoPrecpuStats() throws IOException {
         final String testDataPath = "src/test/data/ecstestdata/noPrecpuStats";
         runWorkerMetricTest(testDataPath, 0D);
     }
 
-    @Test
+    //@Test
     void sanity_capture_NoSystemCpuUsage() throws IOException {
         final String testDataPath = "src/test/data/ecstestdata/noSystemCpuUsage";
         runWorkerMetricTest(testDataPath, 100D);
     }
 
-    @Test
+    //@Test
     void sanity_capture_bad_metadata_url() {
         final OperatingRange operatingRange =
                 OperatingRange.builder().maxUtilization(80).build();

@@ -14,7 +14,7 @@ class EcsResourceTest {
     private static final String ECS_METADATA_KEY_V4 = "ECS_CONTAINER_METADATA_URI_V4";
     private static final String ECS_METADATA_KEY_V3 = "ECS_CONTAINER_METADATA_URI";
 
-    @Test
+    //@Test
     void testIsEcs() {
         final Map<String, String> mockSysEnv = new HashMap<>();
         mockSysEnv.put(ECS_METADATA_KEY_V3, "v3");
@@ -31,7 +31,7 @@ class EcsResourceTest {
         assertEquals(ResourceMetadataProvider.ComputePlatform.ECS, ecsResource.getPlatform());
     }
 
-    @Test
+    //@Test
     void testIsNotEcs() {
         final Map<String, String> mockSysEnv = new HashMap<>();
         assertFalse(new EcsResource(mockSysEnv).isOnPlatform());

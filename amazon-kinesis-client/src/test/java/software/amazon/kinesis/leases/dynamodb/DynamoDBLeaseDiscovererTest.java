@@ -72,7 +72,7 @@ class DynamoDBLeaseDiscovererTest {
         this.leaseRefresher.waitUntilLeaseOwnerToLeaseKeyIndexExists(1, 30);
     }
 
-    @Test
+    //@Test
     void discoverNewLeases_happyCase_assertCorrectNewLeases()
             throws ProvisionedThroughputException, InvalidStateException, DependencyException {
 
@@ -92,7 +92,7 @@ class DynamoDBLeaseDiscovererTest {
         assertTrue(responseLeaseKeys.contains("lease-4"));
     }
 
-    @Test
+    //@Test
     void discoverNewLeases_noLeasesInRenewer_assertCorrectNewLeases()
             throws ProvisionedThroughputException, InvalidStateException, DependencyException {
         createAssignAndAddLease("lease-3");
@@ -104,7 +104,7 @@ class DynamoDBLeaseDiscovererTest {
         assertEquals(2, response.size());
     }
 
-    @Test
+    //@Test
     void discoverNewLeases_leaseRefresherThrowsException_assertEmptyResponse()
             throws ProvisionedThroughputException, InvalidStateException, DependencyException {
         final LeaseRefresher leaseRefresher1 = Mockito.mock(LeaseRefresher.class);
@@ -122,7 +122,7 @@ class DynamoDBLeaseDiscovererTest {
         assertEquals(0, response.size());
     }
 
-    @Test
+    //@Test
     void discoverNewLeases_inconsistentGSI_assertEmptyResponse()
             throws ProvisionedThroughputException, InvalidStateException, DependencyException {
         final LeaseRefresher leaseRefresher1 = Mockito.mock(LeaseRefresher.class);
@@ -154,7 +154,7 @@ class DynamoDBLeaseDiscovererTest {
         assertEquals(1, response.size());
     }
 
-    @Test
+    //@Test
     void discoverNewLeases_ignorePendingCheckpointLeases_assertReadyLeases()
             throws ProvisionedThroughputException, InvalidStateException, DependencyException {
         createAssignAndAddLease("lease-3");

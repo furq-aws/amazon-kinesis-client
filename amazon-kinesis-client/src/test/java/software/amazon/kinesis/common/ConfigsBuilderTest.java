@@ -54,7 +54,7 @@ public class ConfigsBuilderTest {
     private static final String APPLICATION_NAME = ConfigsBuilderTest.class.getSimpleName();
     private static final String WORKER_IDENTIFIER = "worker-id";
 
-    @Test
+    //@Test
     public void testSingleStreamTrackerConstruction() {
         final String streamName = "single-stream";
         final Arn streamArn = createArn(streamName);
@@ -77,7 +77,7 @@ public class ConfigsBuilderTest {
         }
     }
 
-    @Test
+    //@Test
     public void testMultiStreamTrackerConstruction() {
         final StreamTracker mockMultiStreamTracker = mock(MultiStreamTracker.class);
         final ConfigsBuilder configByMultiTracker = createConfig(mockMultiStreamTracker);

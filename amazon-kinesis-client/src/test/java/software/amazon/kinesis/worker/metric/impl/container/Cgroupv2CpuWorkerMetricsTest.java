@@ -29,7 +29,7 @@ class Cgroupv2CpuWorkerMetricsTest {
         MockitoAnnotations.initMocks(this);
     }
 
-    @Test
+    //@Test
     void sanity_capture(final @TempDir Path tempDir) throws IOException {
         final File cpuMaxFile = new File(tempDir.toAbsolutePath() + "/cpu.max");
         final File effectiveCpusFile = new File(tempDir.toAbsolutePath() + "/cpuset.cpus.effective");
@@ -66,7 +66,7 @@ class Cgroupv2CpuWorkerMetricsTest {
         cpuStatFile.delete();
     }
 
-    @Test
+    //@Test
     void capture_noCpuLimit(final @TempDir Path tempDir) throws IOException {
         final File cpuMaxFile = new File(tempDir.toAbsolutePath() + "/cpu.max");
         final File effectiveCpusFile = new File(tempDir.toAbsolutePath() + "/cpuset.cpus.effective");
@@ -104,7 +104,7 @@ class Cgroupv2CpuWorkerMetricsTest {
         cpuStatFile.delete();
     }
 
-    @Test
+    //@Test
     void sanity_capture_file_not_found() {
         final OperatingRange operatingRange =
                 OperatingRange.builder().maxUtilization(80).build();

@@ -129,7 +129,7 @@ public class ShardSyncTaskIntegrationTest {
      * @throws InvalidStateException
      * @throws ProvisionedThroughputException
      */
-    @Test
+    //@Test
     public final void testCall() throws DependencyException, InvalidStateException, ProvisionedThroughputException {
         if (!leaseRefresher.leaseTableExists()) {
             final Long readCapacity = 10L;

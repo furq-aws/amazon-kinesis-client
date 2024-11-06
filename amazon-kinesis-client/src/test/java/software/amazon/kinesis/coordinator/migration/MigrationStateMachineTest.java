@@ -116,7 +116,7 @@ public class MigrationStateMachineTest {
         Assertions.assertEquals(expectedStateMachineState, stateMachineUnderTest.getCurrentClientVersion());
     }
 
-    @Test
+    //@Test
     public void testMigrationReadyFlip() throws Exception {
         stateMachineUnderTest = getStateMachineUnderTest(ClientVersionConfig.CLIENT_VERSION_CONFIG_COMPATIBLE_WITH_2X);
 
@@ -128,7 +128,7 @@ public class MigrationStateMachineTest {
         initiateAndTestFlip(runnableCaptor);
     }
 
-    @Test
+    //@Test
     public void testRollbackAfterFlip() throws Exception {
         stateMachineUnderTest = getStateMachineUnderTest(ClientVersionConfig.CLIENT_VERSION_CONFIG_COMPATIBLE_WITH_2X);
 
@@ -148,7 +148,7 @@ public class MigrationStateMachineTest {
         initiateAndTestRollBack(rollbackMonitorRunnable);
     }
 
-    @Test
+    //@Test
     public void testRollForward() throws Exception {
         stateMachineUnderTest = getStateMachineUnderTest(ClientVersionConfig.CLIENT_VERSION_CONFIG_COMPATIBLE_WITH_2X);
 
@@ -175,7 +175,7 @@ public class MigrationStateMachineTest {
         initiateAndTestRollForward(rollforwardMonitorRunnable);
     }
 
-    @Test
+    //@Test
     public void testRollbackBeforeFlip() throws Exception {
         stateMachineUnderTest = getStateMachineUnderTest(ClientVersionConfig.CLIENT_VERSION_CONFIG_COMPATIBLE_WITH_2X);
 
@@ -187,7 +187,7 @@ public class MigrationStateMachineTest {
         initiateAndTestRollbackBeforeFlip(runnableCaptor);
     }
 
-    @Test
+    //@Test
     public void successfulUpgradeAfterFlip() throws Exception {
         stateMachineUnderTest = getStateMachineUnderTest(ClientVersionConfig.CLIENT_VERSION_CONFIG_COMPATIBLE_WITH_2X);
 

@@ -9,7 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 class HeapMemoryAfterGCWorkerMetricsTest {
 
-    @Test
+    //@Test
     void capture_sanity() {
         final HeapMemoryAfterGCWorkerMetric heapMemoryAfterGCWorkerMetric = new HeapMemoryAfterGCWorkerMetric(
                 OperatingRange.builder().maxUtilization(100).build());

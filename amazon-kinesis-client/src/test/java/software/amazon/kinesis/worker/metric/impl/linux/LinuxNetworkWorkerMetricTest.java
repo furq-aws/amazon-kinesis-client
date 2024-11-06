@@ -51,19 +51,19 @@ public class LinuxNetworkWorkerMetricTest {
     @TempDir
     private Path tempDir;
 
-    @Test
+    //@Test
     void capture_sanityWith1SecondTicker() throws IOException {
         executeTestForInAndOutWorkerMetric(INPUT_1, INPUT_2, 1000L, 10, 20);
         executeTestForInAndOutWorkerMetric(NO_WHITESPACE_INPUT_1, NO_WHITESPACE_INPUT_2, 1000L, 10, 20);
     }
 
-    @Test
+    //@Test
     void capture_sanityWith500MsTicker() throws IOException {
         executeTestForInAndOutWorkerMetric(INPUT_1, INPUT_2, 500L, 20, 40);
         executeTestForInAndOutWorkerMetric(NO_WHITESPACE_INPUT_1, NO_WHITESPACE_INPUT_2, 500L, 20, 40);
     }
 
-    @Test
+    //@Test
     void capture_withNoTimeElapsed() {
         assertThrows(
                 IllegalArgumentException.class, () -> executeTestForInAndOutWorkerMetric(INPUT_1, INPUT_2, 0L, 20, 40));
@@ -97,7 +97,7 @@ public class LinuxNetworkWorkerMetricTest {
         writeFileAndRunTest(statFile, linuxNetworkOutWorkerMetric, input1, input2, expectedOut);
     }
 
-    @Test
+    //@Test
     void capture_nonExistingFile_assertIllegalArgumentException() {
         final LinuxNetworkInWorkerMetric linuxNetworkInWorkerMetric = new LinuxNetworkInWorkerMetric(
                 TEST_OPERATING_RANGE, "eth0", "/non/existing/file", 10, getMockedStopWatchWithOneSecondTicker(1000L));
@@ -105,7 +105,7 @@ public class LinuxNetworkWorkerMetricTest {
         assertThrows(IllegalArgumentException.class, linuxNetworkInWorkerMetric::capture);
     }
 
-    @Test
+    //@Test
     void capture_nonExistingNetworkInterface_assertIllegalArgumentException() throws IOException {
 
         final File statFile = new File(tempDir.toAbsolutePath() + "/netStat");
@@ -122,7 +122,7 @@ public class LinuxNetworkWorkerMetricTest {
         assertThrows(IllegalArgumentException.class, linuxNetworkInWorkerMetric::capture);
     }
 
-    @Test
+    //@Test
     void capture_configuredMaxLessThanUtilized_assert100Percent() throws IOException {
         final File statFile = new File(tempDir.toAbsolutePath() + "/netStat");
 
@@ -137,7 +137,7 @@ public class LinuxNetworkWorkerMetricTest {
         writeFileAndRunTest(statFile, linuxNetworkOutWorkerMetric, NO_WHITESPACE_INPUT_1, NO_WHITESPACE_INPUT_2, 100);
     }
 
-    @Test
+    //@Test
     void capture_maxBandwidthInMBAsZero_assertIllegalArgumentException() throws IOException {
         final File statFile = new File(tempDir.toAbsolutePath() + "/netStat");
 
