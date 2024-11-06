@@ -111,6 +111,7 @@ class LeaseAssignmentManagerTest {
                 });
         when(scheduledFuture.cancel(anyBoolean())).thenReturn(true);
         leaseRefresher.createLeaseTableIfNotExists();
+        leaseRefresher.waitUntilLeaseTableExists(1, 30);
     }
 
     @Test
