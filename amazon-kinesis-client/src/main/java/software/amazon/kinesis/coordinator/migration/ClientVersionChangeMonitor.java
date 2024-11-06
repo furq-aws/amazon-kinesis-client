@@ -61,7 +61,7 @@ public class ClientVersionChangeMonitor implements Runnable {
     }
 
     private static final long MONITOR_INTERVAL_MILLIS = Duration.ofMinutes(1).toMillis();
-    private static final double JITTER_FACTOR = 0.1;
+    private static final double JITTER_FACTOR = 0.5;
 
     private final MetricsFactory metricsFactory;
     private final CoordinatorStateDAO coordinatorStateDAO;
@@ -69,20 +69,19 @@ public class ClientVersionChangeMonitor implements Runnable {
     private final ClientVersionChangeCallback callback;
     private final ClientVersion expectedVersion;
     private final Random random;
-    private long monitorIntervalMillis;
 
     private ScheduledFuture<?> scheduledFuture;
 
     public synchronized void startMonitor() {
         if (scheduledFuture == null) {
             final long jitter = (long) (random.nextDouble() * MONITOR_INTERVAL_MILLIS * JITTER_FACTOR);
-            monitorIntervalMillis = MONITOR_INTERVAL_MILLIS + jitter;
             log.info(
-                    "Monitoring for MigrationState client version change from {} every {}ms",
+                    "Monitoring for MigrationState client version change from {} every {}ms with initial delay of {}ms",
                     expectedVersion,
-                    monitorIntervalMillis);
+                    MONITOR_INTERVAL_MILLIS,
+                    jitter);
             scheduledFuture = stateMachineThreadPool.scheduleWithFixedDelay(
-                    this, monitorIntervalMillis, monitorIntervalMillis, TimeUnit.MILLISECONDS);
+                    this, jitter, MONITOR_INTERVAL_MILLIS, TimeUnit.MILLISECONDS);
         }
     }
 
@@ -136,7 +135,7 @@ public class ClientVersionChangeMonitor implements Runnable {
             log.warn(
                     "Exception occurred when monitoring for client version change from {}, will retry in {}",
                     expectedVersion,
-                    monitorIntervalMillis,
+                    MONITOR_INTERVAL_MILLIS,
                     e);
         }
     }
