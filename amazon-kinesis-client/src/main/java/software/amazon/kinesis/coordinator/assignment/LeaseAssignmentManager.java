@@ -223,7 +223,7 @@ public final class LeaseAssignmentManager {
 
             System.out.println("Calculating expired leases " + expiredOrUnAssignedLeases);
             System.out.println("Calculating expired leases " + inMemoryStorageView.getLeaseTableScanTime());
-
+            System.out.println("Calculating expired leases" + TimeUnit.MILLISECONDS.toNanos(leaseDurationMillis));
             log.info("Total expiredOrUnassignedLeases count : {}", expiredOrUnAssignedLeases.size());
             metricsScope.addData(
                     "ExpiredLeases", expiredOrUnAssignedLeases.size(), StandardUnit.COUNT, MetricsLevel.SUMMARY);
