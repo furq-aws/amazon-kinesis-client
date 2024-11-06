@@ -263,7 +263,7 @@ public class Lease {
         if (lastCounterIncrementNanos == null) {
             return true;
         }
-
+        System.out.println(leaseKey + " " + lastCounterIncrementNanos);
         long age = asOfNanos - lastCounterIncrementNanos;
         // see comment on MAX_ABS_AGE_NANOS
         if (Math.abs(age) > MAX_ABS_AGE_NANOS) {
