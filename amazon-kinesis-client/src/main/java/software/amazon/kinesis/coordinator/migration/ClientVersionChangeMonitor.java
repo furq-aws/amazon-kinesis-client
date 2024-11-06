@@ -79,9 +79,9 @@ public class ClientVersionChangeMonitor implements Runnable {
                     "Monitoring for MigrationState client version change from {} every {}ms with initial delay of {}ms",
                     expectedVersion,
                     MONITOR_INTERVAL_MILLIS,
-                    jitter);
+                    MONITOR_INTERVAL_MILLIS + jitter);
             scheduledFuture = stateMachineThreadPool.scheduleWithFixedDelay(
-                    this, jitter, MONITOR_INTERVAL_MILLIS, TimeUnit.MILLISECONDS);
+                    this, MONITOR_INTERVAL_MILLIS + jitter, MONITOR_INTERVAL_MILLIS, TimeUnit.MILLISECONDS);
         }
     }
 
