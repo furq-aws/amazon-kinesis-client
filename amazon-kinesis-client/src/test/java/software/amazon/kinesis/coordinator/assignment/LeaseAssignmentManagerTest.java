@@ -62,8 +62,6 @@ class LeaseAssignmentManagerTest {
 
     private static final String LEASE_TABLE_NAME = "leaseTable";
     private static final String WORKER_METRICS_TABLE_NAME = "workerMetrics";
-    private final DynamoDbAsyncClient dynamoDbAsyncClient =
-            DynamoDBEmbedded.create().dynamoDbAsyncClient();
     private LeaseManagementConfig.GracefulLeaseHandoffConfig gracefulLeaseHandoffConfig =
             LeaseManagementConfig.GracefulLeaseHandoffConfig.builder()
                     .isGracefulLeaseHandoffEnabled(false)
@@ -73,21 +71,24 @@ class LeaseAssignmentManagerTest {
     private ScheduledExecutorService scheduledExecutorService;
     private ScheduledFuture<Void> scheduledFuture;
     private Runnable leaseAssignmentManagerRunnable;
-    private final LeaseRefresher leaseRefresher = new DynamoDBLeaseRefresher(
-            LEASE_TABLE_NAME,
-            dynamoDbAsyncClient,
-            new DynamoDBLeaseSerializer(),
-            true,
-            TableCreatorCallback.NOOP_TABLE_CREATOR_CALLBACK,
-            LeaseManagementConfig.DEFAULT_REQUEST_TIMEOUT,
-            new DdbTableConfig(),
-            LeaseManagementConfig.DEFAULT_LEASE_TABLE_DELETION_PROTECTION_ENABLED,
-            LeaseManagementConfig.DEFAULT_LEASE_TABLE_PITR_ENABLED,
-            DefaultSdkAutoConstructList.getInstance());
     private WorkerMetricStatsDAO workerMetricsDAO;
+    private DynamoDbAsyncClient dynamoDbAsyncClient;
+    private LeaseRefresher leaseRefresher;
 
     @BeforeEach
     void setup() throws ProvisionedThroughputException, DependencyException {
+        dynamoDbAsyncClient = DynamoDBEmbedded.create().dynamoDbAsyncClient();
+        leaseRefresher = new DynamoDBLeaseRefresher(
+                LEASE_TABLE_NAME,
+                dynamoDbAsyncClient,
+                new DynamoDBLeaseSerializer(),
+                true,
+                TableCreatorCallback.NOOP_TABLE_CREATOR_CALLBACK,
+                LeaseManagementConfig.DEFAULT_REQUEST_TIMEOUT,
+                new DdbTableConfig(),
+                LeaseManagementConfig.DEFAULT_LEASE_TABLE_DELETION_PROTECTION_ENABLED,
+                LeaseManagementConfig.DEFAULT_LEASE_TABLE_PITR_ENABLED,
+                DefaultSdkAutoConstructList.getInstance());
         final WorkerMetricsTableConfig config = new WorkerMetricsTableConfig("applicationName");
         config.tableName(WORKER_METRICS_TABLE_NAME);
         workerMetricsDAO = new WorkerMetricStatsDAO(dynamoDbAsyncClient, config, 10000L);
