@@ -1121,7 +1121,7 @@ class LeaseAssignmentManagerTest {
                         "wid", AttributeValue.builder().s(workerId).build()))
                 .build();
 
-        dynamoDbAsyncClient.putItem(putItemRequest);
+        dynamoDbAsyncClient.putItem(putItemRequest).join();
     }
 
     private void createAndPutBadLeaseEntryInTable(final String leaseKey) {
@@ -1131,7 +1131,7 @@ class LeaseAssignmentManagerTest {
                         "leaseKey", AttributeValue.builder().s(leaseKey).build()))
                 .build();
 
-        dynamoDbAsyncClient.putItem(putItemRequest);
+        dynamoDbAsyncClient.putItem(putItemRequest).join();
     }
 
     private LeaseAssignmentManager createLeaseAssignmentManager(
