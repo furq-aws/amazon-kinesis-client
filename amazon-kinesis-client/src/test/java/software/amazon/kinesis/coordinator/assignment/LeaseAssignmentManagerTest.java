@@ -114,7 +114,7 @@ class LeaseAssignmentManagerTest {
         leaseRefresher.waitUntilLeaseTableExists(1, 30);
     }
 
-    //@Test
+    // @Test
     void performAssignment_yieldAndTakeWorker_validateNewLeaseAssignedToTakeWorker() throws Exception {
         createLeaseAssignmentManager(
                 getWorkerUtilizationAwareAssignmentConfig(Double.MAX_VALUE, 20),
@@ -131,7 +131,7 @@ class LeaseAssignmentManagerTest {
         assertEquals(TEST_TAKE_WORKER_ID, leaseRefresher.listLeases().get(0).leaseOwner());
     }
 
-    //@Test
+    // @Test
     void performAssignment_workerWithFailingWorkerMetric_assertLeaseNotAssignedToWorkerWithFailingWorkerMetric()
             throws Exception {
         createLeaseAssignmentManager(
@@ -154,7 +154,7 @@ class LeaseAssignmentManagerTest {
                         .size());
     }
 
-    //@Test
+    // @Test
     void performAssignment_workerWithFailingWorkerMetricInPast_assertLeaseAssignment() throws Exception {
         createLeaseAssignmentManager(
                 getWorkerUtilizationAwareAssignmentConfig(Double.MAX_VALUE, 20),
@@ -176,7 +176,7 @@ class LeaseAssignmentManagerTest {
                         .size());
     }
 
-    //@Test
+    // @Test
     void performAssignment_noThroughputToWorker_assertOneLeaseTaken() throws Exception {
         createLeaseAssignmentManager(
                 getWorkerUtilizationAwareAssignmentConfig(Double.MAX_VALUE, 20),
@@ -211,7 +211,7 @@ class LeaseAssignmentManagerTest {
                         .size());
     }
 
-    //@Test
+    // @Test
     void performAssignment_moreLeasesThanMaxConfigured_assertSomeUnassignedLeases()
             throws ProvisionedThroughputException, InvalidStateException, DependencyException {
         final LeaseManagementConfig.WorkerUtilizationAwareAssignmentConfig config =
@@ -232,7 +232,7 @@ class LeaseAssignmentManagerTest {
                         .count());
     }
 
-    //@Test
+    // @Test
     void performAssignment_unAssignedAndExpiredLeasesBothAvailable_validateUnAssignedLeaseAssignedFirst()
             throws Exception {
 
@@ -259,7 +259,7 @@ class LeaseAssignmentManagerTest {
                 TEST_TAKE_WORKER_ID, leaseRefresher.getLease("unAssignedLease").leaseOwner());
     }
 
-    //@Test
+    // @Test
     void performAssignment_workerNotAboveReBalanceThresholdButAboveOperatingRange_asserReBalance() throws Exception {
         createLeaseAssignmentManager(
                 getWorkerUtilizationAwareAssignmentConfig(Double.MAX_VALUE, 20),
@@ -285,7 +285,7 @@ class LeaseAssignmentManagerTest {
                         .count());
     }
 
-    //@Test
+    // @Test
     void performAssignment_inActiveWorkerWithLowUtilizationAvailable_verifyLeaseNotAssigned()
             throws ProvisionedThroughputException, InvalidStateException, DependencyException {
         final String inActiveWorkerId = "InActiveWorker";
@@ -314,7 +314,7 @@ class LeaseAssignmentManagerTest {
                         .count());
     }
 
-    //@Test
+    // @Test
     void performAssignment_takeAndYieldWorkers_verifyThroughoutTaken() throws Exception {
         createLeaseAssignmentManager(
                 getWorkerUtilizationAwareAssignmentConfig(Double.MAX_VALUE, 10),
@@ -347,7 +347,7 @@ class LeaseAssignmentManagerTest {
                 >= 100D);
     }
 
-    //@Test
+    // @Test
     void performAssignment_takeOvershootingLease_verifySmallestLeaseTaken() throws Exception {
         workerMetricsDAO.updateMetrics(createDummyYieldWorkerMetrics(TEST_YIELD_WORKER_ID));
         workerMetricsDAO.updateMetrics(createDummyTakeWorkerMetrics(TEST_TAKE_WORKER_ID));
@@ -393,7 +393,7 @@ class LeaseAssignmentManagerTest {
         assertTrue(leaseKeysAssignedToTakeWorker.contains("lease2"));
     }
 
-    //@Test
+    // @Test
     void performAssignment_takeAndYieldWorkerWithSeveralLeases_verifyBalancingBetweenLeases() throws Exception {
 
         createLeaseAssignmentManager(
@@ -437,7 +437,7 @@ class LeaseAssignmentManagerTest {
                 .anyMatch(lease -> lease.leaseOwner().equals(TEST_YIELD_WORKER_ID + "2")));
     }
 
-    //@Test
+    // @Test
     void performAssignment_varianceBalanceFreq3_asserLoadBalancingEvery3Iteration() throws Exception {
         final LeaseManagementConfig.WorkerUtilizationAwareAssignmentConfig config =
                 getWorkerUtilizationAwareAssignmentConfig(Double.MAX_VALUE, 10);
@@ -514,7 +514,7 @@ class LeaseAssignmentManagerTest {
         populateLeasesInLeaseTable(lease1, lease2, lease3, lease4, lease5);
     }
 
-    //@Test
+    // @Test
     void performAssignment_withLeaderSwitchOver_assertAssignmentOnlyAfterBeingLeader() throws Exception {
         when(mockLeaderDecider.isLeader(anyString())).thenReturn(false).thenReturn(true);
 
@@ -590,7 +590,7 @@ class LeaseAssignmentManagerTest {
                         .count());
     }
 
-    //@Test
+    // @Test
     void performAssignment_workerWithHotWorkerMetricButNotAboveAverage_validateRebalance()
             throws ProvisionedThroughputException, InvalidStateException, DependencyException {
         final String randomWorkerId = "randomWorkerId";
@@ -627,7 +627,7 @@ class LeaseAssignmentManagerTest {
                         .count());
     }
 
-    //@Test
+    // @Test
     void performAssignment_yieldWorkerWithSingleLease_assertReBalance() throws Exception {
         createLeaseAssignmentManager(
                 getWorkerUtilizationAwareAssignmentConfig(Double.MAX_VALUE, 20),
@@ -658,7 +658,7 @@ class LeaseAssignmentManagerTest {
                         .count());
     }
 
-    //@Test
+    // @Test
     void performAssignment_continuousFailure_assertLeadershipRelease() throws Exception {
         final Supplier<Long> mockFailingNanoTimeProvider = Mockito.mock(Supplier.class);
         when(mockFailingNanoTimeProvider.get()).thenThrow(new RuntimeException("IAmAlwaysFailing"));
@@ -684,7 +684,7 @@ class LeaseAssignmentManagerTest {
         }
     }
 
-    //@Test
+    // @Test
     void startStopValidation_sanity()
             throws InterruptedException, ProvisionedThroughputException, InvalidStateException, DependencyException {
         final LeaseAssignmentManager leaseAssignmentManager = createLeaseAssignmentManager(
@@ -706,7 +706,7 @@ class LeaseAssignmentManagerTest {
         assertEquals(TEST_TAKE_WORKER_ID, leaseRefresher.listLeases().get(0).leaseOwner());
     }
 
-    //@Test
+    // @Test
     void performAssignment_staleWorkerMetricsEntries_assertCleaning() {
         LeaseManagementConfig.WorkerUtilizationAwareAssignmentConfig config =
                 getWorkerUtilizationAwareAssignmentConfig(Double.MAX_VALUE, 20);
@@ -730,7 +730,7 @@ class LeaseAssignmentManagerTest {
                 workerMetricsDAO.getAllWorkerMetricStats().get(0).getWorkerId());
     }
 
-    //@Test
+    // @Test
     void performAssignment_testRetryBehavior()
             throws ProvisionedThroughputException, InvalidStateException, DependencyException {
 
@@ -763,7 +763,7 @@ class LeaseAssignmentManagerTest {
         verify(mockedWorkerMetricsDAO, times(2)).getAllWorkerMetricStats();
     }
 
-    //@Test
+    // @Test
     void performAssignment_invalidLeaseInTable_validateAssignmentDoesNotFail() throws Exception {
         createLeaseAssignmentManager(
                 getWorkerUtilizationAwareAssignmentConfig(Double.MAX_VALUE, 20),
@@ -783,7 +783,7 @@ class LeaseAssignmentManagerTest {
                 TEST_TAKE_WORKER_ID, leaseRefresher.getLease("validLeaseKey").leaseOwner());
     }
 
-    //@Test
+    // @Test
     void performAssignment_invalidWorkerMetricsEntry_validateAssignmentDoesNotFail() throws Exception {
         createLeaseAssignmentManager(
                 getWorkerUtilizationAwareAssignmentConfig(Double.MAX_VALUE, 20),
@@ -802,7 +802,7 @@ class LeaseAssignmentManagerTest {
         assertEquals(TEST_TAKE_WORKER_ID, leaseRefresher.getLease("leaseKey").leaseOwner());
     }
 
-    //@Test
+    // @Test
     void performAssignment_testAssignmentHandlingForDifferentPendingCheckpointStatesLeases() throws Exception {
         final long leaseDurationMillis = 100;
         final long currentTimeMillis = 10000;
@@ -872,7 +872,7 @@ class LeaseAssignmentManagerTest {
                         .count());
     }
 
-    //@Test
+    // @Test
     void performAssignment_expiredLeasesButPendingCheckpointNotExpiredLease_validateItIsAssigned() throws Exception {
         final Supplier<Long> mockNanoTimeProvider = Mockito.mock(Supplier.class);
         when(mockNanoTimeProvider.get())
@@ -902,7 +902,7 @@ class LeaseAssignmentManagerTest {
                 TEST_TAKE_WORKER_ID, leaseRefresher.getLease("expiredLease").leaseOwner());
     }
 
-    //@Test
+    // @Test
     void loadInMemoryStorageView_testDefaultWorkerMetricTakeLeasesUtilRatioCalculation() throws Exception {
         createLeaseAssignmentManager(
                 getWorkerUtilizationAwareAssignmentConfig(Double.MAX_VALUE, 20),
@@ -937,7 +937,7 @@ class LeaseAssignmentManagerTest {
                         .count());
     }
 
-    //@Test
+    // @Test
     void loadInMemoryStorageView_assertNoLeasesTakenFromOptimallyUtilizedDefaultWorkerMetricWorker() throws Exception {
         createLeaseAssignmentManager(
                 getWorkerUtilizationAwareAssignmentConfig(Double.MAX_VALUE, 20),
@@ -977,7 +977,7 @@ class LeaseAssignmentManagerTest {
                         .count());
     }
 
-    //@Test
+    // @Test
     void loadInMemoryStorageView_assertNoLeasesTakenWhenDefaultWorkerMetricAndCPUWorkerMetricWorkersAreOverloaded()
             throws Exception {
         createLeaseAssignmentManager(
@@ -1012,7 +1012,7 @@ class LeaseAssignmentManagerTest {
                         .count());
     }
 
-    //    //@Test
+    //    // @Test
     void loadInMemoryStorageView_assertLeasesAreTakenWhenDefaultWorkerMetricWorkerIsOverloaded() throws Exception {
         createLeaseAssignmentManager(
                 getWorkerUtilizationAwareAssignmentConfig(Double.MAX_VALUE, 20),
@@ -1065,7 +1065,7 @@ class LeaseAssignmentManagerTest {
                         .sum());
     }
 
-    //    //@Test
+    //    // @Test
     void loadInMemoryStorageView_assertLeasesAreBalancedWhenDefaultWorkerMetricWorkerIsOverloadedWithMultipleRuns()
             throws Exception {
         createLeaseAssignmentManager(
