@@ -571,6 +571,9 @@ class LeaseAssignmentManagerTest {
         leaseY1.throughputKBps(1000);
         final Lease leaseT2 = createDummyUnAssignedLease("leaseT1");
 
+        System.out.println("List leases 0");
+        System.out.println(leaseRefresher.listLeases());
+        System.out.println("List leases 0 done");
         populateLeasesInLeaseTable(leaseY1, leaseT2);
 
         populateLeasesInLeaseTable(createDummyLease("leaseY2", TEST_YIELD_WORKER_ID));
@@ -581,7 +584,15 @@ class LeaseAssignmentManagerTest {
         populateLeasesInLeaseTable(createDummyLease("leaseY8", TEST_YIELD_WORKER_ID));
         populateLeasesInLeaseTable(createDummyLease("leaseY9", TEST_YIELD_WORKER_ID));
 
+        System.out.println("List leases 1");
+        System.out.println(leaseRefresher.listLeases());
+        System.out.println("List leases 1 done");
+
         leaseAssignmentManagerRunnable.run();
+
+        System.out.println("List leases 2");
+        System.out.println(leaseRefresher.listLeases());
+        System.out.println("List leases 2 done");
 
         assertEquals(
                 4L,
