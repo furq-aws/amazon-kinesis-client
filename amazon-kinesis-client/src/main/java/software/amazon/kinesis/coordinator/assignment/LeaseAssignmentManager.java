@@ -221,7 +221,8 @@ public final class LeaseAssignmentManager {
                     .map(l -> l.isExpiredOrUnassigned(true))
                     .collect(Collectors.toList());
 
-            System.out.println("Calculating expired leases " + expiredOrUnAssignedLeases + " " + inMemoryStorageView.getLeaseTableScanTime());
+            System.out.println("Calculating expired leases " + expiredOrUnAssignedLeases);
+            System.out.println("Calculating expired leases " + inMemoryStorageView.getLeaseTableScanTime());
 
             log.info("Total expiredOrUnassignedLeases count : {}", expiredOrUnAssignedLeases.size());
             metricsScope.addData(
